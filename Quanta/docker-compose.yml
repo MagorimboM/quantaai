@@ -1,0 +1,85 @@
+version: '3.9'
+
+services:
+  # ============================================================
+  # PostgreSQL Database
+  # ============================================================
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: quanta_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: quanta_password
+      POSTGRES_DB: quanta
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./server/prisma/migrations/20260606050755_init/migration.sql:/docker-entrypoint-initdb.d/01_migrate.sql
+      - ./server/prisma/vector.sql:/docker-entrypoint-initdb.d/02_vector.sql
+      - ./server/prisma/seed.sql:/docker-entrypoint-initdb.d/03_seed.sql
+    networks:
+      - quanta_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d quanta']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # NestJS Backend
+  # ============================================================
+  server:
+    container_name: quanta_server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://postgres:quanta_password@postgres:5432/quanta
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - quanta_network
+
+  # ============================================================
+  # React + Vite Frontend
+  # ============================================================
+  web:
+    container_name: quanta_web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - server
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    networks:
+      - quanta_network
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  postgres_data:
+    driver: local
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  quanta_network:
+    driver: bridge

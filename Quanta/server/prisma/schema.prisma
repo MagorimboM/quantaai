@@ -1,0 +1,518 @@
+// ============================================================
+// QUANTA — PRISMA SCHEMA
+// Stack: NestJS + PostgreSQL + Prisma + pgvector
+//
+// OWNERSHIP MODEL:
+// userId    = owner of ALL data
+// companyId = optional tag (null = personal template)
+//
+// companyId = null   → John's personal template
+// companyId = set    → tagged to a specific company
+//
+// NOTE: All userId and companyId are optional for development.
+//       Make required before production.
+// ============================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// USERS
+// Auth handled by Auth0
+// ============================================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  avatarUrl String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ============================================================
+// COMPANIES
+// John's company labels — data belongs to John not the company
+// ============================================================
+
+model Company {
+  id           String   @id @default(uuid())
+  userId       String?
+  name         String
+  address      String?
+  city         String?
+  state        String?
+  postcode     String?
+  country      String?  @default("Australia")
+  phone        String?
+  email        String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  companyType  String?
+  isArchived   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companyTradeCodes CompanyTradeCode[]
+  categories        Category[]
+  materials         Material[]
+  labour            Labour[]
+  overheads         Overhead[]
+  recipes           Recipe[]
+  projects          Project[]
+  documents         Document[]
+  chatMessages      ChatMessage[]
+
+  @@map("companies")
+}
+
+// ============================================================
+// AUSTRALIAN TRADE CODES
+// Global master list — AIQS standard, read only
+// ============================================================
+
+model AustralianTradeCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  division    String
+  level       String
+  unit        String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  companyTradeCodes CompanyTradeCode[]
+
+  @@map("australian_trade_codes")
+}
+
+// ============================================================
+// COMPANY TRADE CODES
+// userId = owner
+// companyId = null  → John's personal trade codes
+// companyId = set   → company specific trade codes
+// ============================================================
+
+model CompanyTradeCode {
+  id                    String   @id @default(uuid())
+  userId                String?
+  companyId             String?
+  australianTradeCodeId String?
+  code                  String
+  name                  String
+  unit                  String?
+  isCustom              Boolean  @default(false)
+  notes                 String?
+  createdAt             DateTime @default(now())
+
+  company             Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  australianTradeCode AustralianTradeCode? @relation(fields: [australianTradeCodeId], references: [id])
+
+  @@map("company_trade_codes")
+}
+
+// ============================================================
+// CATEGORIES
+// userId = owner
+// companyId = null  → personal category
+// companyId = set   → company category
+// isDefault = true  → pre-loaded global defaults
+// ============================================================
+
+model Category {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company   Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  materials Material[]
+  labour    Labour[]
+  overheads Overhead[]
+
+  @@map("categories")
+}
+
+// ============================================================
+// MATERIALS
+// userId = owner
+// companyId = null  → John's personal material
+// companyId = set   → company specific material
+// ============================================================
+
+model Material {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  categoryId  String
+  name        String
+  description String?
+  unit        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category        Category         @relation(fields: [categoryId], references: [id])
+  recipeMaterials RecipeMaterial[]
+
+  @@map("materials")
+}
+
+// ============================================================
+// LABOUR
+// userId = owner
+// companyId = null  → John's personal labour
+// companyId = set   → company specific labour
+// ============================================================
+
+model Labour {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  categoryId  String
+  name        String
+  description String?
+  labourType  String
+  unit        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company      Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category     Category       @relation(fields: [categoryId], references: [id])
+  recipeLabour RecipeLabour[]
+
+  @@map("labour")
+}
+
+// ============================================================
+// OVERHEADS
+// userId = owner
+// companyId = null  → John's personal overhead
+// companyId = set   → company specific overhead
+// ============================================================
+
+model Overhead {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  categoryId  String
+  name        String
+  description String?
+  unit        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category        Category         @relation(fields: [categoryId], references: [id])
+  recipeOverheads RecipeOverhead[]
+
+  @@map("overheads")
+}
+
+// ============================================================
+// RECIPES
+// userId = owner
+// companyId = null  → John's personal template
+// companyId = set   → company specific recipe
+// ============================================================
+
+model Recipe {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  name        String
+  description String?
+  unit        String
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recipeMaterials RecipeMaterial[]
+  recipeLabour    RecipeLabour[]
+  recipeOverheads RecipeOverhead[]
+  takeoffItems    TakeoffItem[]
+
+  @@map("recipes")
+}
+
+// ============================================================
+// RECIPE MATERIALS
+// userId = owner — always follows recipe owner
+// ============================================================
+
+model RecipeMaterial {
+  id         String  @id @default(uuid())
+  userId     String?
+  recipeId   String
+  materialId String
+  quantity   Float
+  unit       String
+
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@map("recipe_materials")
+}
+
+// ============================================================
+// RECIPE LABOUR
+// userId = owner — always follows recipe owner
+// ============================================================
+
+model RecipeLabour {
+  id       String  @id @default(uuid())
+  userId   String?
+  recipeId String
+  labourId String
+  quantity Float
+  unit     String
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  labour Labour @relation(fields: [labourId], references: [id])
+
+  @@map("recipe_labour")
+}
+
+// ============================================================
+// RECIPE OVERHEADS
+// userId = owner — always follows recipe owner
+// ============================================================
+
+model RecipeOverhead {
+  id         String  @id @default(uuid())
+  userId     String?
+  recipeId   String
+  overheadId String
+  quantity   Float
+  unit       String
+
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  overhead Overhead @relation(fields: [overheadId], references: [id])
+
+  @@map("recipe_overheads")
+}
+
+// ============================================================
+// PROJECTS
+// userId = owner
+// companyId = null  → personal project
+// companyId = set   → company project
+// ============================================================
+
+model Project {
+  id               String    @id @default(uuid())
+  userId           String?
+  companyId        String?
+  projectNumber    String
+  name             String
+  description      String?
+  type             String
+  status           String    @default("draft")
+  stage            String?
+  clientName       String?
+  clientEmail      String?
+  clientPhone      String?
+  siteContactName  String?
+  siteContactPhone String?
+  address          String?
+  city             String?
+  state            String?
+  postcode         String?
+  drawingNumber    String?
+  revision         String?
+  startDate        DateTime?
+  endDate          DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  company      Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  takeoffItems TakeoffItem[]
+  documents    Document[]
+  chatMessages ChatMessage[]
+
+  @@map("projects")
+}
+
+// ============================================================
+// TAKEOFF ITEMS
+// userId = owner
+// companyId = tag (follows project)
+// John inputs ONE measurement — app calculates everything
+// ============================================================
+
+model TakeoffItem {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  projectId   String
+  recipeId    String?
+  description String
+  measurement Float
+  unit        String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recipe    Recipe?    @relation(fields: [recipeId], references: [id])
+  auditLogs AuditLog[]
+
+  @@map("takeoff_items")
+}
+
+// ============================================================
+// AUDIT LOGS
+// userId = who made the change
+// companyId = context tag
+// entityId is polymorphic — integrity enforced at app layer
+// takeoffItemId is a typed FK for Prisma relation only
+// ============================================================
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?
+  companyId     String?
+  entityType    String
+  entityId      String
+  action        String
+  oldValue      Json?
+  newValue      Json?
+  reason        String?
+  changedAt     DateTime @default(now())
+  takeoffItemId String?
+
+  takeoffItem TakeoffItem? @relation(fields: [takeoffItemId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+
+// ============================================================
+// DOCUMENTS
+// userId = owner
+// companyId = null  → company policy document
+// projectId = null  → personal document
+// all optional — covers personal, company, and project scoped docs
+// isArchived = true → excluded from AI search / active use
+// archivedAt        → timestamp when archived
+// archivedReason    → optional note explaining why archived
+// ============================================================
+
+model Document {
+  id              String    @id @default(uuid())
+  userId          String?
+  companyId       String?
+  projectId       String?
+  name            String
+  fileUrl         String
+  fileType        String
+  documentType    String?
+  documentTitle   String?
+  documentDate    DateTime?
+  documentAuthor  String?
+  documentVersion String?
+  issuedBy        String?
+  extractedText   String?
+  status          String    @default("processing")
+  isArchived      Boolean   @default(false)
+  archivedAt      DateTime?
+  archivedReason  String?
+  uploadedAt      DateTime  @default(now())
+
+  company    Company?            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project    Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  embeddings DocumentEmbedding[]
+
+  @@map("documents")
+}
+
+// ============================================================
+// DOCUMENT EMBEDDINGS
+// userId = owner — follows document owner
+// chunkTitle = document name for AI reference
+// isArchived = true → excluded from vector search
+// archivedAt        → timestamp when archived (mirrors parent doc)
+//
+// NOTE: embedding column added manually after migration:
+//   CREATE EXTENSION IF NOT EXISTS vector;
+//   ALTER TABLE document_embeddings ADD COLUMN embedding vector(1536);
+//   CREATE INDEX ON document_embeddings USING hnsw (embedding vector_cosine_ops);
+// ============================================================
+
+model DocumentEmbedding {
+  id         String    @id @default(uuid())
+  userId     String?
+  documentId String
+  chunkText  String
+  chunkTitle String?
+  chunkIndex Int
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_embeddings")
+}
+
+// ============================================================
+// CHAT MESSAGES
+// userId = owner
+// companyId = null  → general AI chat
+// companyId = set   → company scoped AI
+// projectId = null  → general or company AI
+// projectId = set   → project scoped AI
+// ============================================================
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  userId       String?
+  companyId    String?
+  projectId    String?
+  role         String
+  content      String
+  createdAt    DateTime @default(now())
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+// ============================================================
+// TEMP FILE CACHE
+// Short-lived records for files uploaded but not yet committed
+// to a document or drawing record.
+// userId = who uploaded
+// fileUrl = S3 location of the cached file
+// expiresAt = when the cache entry should be purged
+//   (set to createdAt + 24hr at the app layer)
+// ============================================================
+
+model TempFileCache {
+  id        String    @id @default(uuid())
+  userId    String?
+  fileName  String    @unique
+  fileType  String
+  fileUrl   String
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("temp_file_cache")
+}
