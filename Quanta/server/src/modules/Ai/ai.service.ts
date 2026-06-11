@@ -28,6 +28,7 @@ export class AiService {
     // persist the user message before doing anything else
     await this.repository.saveMessage({
       message: dto.userMessage,
+      userId: dto.userId,
       projectId: dto.projectId,
       companyId: dto.companyId,
       role: dto.role,
@@ -100,6 +101,7 @@ export class AiService {
       projectId: dto.projectId,
       companyId: dto.companyId,
       role: 'ai',
+      userId: userId,
     });
 
     return {

@@ -26,21 +26,26 @@ export class AiRepository {
     role,
     projectId,
     companyId,
+    userId
   }: {
     message: string;
     role: 'user' | 'ai';
     projectId?: string;
     companyId?: string;
+    userId?:string
   }) {
-    const savedMessage = await prisma.chatMessage.create({
-      data: {
-        content: message,
-        role: role,
-        projectId: projectId,
-        companyId: companyId,
-      },
-    });
-    return savedMessage;
+    
+      // ! why is it not saving the messages !
+      const savedMessage = await prisma.chatMessage.create({
+        data: {
+          content: message,
+          role: role,
+          projectId: projectId,
+          companyId: companyId,
+          userId:userId
+        },
+      });
+      return savedMessage;
   }
 
   // grabs the 15 most recent messages then reverses them
@@ -58,14 +63,14 @@ export class AiRepository {
         userId: userId,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
-      take: 15,
+      take: 20,
     });
 
-    return getChatHistory.reverse();
-  }
-
+    return getChatHistory;
+  }; 
+    
   // loads documents scoped to the current user, company and project
   // reconstructs full text from sorted chunks per document
   // returns an array of { nameOfDocument, content, documentType }

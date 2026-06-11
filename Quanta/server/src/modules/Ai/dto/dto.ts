@@ -9,6 +9,10 @@ export class ChatDto {
   userMessage!: string;
 
   @IsString()
+  @IsNotEmpty()
+  userId!:string
+
+  @IsString()
   @IsOptional()
   projectId!: string;
 
