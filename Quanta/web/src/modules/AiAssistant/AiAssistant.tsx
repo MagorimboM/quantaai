@@ -17,8 +17,8 @@ export function AiAssistant() {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [typeIndicator, setTypeIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<string>("");
 
-  // 1.  send to the backend projectId, userId and it gives back the chat history...
   useEffect(() => {
     async function fetchChatHistory() {
       const chatHistory: Message[] = await getChatHistory();
@@ -27,21 +27,32 @@ export function AiAssistant() {
     fetchChatHistory();
   }, []);
 
-  async function submitMessage(e?: React.KeyboardEvent<HTMLInputElement>) {
-    if (e?.key != "Enter") {
-      
-      return;
-    }
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setChatInput(e.target.value);
+    chatInputRef.current = e.target.value;
+  }
 
+  async function submitMessage(e?: React.KeyboardEvent<HTMLInputElement>) {
+    if (e && e.key !== "Enter") return;
+    const message = chatInputRef.current.trim();
+    if (!message) return;
+
+    setChatInput("");
+    chatInputRef.current = "";
     setTypeIndicator(true);
     setChatMessages((prev) => [
       ...prev,
-      { id: "", role: "user", content: chatInput },
+      { id: "", role: "user", content: message },
     ]);
-    const chatResponse = await sendUserMessage(chatInput);
-    setChatMessages((prev) => [...prev, chatResponse]);
-    setTypeIndicator(false);
-    setChatInput("")
+
+    try {
+      const chatResponse = await sendUserMessage(message);
+      setChatMessages((prev) => [...prev, chatResponse]);
+    } catch (err: any) {
+      console.error("API Error:", err.response?.data);
+    } finally {
+      setTypeIndicator(false);
+    }
   }
 
   useEffect(() => {
@@ -67,7 +78,7 @@ export function AiAssistant() {
             </div>
             <div
               onClick={() => setChatOpen(false)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </div>
@@ -96,6 +107,16 @@ export function AiAssistant() {
                 </div>
               </div>
             ))}
+            {typeIndicator && (
+              <div className="flex justify-start">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <div className="bg-muted text-foreground px-3 py-2 rounded-2xl rounded-bl-sm text-sm">
+                  <span className="animate-pulse">...</span>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -105,16 +126,14 @@ export function AiAssistant() {
               <input
                 type="text"
                 value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e)=>(submitMessage(e))}
+                onChange={handleInputChange}
+                onKeyDown={(e) => submitMessage(e)}
                 placeholder="Ask about your quantities..."
                 className="flex-1 px-3 py-2 bg-muted border border-border rounded-xl text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
               />
               <div
-                className="w-9 h-9 flex items-center justify-center bg-primary hover:bg-primary/90 disabled:opacity-40 rounded-xl transition-colors"
-                onClick={() => {
-                  submitMessage();
-                }}
+                className="w-9 h-9 flex items-center justify-center bg-primary hover:bg-primary/90 rounded-xl transition-colors cursor-pointer"
+                onClick={() => submitMessage()}
               >
                 <Send className="w-4 h-4 text-white" />
               </div>
@@ -127,7 +146,7 @@ export function AiAssistant() {
       {!chatOpen && (
         <div
           onClick={() => setChatOpen(true)}
-          className="absolute bottom-6 right-6 w-[52px] h-[52px] bg-primary hover:bg-primary/90 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 z-20"
+          className="absolute bottom-6 right-6 w-[52px] h-[52px] bg-primary hover:bg-primary/90 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 z-20 cursor-pointer"
         >
           <Sparkles className="w-5 h-5" />
         </div>
