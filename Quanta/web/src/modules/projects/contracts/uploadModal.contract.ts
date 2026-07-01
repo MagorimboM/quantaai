@@ -1,4 +1,5 @@
-export type File = {
+
+export type Document = {
   id?: string;
   userId?: string | null;
   companyId?: string | null;
@@ -20,13 +21,10 @@ export type File = {
   uploadedAt: Date;
 };
 
-export type GetFilesResponse = {
-  file: File;
-  bytes: Uint8Array<ArrayBuffer> | undefined;
+export type UploadModalProps = {
+  document: Document;
+  bytes: string | null;
+  closeModal: () => void;
 };
 
 
-export type DeleteFileResponse = {
-  success: boolean;
-  message: string;
-};

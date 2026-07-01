@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { projectUploadFiles } from "@/modules/projects/services/uploadFile.service";
 import { sendUploadedFilesToBackEnd } from "@/modules/projects/api/api";
+import type { UploadModalProps } from "@/modules/projects/contracts/uploadModal.contract";
 
-type UploadModalProps = {
-  closeModal: () => void;
-};
+
+// TODO :: replace dummy data with real-time data
+// TODO :: implement "Loading" ui
+
 
 export function UploadModal({ closeModal }: UploadModalProps) {
   const [files, setFiles] = useState<File[]>([]);
@@ -59,10 +61,15 @@ export function UploadModal({ closeModal }: UploadModalProps) {
 
         {files.length > 0 && (
           <div className="mt-4">
-            <h3 className="mb-2 font-medium">Selected Files ({files.length})</h3>
+            <h3 className="mb-2 font-medium">
+              Selected Files ({files.length})
+            </h3>
             <div className="max-h-48 overflow-y-auto rounded border">
               {files.map((file, index) => (
-                <div key={index} className="border-b p-2 text-sm last:border-b-0">
+                <div
+                  key={index}
+                  className="border-b p-2 text-sm last:border-b-0"
+                >
                   {file.name}
                 </div>
               ))}
@@ -70,9 +77,7 @@ export function UploadModal({ closeModal }: UploadModalProps) {
           </div>
         )}
 
-        {error && (
-          <p className="mt-3 text-sm text-red-500">{error}</p>
-        )}
+        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
 
         <div className="mt-6 flex justify-end gap-2">
           <button
@@ -93,5 +98,4 @@ export function UploadModal({ closeModal }: UploadModalProps) {
       </div>
     </div>
   );
-}; 
-
+}

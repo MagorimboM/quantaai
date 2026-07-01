@@ -1,43 +1,16 @@
-import { getDocuments, deleteDocument } from "@/modules/projects/api/api";
+import { getDocuments } from "@/modules/projects/api/api";
 import { useState, useEffect } from "react";
 import { ViewDocumentModal } from "@/modules/projects/components/viewDocumentModal";
 import { AiOutlineFile } from "react-icons/ai";
-import { Trash2, Eye } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import type {
+  DocumentModalProps,
+  Documents,
+} from "@/modules/projects/contracts/documentModal.contract";
 
-export type Document = {
-  id?: string;
-  userId?: string | null;
-  companyId?: string | null;
-  projectId?: string | null;
-  name: string;
-  fileUrl: string;
-  fileType: string;
-  documentType?: string | null;
-  documentTitle?: string | null;
-  documentDate?: Date | null;
-  documentAuthor?: string | null;
-  documentVersion?: string | null;
-  issuedBy?: string | null;
-  extractedText?: string | null;
-  status: string;
-  isArchived: boolean;
-  archivedAt?: Date | null;
-  archivedReason?: string | null;
-  uploadedAt: Date;
-};
-
-export type Documents = {
-  document: Document;
-  bytes: Uint8Array | undefined;
-};
+// TODO :: Replace Dummy Data with real-time data
 
 const DUMMY_DATA = {
   projectId: "seed-proj-001",
@@ -45,16 +18,8 @@ const DUMMY_DATA = {
   companyId: "seed-company-001",
 };
 
-export function DocumentsModal({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function DocumentsModal({ open, onClose }: DocumentModalProps) {
   const [documents, setDocuments] = useState<Documents[]>([]);
-  const [viewDocumentModal, setViewDocumentModal] = useState<boolean>(false);
-  const [viewDocument, setViewDocument] = useState<Documents>();
 
   useEffect(() => {
     async function fetchDocuments() {
@@ -67,47 +32,29 @@ export function DocumentsModal({
     fetchDocuments();
   }, []);
 
-  async function removeDocument({
-    documentId,
-    companyId,
-    projectId,
-  }: {
-    documentId?: string | null;
-    companyId?: string | null;
-    projectId?: string | null;
-  }) {
-    await deleteDocument({
-      projectId: projectId,
-      companyId: companyId,
-      documentId: documentId,
-    });
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
 
-    setDocuments((documents) =>
-      documents.filter((doc) => doc.document.id != documentId),
-    );
-  };
-
-  async function openDocument({ document }: { document: Documents }) {
-    setViewDocument(document);
-    setViewDocumentModal(true);
-  };
-
-  async function closeDocument() {
-    setViewDocument(undefined);
-    setViewDocumentModal(false);
-  };
+  if (!open) return null;
 
   return (
-    <>
-      {/* DocumentsModal owns this — it opens and closes ViewDocumentModal */}
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Project Documents</DialogTitle>
-          </DialogHeader>
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-lg bg-background shadow-xl">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <h2 className="text-lg font-semibold">Project Documents</h2>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X size={16} />
+          </Button>
+        </div>
 
+        <div className="overflow-y-auto px-6 py-4">
           <div title="docs-container" className="flex flex-col gap-4">
-
             {/* company documents */}
             <div title="company-docs" className="flex flex-col gap-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -116,22 +63,11 @@ export function DocumentsModal({
               {documents.map((document) => {
                 if (document.document.documentType === "companyDocument") {
                   return (
-                    <div
+                    <ViewDocumentModal
+                      bytes={document.bytes}
                       key={document.document.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-muted transition-colors"
-                    >
-                      <div className="flex items-center gap-2 text-sm">
-                        <AiOutlineFile className="text-muted-foreground" />
-                        {document.document.name}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDocument({ document })}
-                      >
-                        <Eye size={16} />
-                      </Button>
-                    </div>
+                      document={document.document}
+                    />
                   );
                 }
               })}
@@ -147,38 +83,11 @@ export function DocumentsModal({
               {documents.map((document) => {
                 if (document.document.documentType === "projectDocument") {
                   return (
-                    <div
+                    <ViewDocumentModal
                       key={document.document.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-muted transition-colors"
-                    >
-                      <div className="flex items-center gap-2 text-sm">
-                        <AiOutlineFile className="text-muted-foreground" />
-                        {document.document.name}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openDocument({ document })}
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() =>
-                            removeDocument({
-                              documentId: document.document.id,
-                              companyId: document.document.companyId,
-                              projectId: document.document.projectId,
-                            })
-                          }
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </div>
+                      bytes={document.bytes}
+                      document={document.document}
+                    />
                   );
                 }
               })}
@@ -194,27 +103,15 @@ export function DocumentsModal({
               {documents.map((document) => {
                 if (document.document.documentType === "personalDocument") {
                   return (
-                    <div
+                    <ViewDocumentModal
                       key={document.document.id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-muted transition-colors"
-                    >
-                      <div className="flex items-center gap-2 text-sm">
-                        <AiOutlineFile className="text-muted-foreground" />
-                        {document.document.name}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDocument({ document })}
-                      >
-                        <Eye size={16} />
-                      </Button>
-                    </div>
+                      bytes={document.bytes}
+                      document={document.document}
+                    />
                   );
                 }
               })}
             </div>
-
           </div>
 
           {documents.length === 0 && (
@@ -223,21 +120,8 @@ export function DocumentsModal({
               <p className="text-sm">No documents found</p>
             </div>
           )}
-
-        </DialogContent>
-      </Dialog>
-
-      {/* ViewDocumentModal — DocumentsModal owns this */}
-      <Dialog open={viewDocumentModal} onOpenChange={closeDocument}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{viewDocument?.document.name}</DialogTitle>
-          </DialogHeader>
-          <div title="document-view-container" className="mt-2">
-            <ViewDocumentModal document={viewDocument} />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </div>
+    </div>
   );
 }

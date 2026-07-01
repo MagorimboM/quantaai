@@ -45,7 +45,7 @@ export class FilesController {
       bytes: file.bytes ? Buffer.from(file.bytes).toString('base64') : null,
       document: file.file,
     }));
-  }
+  }; 
 
   @Delete('/:projectId/:companyId/:documentId')
   async deleteFiles(@Param() request: DeleteFilesRequest) {

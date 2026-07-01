@@ -1,4 +1,15 @@
-export type File = {
+export type projectUploadsResponse = {
+  success: boolean;
+  message: string;
+  savedDocuments: any[];
+};
+
+export type DocumentDeletionResponse = {
+  success: boolean;
+  message: string;
+};
+
+export type Document = {
   id?: string;
   userId?: string | null;
   companyId?: string | null;
@@ -20,13 +31,7 @@ export type File = {
   uploadedAt: Date;
 };
 
-export type GetFilesResponse = {
-  file: File;
-  bytes: Uint8Array<ArrayBuffer> | undefined;
-};
-
-
-export type DeleteFileResponse = {
-  success: boolean;
-  message: string;
+export type GetFilesResponse= {
+  document: Document;
+  bytes: string | null;
 };

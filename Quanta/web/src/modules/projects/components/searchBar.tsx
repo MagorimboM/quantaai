@@ -2,18 +2,15 @@ import { useState } from "react";
 import type React from "react";
 import { MdOutlineSearch } from "react-icons/md";
 
+// TODO :: Implement search results modal; 
+// TODO :: create search data pipeline
+// TODO :: implement add to bill of quants. 
+
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  function submitSearch() {
-    console.log("Searching:", searchTerm);
-
-    // send request to backend here
-  }
-
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      submitSearch();
     }
   }
 
@@ -31,7 +28,6 @@ export function SearchBar() {
       <button
         title="submit-search-term"
         className="cursor-pointer rounded-lg p-1 hover:bg-zinc-400 flex flex-row"
-        onClick={submitSearch}
       >
         <MdOutlineSearch size={20} />
       </button>

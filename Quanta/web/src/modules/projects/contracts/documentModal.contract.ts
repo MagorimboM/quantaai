@@ -1,4 +1,4 @@
-export type File = {
+export type Document = {
   id?: string;
   userId?: string | null;
   companyId?: string | null;
@@ -20,13 +20,13 @@ export type File = {
   uploadedAt: Date;
 };
 
-export type GetFilesResponse = {
-  file: File;
-  bytes: Uint8Array<ArrayBuffer> | undefined;
+export type Documents = {
+  document: Document;
+  bytes: string | null;
 };
 
 
-export type DeleteFileResponse = {
-  success: boolean;
-  message: string;
+export type DocumentModalProps = {
+  open: boolean;
+  onClose: () => void;
 };
