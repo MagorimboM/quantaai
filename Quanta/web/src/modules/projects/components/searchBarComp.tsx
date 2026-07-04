@@ -6,7 +6,7 @@ import { MdOutlineSearch } from "react-icons/md";
 // TODO :: create search data pipeline
 // TODO :: implement add to bill of quants. 
 
-export function SearchBar() {
+export function SearchBarComp() {
   const [searchTerm, setSearchTerm] = useState("");
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

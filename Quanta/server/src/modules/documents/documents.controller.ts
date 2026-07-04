@@ -36,7 +36,7 @@ export class FilesController {
       encoding: file.encoding,
     }));
     return await this.filesService.filesUpload(request, files);
-  }
+  }; 
 
   @Get(':projectId/:companyId')
   async getFiles(@Param() request: GetFilesRequest) {
@@ -50,5 +50,8 @@ export class FilesController {
   @Delete('/:projectId/:companyId/:documentId')
   async deleteFiles(@Param() request: DeleteFilesRequest) {
     return await this.filesService.deleteFiles(request);
-  }
-}
+  }; 
+}; 
+
+
+

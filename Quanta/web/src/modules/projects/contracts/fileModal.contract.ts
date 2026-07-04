@@ -1,4 +1,3 @@
-
 export type Document = {
   id?: string;
   userId?: string | null;
@@ -21,9 +20,13 @@ export type Document = {
   uploadedAt: Date;
 };
 
-export type ViewDocumentModalProps = {
+export type Documents = {
   document: Document;
   bytes: string | null;
 };
 
 
+export type FileModalProps = {
+  open: boolean;
+  onClose: () => void;
+};

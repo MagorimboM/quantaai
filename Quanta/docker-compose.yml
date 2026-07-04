@@ -1,9 +1,6 @@
 version: '3.9'
 
 services:
-  # ============================================================
-  # PostgreSQL Database
-  # ============================================================
   postgres:
     image: pgvector/pgvector:pg15
     container_name: quanta_db
@@ -26,9 +23,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ============================================================
-  # NestJS Backend
-  # ============================================================
   server:
     container_name: quanta_server
     build:
@@ -49,9 +43,6 @@ services:
     networks:
       - quanta_network
 
-  # ============================================================
-  # React + Vite Frontend
-  # ============================================================
   web:
     container_name: quanta_web
     build:
@@ -70,16 +61,10 @@ services:
     networks:
       - quanta_network
 
-# ============================================================
-# Volumes
-# ============================================================
 volumes:
   postgres_data:
     driver: local
 
-# ============================================================
-# Networks
-# ============================================================
 networks:
   quanta_network:
     driver: bridge

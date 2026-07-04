@@ -1,14 +1,14 @@
-import { getDocuments } from "@/modules/projects/api/api";
+import { getFiles } from "@/modules/projects/api/api";
 import { useState, useEffect } from "react";
-import { ViewDocumentModal } from "@/modules/projects/components/viewDocumentModal";
+import { ViewFileModalComp } from "@/modules/projects/components/viewFileModalComp";
 import { AiOutlineFile } from "react-icons/ai";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type {
-  DocumentModalProps,
+  FileModalProps,
   Documents,
-} from "@/modules/projects/contracts/documentModal.contract";
+} from "@/modules/projects/contracts/fileModal.contract";
 
 // TODO :: Replace Dummy Data with real-time data
 
@@ -18,12 +18,12 @@ const DUMMY_DATA = {
   companyId: "seed-company-001",
 };
 
-export function DocumentsModal({ open, onClose }: DocumentModalProps) {
+export function FileModalComp({ open, onClose }: FileModalProps) {
   const [documents, setDocuments] = useState<Documents[]>([]);
 
   useEffect(() => {
     async function fetchDocuments() {
-      const files = await getDocuments({
+      const files = await getFiles({
         projectId: DUMMY_DATA.projectId,
         companyId: DUMMY_DATA.companyId,
       });
@@ -43,8 +43,11 @@ export function DocumentsModal({ open, onClose }: DocumentModalProps) {
 
   if (!open) return null;
 
+  // TODO :: double check component orchestrator 
+  // TODO :: rename data structure " got to fix that document.document nonsense"
+
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
       <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-lg bg-background shadow-xl">
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-lg font-semibold">Project Documents</h2>
@@ -63,7 +66,7 @@ export function DocumentsModal({ open, onClose }: DocumentModalProps) {
               {documents.map((document) => {
                 if (document.document.documentType === "companyDocument") {
                   return (
-                    <ViewDocumentModal
+                    <ViewFileModalComp
                       bytes={document.bytes}
                       key={document.document.id}
                       document={document.document}
@@ -83,7 +86,7 @@ export function DocumentsModal({ open, onClose }: DocumentModalProps) {
               {documents.map((document) => {
                 if (document.document.documentType === "projectDocument") {
                   return (
-                    <ViewDocumentModal
+                    <ViewFileModalComp
                       key={document.document.id}
                       bytes={document.bytes}
                       document={document.document}
@@ -103,7 +106,7 @@ export function DocumentsModal({ open, onClose }: DocumentModalProps) {
               {documents.map((document) => {
                 if (document.document.documentType === "personalDocument") {
                   return (
-                    <ViewDocumentModal
+                    <ViewFileModalComp
                       key={document.document.id}
                       bytes={document.bytes}
                       document={document.document}

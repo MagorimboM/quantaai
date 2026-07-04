@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {globalErrorState} from "@/common/storage/globalState"; 
 
-export function GlobalError({ children }: { children: React.ReactNode }) {
+export function GlobalErrorComp({ children }: { children: React.ReactNode }) {
   const clearGlobalError = globalErrorState((state:any)=>(state.clearGlobalError)); 
   const globalErrorMessage = globalErrorState((state:any)=>(state.globalErrorMessage)); 
 
@@ -12,7 +12,7 @@ export function GlobalError({ children }: { children: React.ReactNode }) {
     <>
       <main>{children}</main>
 
-      {globalErrorMessage && (
+      {globalErrorMessage != null ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
           <Alert variant="destructive" className="w-full max-w-md mx-4 bg-background">
             <AlertCircle className="h-4 w-4" />
@@ -32,7 +32,7 @@ export function GlobalError({ children }: { children: React.ReactNode }) {
             </AlertDescription>
           </Alert>
         </div>
-      )}
+      ):(null)}
     </>
   );
 }

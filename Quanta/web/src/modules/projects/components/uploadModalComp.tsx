@@ -3,12 +3,10 @@ import { projectUploadFiles } from "@/modules/projects/services/uploadFile.servi
 import { sendUploadedFilesToBackEnd } from "@/modules/projects/api/api";
 import type { UploadModalProps } from "@/modules/projects/contracts/uploadModal.contract";
 
-
 // TODO :: replace dummy data with real-time data
 // TODO :: implement "Loading" ui
 
-
-export function UploadModal({ closeModal }: UploadModalProps) {
+export function UploadModalComp({ closeModal }: UploadModalProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +57,7 @@ export function UploadModal({ closeModal }: UploadModalProps) {
           className="w-full rounded-md border p-2"
         />
 
-        {files.length > 0 && (
+        {files.length > 0 ? (
           <div className="mt-4">
             <h3 className="mb-2 font-medium">
               Selected Files ({files.length})
@@ -75,9 +73,9 @@ export function UploadModal({ closeModal }: UploadModalProps) {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
-        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
 
         <div className="mt-6 flex justify-end gap-2">
           <button

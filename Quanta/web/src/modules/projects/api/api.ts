@@ -13,7 +13,7 @@ export async function sendUploadedFilesToBackEnd(
   formData?: FormData,
 ): Promise<projectUploadsResponse> {
   const response = await apiClient.post<projectUploadsResponse>(
-    "documents/upload",
+    "files/upload",
     formData,
     {
       headers: {

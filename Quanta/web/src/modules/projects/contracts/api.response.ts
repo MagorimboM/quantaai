@@ -31,7 +31,7 @@ export type Document = {
   uploadedAt: Date;
 };
 
-export type GetFilesResponse= {
+export type GetFilesResponse = {
   document: Document;
   bytes: string | null;
 };

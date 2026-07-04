@@ -22,8 +22,8 @@ export type Document = {
 };
 
 export type UploadModalProps = {
-  document: Document;
-  bytes: string | null;
+  document?: Document;
+  bytes?: string | null;
   closeModal: () => void;
 };
 

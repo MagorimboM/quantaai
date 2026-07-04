@@ -1,8 +1,8 @@
 import { AiAssistant } from "@/modules/AiAssistant/AiAssistant";
 import { useState } from "react";
-import { UploadModal } from "@/modules/projects/components/uploadModal";
-import { SearchBar } from "@/modules/projects/components/searchBar";
-import { DocumentsModal } from "@/modules/projects/components/documentModal";
+import { UploadModalComp } from "@/modules/projects/components/uploadModalComp";
+import { SearchBarComp } from "@/modules/projects/components/searchBarComp";
+import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 
 import { MdOutlineUploadFile } from "react-icons/md";
 import { MdOutlineNotifications } from "react-icons/md";
@@ -11,7 +11,8 @@ import { FiFolder } from "react-icons/fi";
 
 export function ProjectsPage() {
   const [uploadModal, setUploadModal] = useState(false);
-  const [viewListOfDocuments, setViewListOfDocuments] = useState<boolean>(false);
+  const [viewListOfDocuments, setViewListOfDocuments] =
+    useState<boolean>(false);
 
   function toggleUploadModal() {
     setUploadModal((prev) => !prev);
@@ -27,17 +28,16 @@ export function ProjectsPage() {
 
   return (
     <div className="flex h-full w-full flex-col bg-background text-foreground">
-
       {/* Header */}
       <header className="flex items-center justify-between border-b px-4 py-3">
         <div className="max-w-md flex-1">
-          <SearchBar />
+          <SearchBarComp />
         </div>
 
         <div className="flex items-center gap-2">
           <button
             title="view-project-documents"
-            onClick={showDocuments}
+            onClick={()=>showDocuments()}
             className="
               inline-flex items-center gap-2 rounded-md border
               border-zinc-300 bg-white px-4 py-2 text-sm font-medium
@@ -51,7 +51,7 @@ export function ProjectsPage() {
 
           <button
             title="project-file-upload-modal"
-            onClick={toggleUploadModal}
+            onClick={()=>toggleUploadModal()}
             className="
               inline-flex items-center gap-2 rounded-md bg-zinc-900
               px-4 py-2 text-sm font-medium text-white transition-colors
@@ -82,18 +82,15 @@ export function ProjectsPage() {
       <main className="flex-1 p-4">
         <AiAssistant />
       </main>
-
       {/* Upload Modal — page tells it when to open and how to close */}
       {uploadModal === true ? (
-        <UploadModal closeModal={() => setUploadModal(false)} />
+        <UploadModalComp closeModal={() => setUploadModal(false)} />
       ) : null}
-
       {/* Documents Modal — page tells it when to open and how to close */}
-      <DocumentsModal
+      <FileModalComp
         open={viewListOfDocuments}
         onClose={() => setViewListOfDocuments(false)}
       />
-
     </div>
   );
 }
