@@ -7,6 +7,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: "postgresql://postgres:quanta_password@localhost:5432/quanta",
   },
 });

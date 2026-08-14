@@ -21,6 +21,7 @@ TRUNCATE TABLE
   company_trade_codes,
   australian_trade_codes,
   temp_file_cache,
+  company_team_members,
   projects,
   companies,
   users
@@ -69,6 +70,19 @@ VALUES (
   NOW(),
   NOW()
 );
+
+-- ============================================================
+-- COMPANY TEAM MEMBERS
+-- ============================================================
+
+INSERT INTO company_team_members (
+  id, userId, companyId, name, lastName, email, phoneNumber,
+  position, createdAt, updatedAt
+)
+VALUES
+  ('seed-team-001', 'seed-user-001', 'seed-company-001', 'Jane',  'Smith',   'jane@abcconstruction.com.au',  '0412 000 000', 'Office Manager',  NOW(), NOW()),
+  ('seed-team-002', 'seed-user-001', 'seed-company-001', 'Mark',  'Taylor',  'mark@abcconstruction.com.au',  '0412 111 333', 'Site Supervisor',  NOW(), NOW()),
+  ('seed-team-003', 'seed-user-001', 'seed-company-001', 'Sarah', 'Nguyen',  'sarah@abcconstruction.com.au', '0412 222 555', 'Estimator',        NOW(), NOW());
 
 -- ============================================================
 -- AUSTRALIAN TRADE CODES

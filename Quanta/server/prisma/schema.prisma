@@ -41,6 +41,31 @@ model User {
 }
 
 // ============================================================
+// COMPANY TEAM MEMBERS
+// userId    = owner (who added this team member)
+// companyId = company this team member belongs to
+// ============================================================
+
+model CompanyTeamMembers {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  name        String
+  lastName    String
+  email       String
+  phoneNumber String
+  position    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_team_members")
+}
+
+
+
+// ============================================================
 // COMPANIES
 // John's company labels — data belongs to John not the company
 // ============================================================
@@ -64,15 +89,16 @@ model Company {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  companyTradeCodes CompanyTradeCode[]
-  categories        Category[]
-  materials         Material[]
-  labour            Labour[]
-  overheads         Overhead[]
-  recipes           Recipe[]
-  projects          Project[]
-  documents         Document[]
-  chatMessages      ChatMessage[]
+  companyTradeCodes  CompanyTradeCode[]
+  categories         Category[]
+  materials          Material[]
+  labour             Labour[]
+  overheads          Overhead[]
+  recipes            Recipe[]
+  projects           Project[]
+  documents          Document[]
+  chatMessages       ChatMessage[]
+  companyTeamMembers CompanyTeamMembers[]  
 
   @@map("companies")
 }

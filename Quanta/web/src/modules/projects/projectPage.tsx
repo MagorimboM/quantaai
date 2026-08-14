@@ -1,13 +1,14 @@
-import { AiAssistant } from "@/modules/AiAssistant/AiAssistant";
+import { AiAssistant } from "@/modules/aiAssistant/AiAssistant";
 import { useState } from "react";
 import { UploadModalComp } from "@/modules/projects/components/uploadModalComp";
 import { SearchBarComp } from "@/modules/projects/components/searchBarComp";
 import { FileModalComp } from "@/modules/projects/components/fileModalComp";
-
 import { MdOutlineUploadFile } from "react-icons/md";
 import { MdOutlineNotifications } from "react-icons/md";
 import { MdOutlineAccountCircle } from "react-icons/md";
 import { FiFolder } from "react-icons/fi";
+
+// TODO:: currently working on view libray button and modal
 
 export function ProjectsPage() {
   const [uploadModal, setUploadModal] = useState(false);
@@ -36,8 +37,17 @@ export function ProjectsPage() {
 
         <div className="flex items-center gap-2">
           <button
+            className="inline-flex items-center gap-2 rounded-md bg-zinc-900
+              px-4 py-2 text-sm font-medium text-white transition-colors
+              hover:bg-zinc-800 cursor-pointer
+            "
+          >
+            {" "}
+            View Library{" "}
+          </button>
+          <button
             title="view-project-documents"
-            onClick={()=>showDocuments()}
+            onClick={() => showDocuments()}
             className="
               inline-flex items-center gap-2 rounded-md border
               border-zinc-300 bg-white px-4 py-2 text-sm font-medium
@@ -51,7 +61,7 @@ export function ProjectsPage() {
 
           <button
             title="project-file-upload-modal"
-            onClick={()=>toggleUploadModal()}
+            onClick={() => toggleUploadModal()}
             className="
               inline-flex items-center gap-2 rounded-md bg-zinc-900
               px-4 py-2 text-sm font-medium text-white transition-colors
@@ -60,20 +70,6 @@ export function ProjectsPage() {
           >
             <MdOutlineUploadFile size={18} />
             Upload Project Files
-          </button>
-
-          <button
-            title="notifications"
-            className="rounded-md p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-          >
-            <MdOutlineNotifications size={22} />
-          </button>
-
-          <button
-            title="account"
-            className="rounded-md p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-          >
-            <MdOutlineAccountCircle size={28} />
           </button>
         </div>
       </header>

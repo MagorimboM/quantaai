@@ -35,6 +35,21 @@ CREATE TABLE "companies" (
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "company_team_members" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "companyId" TEXT,
+    "name" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
+    "position" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "company_team_members_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateTable
 CREATE TABLE "australian_trade_codes" (
     "id" TEXT NOT NULL,
@@ -389,3 +404,4 @@ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_companyId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "company_team_members" ADD CONSTRAINT "company_team_members_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;

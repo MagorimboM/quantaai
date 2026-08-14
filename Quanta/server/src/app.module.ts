@@ -6,6 +6,7 @@ import { AssistantModule } from '@/modules/assistant/assistant.module';
 import { FilesModule } from '@/modules/documents/documents.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import {SettingsModule} from "@/modules/settings/settings.module"; 
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     FilesModule,
     AuthModule,
     UsersModule,
+    SettingsModule
   ],
   controllers: [AppController],
   providers: [AppService],

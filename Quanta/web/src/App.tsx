@@ -1,6 +1,8 @@
 import { ProjectsPage } from "@/modules/projects/projectPage";
 import { Routes, Route } from "react-router";
 import { AppShell } from "@/common/components/appShell";
+import { RecipeLibraryPage } from "@/modules/recipeLibrary/recipeLibraryPage";
+import { SettingsPage } from "@/modules/settings/settingsPage";
 
 function App() {
   //! check if the user is authenticated: show appShell : show landing page or a modal message stating the user need to login or signup;
@@ -13,7 +15,8 @@ function App() {
       <Routes>
         <Route path="/dashboard" element={<div>Dashboard</div>} />
         <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/" element={<ProjectsPage />} />
+        <Route path="/recipes" element={<RecipeLibraryPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </AppShell>
   );

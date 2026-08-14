@@ -1,11 +1,6 @@
 import { useState } from "react";
 import type React from "react";
 import { MdOutlineSearch } from "react-icons/md";
-
-// TODO :: Implement search results modal; 
-// TODO :: create search data pipeline
-// TODO :: implement add to bill of quants. 
-
 export function SearchBarComp() {
   const [searchTerm, setSearchTerm] = useState("");
 
