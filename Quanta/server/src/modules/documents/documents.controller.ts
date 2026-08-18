@@ -17,7 +17,7 @@ import type {
   File,
 } from '@/modules/documents/contracts/documents.request';
 
-@Controller('files')
+@Controller(':companyId/files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
@@ -38,7 +38,7 @@ export class FilesController {
     return await this.filesService.filesUpload(request, files);
   }; 
 
-  @Get(':projectId/:companyId')
+  @Get(':projectId')
   async getFiles(@Param() request: GetFilesRequest) {
     const files = await this.filesService.getFiles(request);
     return files.map((file, index) => ({
@@ -47,7 +47,7 @@ export class FilesController {
     }));
   }; 
 
-  @Delete('/:projectId/:companyId/:documentId')
+  @Delete('/:projectId/:documentId')
   async deleteFiles(@Param() request: DeleteFilesRequest) {
     return await this.filesService.deleteFiles(request);
   }; 

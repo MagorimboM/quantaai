@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AssistantRepository } from '@/modules/assistant/repository/assistant.repository';
-import { SendMessageRequest } from '@/modules/assistant/contracts/chat.requests';
+import { SendMessageRequest } from '@/modules/assistant/contracts/chat.requests.contracts';
 import { openAi } from '@/core/Ai/openAi';
 import fs from 'fs';
 import path from 'path';

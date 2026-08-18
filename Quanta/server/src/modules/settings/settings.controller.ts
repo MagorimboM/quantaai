@@ -33,7 +33,7 @@ type Documents = {
 // TODO :: param the company id
 // TODO :: create the end points.
 
-@Controller('settings/:companyId')
+@Controller(':companyId/settings')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 

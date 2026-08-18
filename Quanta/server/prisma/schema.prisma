@@ -63,31 +63,33 @@ model CompanyTeamMembers {
   @@map("company_team_members")
 }
 
-
-
 // ============================================================
 // COMPANIES
 // John's company labels — data belongs to John not the company
+// userId    = owner of this company label
+// completed / completedAt = lifecycle tracking, distinct from isArchived
 // ============================================================
 
 model Company {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   userId       String?
   name         String
   address      String?
   city         String?
   state        String?
   postcode     String?
-  country      String?  @default("Australia")
+  country      String?    @default("Australia")
   phone        String?
   email        String?
   contactName  String?
   contactPhone String?
   contactEmail String?
   companyType  String?
-  isArchived   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isArchived   Boolean    @default(false)
+  completed    Boolean    @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   companyTradeCodes  CompanyTradeCode[]
   categories         Category[]
@@ -98,7 +100,7 @@ model Company {
   projects           Project[]
   documents          Document[]
   chatMessages       ChatMessage[]
-  companyTeamMembers CompanyTeamMembers[]  
+  companyTeamMembers CompanyTeamMembers[]
 
   @@map("companies")
 }
@@ -364,6 +366,8 @@ model Project {
   revision         String?
   startDate        DateTime?
   endDate          DateTime?
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -427,7 +431,6 @@ model AuditLog {
 
   @@map("audit_logs")
 }
-
 
 // ============================================================
 // DOCUMENTS
@@ -507,13 +510,13 @@ model DocumentEmbedding {
 // ============================================================
 
 model ChatMessage {
-  id           String   @id @default(uuid())
-  userId       String?
-  companyId    String?
-  projectId    String?
-  role         String
-  content      String
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String?
+  companyId String?
+  projectId String?
+  role      String
+  content   String
+  createdAt DateTime @default(now())
 
   company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)

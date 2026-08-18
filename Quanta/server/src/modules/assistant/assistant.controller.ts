@@ -3,9 +3,9 @@ import { AssistantService } from '@/modules/assistant/assistant.service';
 import {
   SendMessageRequest,
   GetChatHistoryRequest,
-} from '@/modules/assistant/contracts/chat.requests';
+} from '@/modules/assistant/contracts/chat.requests.contracts';
 
-@Controller('assistant')
+@Controller(':companyId/assistant')
 export class AssistantController {
   constructor(private readonly assistantService: AssistantService) {}
 

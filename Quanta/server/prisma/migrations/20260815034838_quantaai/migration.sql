@@ -13,6 +13,22 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "company_team_members" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "companyId" TEXT,
+    "name" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
+    "position" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "company_team_members_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "companies" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
@@ -29,25 +45,12 @@ CREATE TABLE "companies" (
     "contactEmail" TEXT,
     "companyType" TEXT,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
+    "completed" BOOLEAN NOT NULL DEFAULT false,
+    "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
-);
-
-CREATE TABLE "company_team_members" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT,
-    "companyId" TEXT,
-    "name" TEXT NOT NULL,
-    "lastName" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "phoneNumber" TEXT NOT NULL,
-    "position" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "company_team_members_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -215,6 +218,8 @@ CREATE TABLE "projects" (
     "revision" TEXT,
     "startDate" TIMESTAMP(3),
     "endDate" TIMESTAMP(3),
+    "completed" BOOLEAN NOT NULL DEFAULT false,
+    "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -331,6 +336,9 @@ CREATE UNIQUE INDEX "australian_trade_codes_code_key" ON "australian_trade_codes
 CREATE UNIQUE INDEX "temp_file_cache_fileName_key" ON "temp_file_cache"("fileName");
 
 -- AddForeignKey
+ALTER TABLE "company_team_members" ADD CONSTRAINT "company_team_members_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "company_trade_codes" ADD CONSTRAINT "company_trade_codes_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -404,4 +412,3 @@ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_companyId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "company_team_members" ADD CONSTRAINT "company_team_members_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
