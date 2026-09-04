@@ -1,18 +1,15 @@
 import { apiClient } from "@/core/api/axios.api";
-import type { Category, Recipe } from "@/modules/recipeLibrary/contracts/types";
+import type {
+  UserRecipeCategoriesRequest,
+  SearchRecipeRequest,
+  Recipe,
+} from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
+
+import type { UserRecipeCategoriesResponse } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 
 // TODO :: move the contracts to the contracts folders
 // TODO :: create api request to the backend on updating recipes, archiving recipes, deleting recipes
 // TODO :: create api request to the backend on creating new recipe, grab list of archived recipes.
-
-type SearchRecipeRequest = {
-  term: string;
-  page: number;
-  pageLimit: number;
-  companyId: string;
-  categoryId: string;
-  categoryName?: string | "all";
-};
 
 export async function searchRecipe(
   request: SearchRecipeRequest,
@@ -29,16 +26,6 @@ export async function searchRecipe(
   );
   return response.data;
 }
-type UserRecipeCategoriesRequest = {
-  companyId: string;
-  userId?: string;
-};
-
-type UserRecipeCategoriesResponse = {
-  companyId: string;
-  companyName: string;
-  categories: Category[];
-};
 
 export async function getUserRecipeCategories(
   request: UserRecipeCategoriesRequest,

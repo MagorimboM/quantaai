@@ -1,16 +1,4 @@
-/**
- * Recipe Library Page
- *
- * - owns recipeListState / setRecipeListState and categoryListState / setCategoryListState —
- *   this page is where both live, everything below just receives them as props
- * - on mount: fetch the most-used recipes, overwrite recipeListState with the response
- * - on mount: fetch the category list, overwrite categoryListState with the response
- * - renders Recipe Category and passes it categoryListState, setRecipeListState
- * - renders Recipe List and passes it recipeListState, setRecipeListState
- * - renders Search Bar and passes it setRecipeListState
- *
- * - Args: none (top of the tree — this is where the state is created, not received)
- */
+
 
 import { useState, useEffect } from "react";
 import { getUserRecipeCategories } from "@/modules/recipeLibrary/api/api";
