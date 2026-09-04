@@ -14,7 +14,7 @@ function App() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/dashboard" element={<> err body in the club get tipsy</>} />
+        <Route path="/dashboard" element={<BillOfQuantsPage/>} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/recipes" element={<RecipeLibraryPage />} />
         <Route path="/settings" element={<SettingsPage />} />

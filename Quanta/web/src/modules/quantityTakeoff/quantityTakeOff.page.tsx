@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   getProjectBillOfQuantities,
   updateLineItem,
@@ -19,38 +19,22 @@ import { ConfirmDeletionModal } from "@/modules/quantityTakeoff/components/confi
 import { StartAfreshModalConfirmation } from "@/modules/quantityTakeoff/components/startAfreshModal";
 import { SavingBillOfQuantsModal } from "@/modules/quantityTakeoff/components/savingModal";
 
-// TODO :: replace comp, proj and user id with dynamic variables
-// TODO :: move the contracts to their folder
-// TODO :: create a keyDown function for search input
-
 export type LineItemId = {
   id: string;
 };
 
 export function BillOfQuantsPage() {
-  // Full line items currently on this project's Bill of Quantities.
   const [LineItems, setLineItems] = useState<GetBillOfQuantsResponse[]>([]);
-
-  // Lightweight -- only ids, not full line item objects -- tracks which
-  // rows are checked for bulk deletion. Kept separate from LineItems so
-  // we're never duplicating full recipe/material data just to mark a row.
   const [deletedLineItems, setDeletedLineItems] = useState<LineItemId[]>([]);
-
-  // Toggles the "confirm delete selected items" modal on/off.
   const [showDeletedSelectedItems, setShowDeletedSelectedItems] =
     useState<boolean>(false);
-
-  // Toggles the "confirm start project afresh" modal on/off.
   const [showStartAfreshConfirmation, setShowStartAfreshConfirmation] =
     useState<boolean>(false);
-
-  // Toggles the "saving..." progress modal while saveBillOfQuants runs.
   const [showSavingModal, setShowSavingModal] = useState<boolean>(false);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // On mount: load this project's existing line items from the backend.
   useEffect(() => {
     async function getProjectBillOfQuants() {
-      // TODO :: replace the companyId and ProjectId with dynamic data.
       const response = await getProjectBillOfQuantities({
         companyId: "seed-company-001",
         projectId: "seed-proj-001",
@@ -65,16 +49,17 @@ export function BillOfQuantsPage() {
     getProjectBillOfQuants();
   }, []);
 
-  async function searchBillOfQuants(
+  function searchBillOfQuants(
     event: React.ChangeEvent<HTMLInputElement>,
     page: number,
   ) {
-    const searchedTerm = event.target.value;
-    // remove any white spaces
-    searchedTerm.trim();
+    const searchedTerm = event.target.value.trim();
 
-    // wait for 400 ms before doing something
-    setTimeout(async () => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
       const results = await getProjectBillOfQuantities({
         companyId: "seed-company-001",
         projectId: "seed-proj-001",
@@ -83,25 +68,10 @@ export function BillOfQuantsPage() {
         limit: 10,
       });
 
-      console.log(results);
       setLineItems(results);
-      // when the search bar is empty
-
-      if (searchedTerm.length == 0) {
-        const results = await getProjectBillOfQuantities({
-          companyId: "seed-company-001",
-          projectId: "seed-proj-001",
-          query: "",
-          page: 1,
-          limit: 10,
-        });
-
-        setLineItems(results);
-      }
     }, 400);
   }
 
-  // Opens/closes the Start Afresh confirmation modal (acts as a toggle).
   async function showStartAfreshModal() {
     if (showStartAfreshConfirmation == true) {
       setShowStartAfreshConfirmation(false);
@@ -112,9 +82,6 @@ export function BillOfQuantsPage() {
     setShowStartAfreshConfirmation(true);
   }
 
-  // Persists every current line item to the backend. Shows the saving
-  // modal for the duration of the request so the user gets feedback
-  // while the save is in flight.
   async function saveBillOfQuants() {
     setShowSavingModal(true);
     const response = await updateLineItem({
@@ -132,36 +99,26 @@ export function BillOfQuantsPage() {
       })),
       projectId: "seed-proj-001",
     });
-    // close the saving modal
     setShowSavingModal(false);
     return;
   }
 
-  // Marks the project's status as completed on the backend.
   async function completeTakeOff() {
-    // send all the items to be saved to the database..
     const response = await updateProjectStatus({
       companyId: "seed-company-001",
       completed: true,
       projectId: "seed-proj-001",
     });
 
-    // click that the object has been completed.
-
     if (response) {
       return;
     }
   }
 
-  // Opens the "confirm delete selected items" modal.
   async function deleteSelectedItems() {
     setShowDeletedSelectedItems(true);
   }
 
-  // Want: is EVERY current line item currently marked for deletion?
-  // Drives the header row's "select all" checkbox state. Checked by
-  // actual id membership, not array length, so it stays correct even if
-  // items were swapped rather than just added/removed.
   function areAllLineItemsInDeletedList() {
     if (LineItems.length === 0) return false;
     return LineItems.every((lineItem) =>
@@ -171,8 +128,6 @@ export function BillOfQuantsPage() {
     );
   }
 
-  // Header "select all" checkbox handler: if everything is already
-  // selected, clear the selection entirely; otherwise select everything.
   function addAllTodDeleteList() {
     if (areAllLineItemsInDeletedList()) {
       setDeletedLineItems([]);
@@ -183,10 +138,6 @@ export function BillOfQuantsPage() {
 
   return (
     <>
-      {/* Top toolbar: page title + primary actions (preview, delete, start
-          afresh, save, complete). Buttons disable themselves whenever
-          LineItems is empty, since none of these actions make sense with
-          nothing on the page yet. */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-background text-foreground">
         <div className="flex items-center p-2 gap-6">
           <button className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-foreground hover:text-background active:scale-95 cursor-pointer">
@@ -212,7 +163,6 @@ export function BillOfQuantsPage() {
           >
             <MdOutlinePreview size={18} /> Preview Quantities
           </button>
-          {/* Only enabled once at least one row is checked for deletion. */}
           <button
             disabled={deletedLineItems.length > 0 ? false : true}
             onClick={() => deleteSelectedItems()}
@@ -256,8 +206,6 @@ export function BillOfQuantsPage() {
         </div>
       </div>
 
-      {/* Search bar — filters the line items list (wiring not yet
-          implemented, input is currently uncontrolled). */}
       <div className="flex flex-row justify-start border-b p-2 bg-background">
         <div className="flex flex-row items-center gap-2 border border-input rounded-md px-2 py-1.5 bg-background">
           <MdOutlineSearch size={20} className="text-muted-foreground" />
@@ -270,9 +218,6 @@ export function BillOfQuantsPage() {
         </div>
       </div>
 
-      {/* Main Bill of Quantities table — header defines the column grid
-          template, each LineItem row must use the exact same grid-cols
-          value or columns will drift out of alignment. */}
       <div
         title="bill-of-quants"
         className="flex-1 bg-background text-foreground"
@@ -284,9 +229,6 @@ export function BillOfQuantsPage() {
                 SELECT
               </th>
               <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                {/* "Select all" checkbox — checked state is derived, not
-                    stored separately, so it can't drift out of sync with
-                    the actual per-row selections below. */}
                 <input
                   checked={areAllLineItemsInDeletedList()}
                   onChange={() => addAllTodDeleteList()}
@@ -334,8 +276,6 @@ export function BillOfQuantsPage() {
         </table>
       </div>
 
-      {/* Confirm-delete modal — only rendered while the user has the
-          delete flow open. */}
       {showDeletedSelectedItems ? (
         <ConfirmDeletionModal
           billOfQuantsUpdater={setLineItems}
@@ -347,8 +287,6 @@ export function BillOfQuantsPage() {
         />
       ) : null}
 
-      {/* Confirm-start-afresh modal — wipes all takeoff items for this
-          project on confirm. */}
       {showStartAfreshConfirmation ? (
         <StartAfreshModalConfirmation
           openCloseModal={showStartAfreshModal}
@@ -357,8 +295,6 @@ export function BillOfQuantsPage() {
         />
       ) : null}
 
-      {/* Saving progress modal — visible only while saveBillOfQuants's
-          request is in flight. */}
       <SavingBillOfQuantsModal show={showSavingModal} />
     </>
   );

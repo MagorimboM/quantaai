@@ -1,34 +1,7 @@
 import { Controller, Get, Put, Delete, Body, Param } from '@nestjs/common';
 import { SettingsService } from '@/modules/settings/settings.service';
+import type {CompanyInformationRequest, TeamMemberRequest} from "@/modules/settings/contracts/settings.requests.contracts"
 
-type Address = {
-  state: string;
-  city: string;
-  postCode: string;
-  street: string;
-  houseNumber: number | null;
-};
-
-type CompanyInformation = {
-  companyId: string;
-  companyName: string;
-  companyAddress: Address;
-};
-
-type TeamMember = {
-  id: string;
-  name: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  position: string;
-};
-
-type Documents = {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-};
 
 // TODO :: param the company id
 // TODO :: create the end points.
@@ -57,16 +30,16 @@ export class SettingsController {
   }
   
   @Put('/companyProfile')
-  async updateCompanyProfile(@Body() request: CompanyInformation) {
+  async updateCompanyProfile(@Body() request: CompanyInformationRequest) {
     return await this.settingsService.updateCompanyProfile(request);
   }
   @Put('/companyTeamMember')
-  async updateCompanyTeam(@Body() request: TeamMember) {
+  async updateCompanyTeam(@Body() request: TeamMemberRequest) {
     return await this.settingsService.updateCompanyTeam(request);
   }
 
   @Delete('/companyTeamMember')
-  async deleteCompanyTeamMember(@Body() request: TeamMember) {
+  async deleteCompanyTeamMember(@Body() request: TeamMemberRequest) {
     return await this.settingsService.deleteCompanyTeamMember(request);
   }
 }

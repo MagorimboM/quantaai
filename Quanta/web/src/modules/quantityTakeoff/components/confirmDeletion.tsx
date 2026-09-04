@@ -38,27 +38,28 @@ export function ConfirmDeletionModal({
   );
 
   async function deleteFiles() {
-    // close modal
     setShowDeletingItems(true);
-    // run up an api
-    const response = await deleteLineItem({
-      companyId: "seed-company-001",
-      projectId: "seed-proj-001",
-      lineItems: deletedLineItemsList,
-    });
 
-    if (response.length == 0) {
-      return;
-    }
-
-    for (const eachDeletedItem of response) {
-      billOfQuantsUpdater((prev: GetBillOfQuantsResponse[]) => {
-        prev.filter((lineItem) => lineItem.id == eachDeletedItem.id);
+    try {
+      const response = await deleteLineItem({
+        companyId: "seed-company-001",
+        projectId: "seed-proj-001",
+        lineItems: deletedLineItemsList,
       });
-    }
 
-    openClose(false);
-    setShowDeletingItems(false);
+      if (response.length === 0) {
+        setShowDeletingItems(false);
+        return;
+      }
+      const deletedIds = new Set(response.map((item) => item.id));
+      billOfQuantsUpdater((prev: GetBillOfQuantsResponse[]) =>
+        prev.filter((lineItem) => !deletedIds.has(lineItem.id)),
+      );
+
+      openClose(false);
+    } finally {
+      setShowDeletingItems(false);
+    }
   }
 
   function closeModal() {

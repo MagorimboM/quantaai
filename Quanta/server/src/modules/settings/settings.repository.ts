@@ -1,39 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import { NotFoundException } from '@nestjs/common';
-
-type Address = {
-  state: string;
-  city: string;
-  postCode: string;
-  street: string;
-  houseNumber: number | null;
-};
-
-type CompanyInformation = {
-  companyId: string;
-  companyName: string;
-  companyAddress: Address;
-};
-
-type TeamMember = {
-  id: string;
-  name: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  position: string;
-};
-
-type Documents = {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-};
+import type {
+  CompanyInformationRequest,
+  TeamMemberRequest,
+  GetCompanyTeamRequest,
+  GetCompanyInformationRequest,
+} from '@/modules/settings/contracts/settings.requests.contracts';
 
 @Injectable()
 export class SettingsRepository {
-  async getCompanyInformation(request: { companyId: string }) {
+  async getCompanyInformation(request: GetCompanyInformationRequest) {
     const company = await prisma.company.findUnique({
       where: { id: request.companyId, isArchived: false },
     });
@@ -45,7 +22,7 @@ export class SettingsRepository {
     return company;
   }
 
-  async getCompanyTeam(request: { companyId: string }) {
+  async getCompanyTeam(request: GetCompanyTeamRequest) {
     return await prisma.companyTeamMembers.findMany({
       where: { companyId: request.companyId },
     });
@@ -59,7 +36,7 @@ export class SettingsRepository {
     });
   }
 
-  async updateCompanyProfile(request: CompanyInformation) {
+  async updateCompanyProfile(request: CompanyInformationRequest) {
     return await prisma.company.update({
       where: { id: request.companyId },
       data: {
@@ -69,7 +46,7 @@ export class SettingsRepository {
     });
   }
 
-  async updateCompanyTeam(request: TeamMember) {
+  async updateCompanyTeam(request: TeamMemberRequest) {
     return await prisma.companyTeamMembers.update({
       where: { id: request.id },
       data: {
@@ -82,7 +59,7 @@ export class SettingsRepository {
     });
   }
 
-  async deleteCompanyTeamMember(request: TeamMember) {
+  async deleteCompanyTeamMember(request: TeamMemberRequest) {
     return await prisma.companyTeamMembers.delete({
       where: {
         id: request.id,

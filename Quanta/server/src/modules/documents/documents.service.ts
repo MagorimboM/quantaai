@@ -23,7 +23,6 @@ export class FilesService {
   async filesUpload(request: UploadFilesRequest, files: File[]) {
     const savedDocuments: any[] = [];
     for (const eachFile of files) {
-      // save the files to the bucket
       const url = await this.documentsS3Bucket.insertFileToS3Bucket({
         fileName: eachFile.originalName,
         body: eachFile.buffer,
