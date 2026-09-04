@@ -104,7 +104,7 @@ export function FileModalComp({ open, onClose }: FileModalProps) {
                 Personal Documents
               </p>
               {documents.map((document) => {
-                if (document.document.documentType === "personalDocument") {
+                if (document.document.documentType === "userDocument") {
                   return (
                     <ViewFileModalComp
                       key={document.document.id}

@@ -248,6 +248,8 @@ VALUES
 
 -- ============================================================
 -- TAKEOFF ITEMS  (link recipes to projects)
+-- Deterministic IDs (instead of gen_random_uuid()) so e2e tests
+-- can reference specific rows directly.
 -- ============================================================
 
 INSERT INTO takeoff_items (
@@ -255,16 +257,20 @@ INSERT INTO takeoff_items (
   description, measurement, unit, notes, "createdAt", "updatedAt"
 )
 VALUES
-  (gen_random_uuid(), 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'North elevation brick wall', 40.8, 'm²', 'Window openings deducted', NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Ground floor slab',          85.0, 'm²', NULL,                       NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-001', 'seed-company-001', 'seed-proj-002', 'seed-rec-002', 'Extension floor slab',       28.5, 'm²', NULL,                       NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-002', 'seed-company-002', 'seed-proj-003', 'seed-rec-003', 'Main shed roof',            420.0, 'm²', NULL,                       NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-002', 'seed-company-002', 'seed-proj-004', 'seed-rec-003', 'Full warehouse reroof',     610.0, 'm²', 'Removed old asbestos sheet', NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-003', 'seed-company-003', 'seed-proj-005', 'seed-rec-004', 'Boardwalk slab section 1',  120.0, 'm²', NULL,                       NOW(), NOW()),
-  (gen_random_uuid(), 'seed-user-003', 'seed-company-003', 'seed-proj-006', 'seed-rec-004', 'Driveway + carport slab',    32.0, 'm²', NULL,                       NOW(), NOW());
-
--- ============================================================
--- DONE
--- ============================================================
+  ('seed-takeoff-101', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'North elevation brick wall',    40.8, 'm²', 'Window openings deducted',      NOW(), NOW()),
+  ('seed-takeoff-102', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'South elevation brick wall',    35.2, 'm²', NULL,                            NOW(), NOW()),
+  ('seed-takeoff-103', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'East elevation brick wall',     41.5, 'm²', 'Door opening deducted',         NOW(), NOW()),
+  ('seed-takeoff-104', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'West elevation brick wall',     38.2, 'm²', NULL,                            NOW(), NOW()),
+  ('seed-takeoff-105', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'North elevation brick wall',    40.8, 'm²', 'Window openings deducted',      NOW(), NOW()),
+  ('seed-takeoff-106', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Ground floor concrete slab',    85.0, 'm²', 'Including garage slab',         NOW(), NOW()),
+  ('seed-takeoff-107', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Garage slab',                   24.0, 'm²', NULL,                            NOW(), NOW()),
+  ('seed-takeoff-108', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Front porch slab',               9.8, 'm²', 'Includes step-down to path',    NOW(), NOW()),
+  ('seed-takeoff-109', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Ground floor concrete slab',    85.0, 'm²', 'Including garage slab',         NOW(), NOW()),
+  ('seed-takeoff-110', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'Rear boundary wall',            52.0, 'm²', NULL,                            NOW(), NOW()),
+  ('seed-takeoff-111', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Rear patio slab',               33.5, 'm²', 'Slight fall to garden for drainage', NOW(), NOW()),
+  ('seed-takeoff-112', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-001', 'Side boundary wall',            29.0, 'm²', NULL,                            NOW(), NOW()),
+  ('seed-takeoff-113', 'seed-user-001', 'seed-company-001', 'seed-proj-001', NULL,           'Site clearance and levelling', 120.0, 'm²', 'No recipe assigned yet — pending scope confirmation', NOW(), NOW()),
+  ('seed-takeoff-114', 'seed-user-001', 'seed-company-001', 'seed-proj-001', NULL,           'Fence removal and disposal',    18.0, 'm',  'No recipe assigned yet',        NOW(), NOW()),
+  ('seed-takeoff-115', 'seed-user-001', 'seed-company-001', 'seed-proj-001', 'seed-rec-002', 'Ground floor concrete slab',    85.0, 'm²', 'Including garage slab',         NOW(), NOW());
 
 SELECT 'Quanta seed complete!' AS status;

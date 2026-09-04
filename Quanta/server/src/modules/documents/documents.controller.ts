@@ -15,7 +15,7 @@ import type {
   GetFilesRequest,
   DeleteFilesRequest,
   File,
-} from '@/modules/documents/contracts/documents.request';
+} from '@/modules/documents/contracts/documents.request.contracts';
 
 @Controller(':companyId/files')
 export class FilesController {

@@ -62,7 +62,10 @@ export class SettingsRepository {
   async updateCompanyProfile(request: CompanyInformation) {
     return await prisma.company.update({
       where: { id: request.companyId },
-      data: { name: request.companyName, Address: request.companyAddress },
+      data: {
+        name: request.companyName,
+        address: `${request.companyAddress.houseNumber}, ${request.companyAddress.street}, ${request.companyAddress.city}, ${request.companyAddress.state}, ${request.companyAddress.postCode}`,
+      },
     });
   }
 

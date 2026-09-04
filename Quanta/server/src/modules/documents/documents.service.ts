@@ -6,12 +6,12 @@ import type {
   DeleteFilesRequest,
   UploadFilesRequest,
   File,
-} from '@/modules/documents/contracts/documents.request';
+} from '@/modules/documents/contracts/documents.request.contracts';
 
 import type {
   GetFilesResponse,
   DeleteFileResponse,
-} from '@/modules/documents/contracts/documents.response';
+} from '@/modules/documents/contracts/documents.response.contracts';
 
 @Injectable()
 export class FilesService {

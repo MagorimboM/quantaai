@@ -12,6 +12,8 @@ async function bootstrap() {
     whitelist: true,     // strips unknown fields
     transform: true,     // auto transforms types
   }));
+
+  
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

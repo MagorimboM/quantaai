@@ -10,10 +10,11 @@ import type {
 } from "@/modules/projects/contracts/api.requests";
 
 export async function sendUploadedFilesToBackEnd(
+  companyId: string,
   formData?: FormData,
 ): Promise<projectUploadsResponse> {
   const response = await apiClient.post<projectUploadsResponse>(
-    "files/upload",
+    `${companyId}/files/upload`,
     formData,
     {
       headers: {
@@ -29,7 +30,7 @@ export async function getFiles(
   request: GetFilesRequest,
 ): Promise<GetFilesResponse[]> {
   const response = await apiClient.get(
-    `/files/${request.projectId}/${request.companyId}`,
+    `/${request.companyId}/files/${request.projectId}`,
   );
   console.log({ message: "the bytes from backend", bytes: response.data });
   return response.data;
@@ -39,7 +40,7 @@ export async function deleteFiles(
   request: DeleteFilesRequest,
 ): Promise<DocumentDeletionResponse> {
   const response = await apiClient.delete(
-    `files/${request.projectId}/${request.companyId}/${request.documentId}`,
+    `${request.companyId}/files/${request.projectId}/${request.documentId}`,
   );
   return response.data;
 }

@@ -6,11 +6,11 @@ import type {
   DeleteFilesRequest,
   GetFilesRequest,
   SaveNewFileRequest,
-} from '@/modules/documents/contracts/documents.request';
+} from '@/modules/documents/contracts/documents.request.contracts';
 import type {
   GetFilesResponse,
   DeleteFileResponse,
-} from '@/modules/documents/contracts/documents.response';
+} from '@/modules/documents/contracts/documents.response.contracts';
 
 @Injectable()
 export class FilesRepository {

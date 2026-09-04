@@ -48,11 +48,14 @@ export class AssistantRepository {
     userId?: string;
     projectId?: string;
   }) {
-    return await prisma.chatMessage.findMany({
+
+    const chatHistory =  await prisma.chatMessage.findMany({
       where: { projectId, userId },
       orderBy: { createdAt: 'asc' },
       take: 20,
     });
+
+    return chatHistory
   }
 
   async getProjectCompanyPersonalDocuments({
@@ -64,7 +67,7 @@ export class AssistantRepository {
     companyId?: string;
     userId?: string;
   }) {
-    return await prisma.$transaction(async (tx) => {
+    const response = await prisma.$transaction(async (tx) => {
       const documents: {
         nameOfDocument: string;
         content: string;
@@ -73,17 +76,14 @@ export class AssistantRepository {
 
       const projectDocs = await tx.document.findMany({
         where: { projectId: projectId, userId: userId },
-        take: 1,
       });
 
       const companyDocs = await tx.document.findMany({
         where: { companyId, projectId: null, userId: userId },
-        take: 1,
       });
 
       const userDocs = await tx.document.findMany({
         where: { userId: userId, companyId: null, projectId: null },
-        take: 1,
       });
 
       async function reconstructContent(
@@ -109,5 +109,7 @@ export class AssistantRepository {
 
       return documents;
     });
+
+    return response
   }; 
 }

@@ -3,11 +3,11 @@ import { Sparkles, X, Send } from "lucide-react";
 import {
   getChatHistory,
   sendUserMessage,
-} from "@/modules/AiAssistant/api/ai.assistant.api";
+} from "@/modules/aiAssistant/api/ai.assistant.api";
 
 type Message = {
   id?: string;
-  role: "user" | "ai";
+  role: "user" | "assistant";
   content: string;
 };
 
@@ -91,7 +91,7 @@ export function AiAssistant() {
                 key={index}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.role === "ai" && (
+                {msg.role === "assistant" && (
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
                   </div>

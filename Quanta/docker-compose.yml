@@ -40,6 +40,12 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
+      # ADDED: without this, the ./server:/app bind mount above overwrites
+      # /app/generated/prisma (the Prisma Client output built into the
+      # image during `docker build`) with whatever's on the host --
+      # usually nothing, since it's typically gitignored. Same protective
+      # trick as the node_modules line above, just for the generated client.
+      - /app/generated
     networks:
       - quanta_network
 

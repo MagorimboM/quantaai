@@ -5,6 +5,21 @@ import { openAi } from '@/core/Ai/openAi';
 import fs from 'fs';
 import path from 'path';
 
+type  ChatHistoryResponse = {
+ id: string;
+ userId: string | null;
+ companyId: string | null;
+ projectId: string | null;
+ role: string;
+ content: string;
+ createdAt: Date;
+}[]
+
+type ProjectCompanyPersonalDocumentsResponse = {
+ nameOfDocument: string;
+ content: string;
+ documentType: string;
+}[]
 @Injectable()
 export class AssistantService {
   constructor(
@@ -34,19 +49,19 @@ export class AssistantService {
     // USER ASKS QUESTION
     await this.assistantRepository.saveMessage({
       message: request.userMessage,
-      userId: request.userId,
+      userId: userId,
       projectId: request.projectId,
       companyId: request.companyId,
       role: request.role,
     });
     // last 15 messages reversed to chronological order for the prompt
-    const chatHistory: any[] = await this.assistantRepository.getChatHistory({
+    const chatHistory: ChatHistoryResponse = await this.assistantRepository.getChatHistory({
       projectId: request.projectId,
       userId: userId,
     });
 
     // pull all documents scoped to this user/company/project
-    const documents = await this.assistantRepository.getProjectCompanyPersonalDocuments({
+    const documents:ProjectCompanyPersonalDocumentsResponse = await this.assistantRepository.getProjectCompanyPersonalDocuments({
       projectId: request.projectId,
       companyId: request.companyId,
       userId: userId,
@@ -90,7 +105,7 @@ export class AssistantService {
           content: filledPrompt,
         },
         ...chatHistory.map((eachMessage) => ({
-          role: eachMessage.role,
+          role: eachMessage.role as 'user' | 'assistant' | 'system',
           content: eachMessage.content,
         })),
         {
@@ -110,7 +125,7 @@ export class AssistantService {
     });
 
     return {
-      role: 'ai',
+      role: 'assistant',
       content: response.output_text,
       savedAiMessage: savedLLMResponse,
     };

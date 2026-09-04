@@ -1,14 +1,13 @@
 import { AiAssistant } from "@/modules/aiAssistant/AiAssistant";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UploadModalComp } from "@/modules/projects/components/uploadModalComp";
 import { SearchBarComp } from "@/modules/projects/components/searchBarComp";
 import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 import { MdOutlineUploadFile } from "react-icons/md";
-import { MdOutlineNotifications } from "react-icons/md";
-import { MdOutlineAccountCircle } from "react-icons/md";
 import { FiFolder } from "react-icons/fi";
 
 // TODO:: currently working on view libray button and modal
+// TODO :: onclick the card -> navigate to bill of quantities...
 
 export function ProjectsPage() {
   const [uploadModal, setUploadModal] = useState(false);
@@ -26,6 +25,10 @@ export function ProjectsPage() {
     }
     setViewListOfDocuments(true);
   }
+
+
+  // on mount get projects
+  useEffect(() => {}, []);
 
   return (
     <div className="flex h-full w-full flex-col bg-background text-foreground">

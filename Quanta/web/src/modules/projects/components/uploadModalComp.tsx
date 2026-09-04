@@ -28,7 +28,7 @@ export function UploadModalComp({ closeModal }: UploadModalProps) {
     });
 
     try {
-      const response = await sendUploadedFilesToBackEnd(formData);
+      const response = await sendUploadedFilesToBackEnd("seed-company-001", formData);
       if (response.success === true) {
         closeModal();
       }

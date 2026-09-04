@@ -18,7 +18,6 @@ import { SearchBar } from "@/modules/recipeLibrary/components/searchBar";
 import { RecipeCategoryList } from "@/modules/recipeLibrary/components/recipeCategory";
 import { RecipeList } from "@/modules/recipeLibrary/components/recipeList";
 import type { Category, Recipe } from "@/modules/recipeLibrary/contracts/types";
-import { MdNotifications, MdPerson } from "react-icons/md";
 
 // TODO :: finish off useEffect for on mount it shoots categories requests and recipe lists.
 // TODO :: New Recipe Form -> create form and connect it to the backend
