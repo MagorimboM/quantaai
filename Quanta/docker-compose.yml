@@ -13,8 +13,9 @@ services:
       - '5432:5432'
     volumes:
       - ./server/prisma/migrations/20260815034838_quantaai/migration.sql:/docker-entrypoint-initdb.d/01_migrate.sql
-      - ./server/prisma/vector.sql:/docker-entrypoint-initdb.d/02_vector.sql
-      - ./server/prisma/seed.sql:/docker-entrypoint-initdb.d/03_seed.sql
+      - ./server/prisma/migrations/20260905105302_quantaai/migration.sql:/docker-entrypoint-initdb.d/02_migrate.sql
+      - ./server/prisma/vector.sql:/docker-entrypoint-initdb.d/03_vector.sql
+      - ./server/prisma/seed.sql:/docker-entrypoint-initdb.d/04_seed.sql
     networks:
       - quanta_network
     healthcheck:
@@ -40,11 +41,6 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
-      # ADDED: without this, the ./server:/app bind mount above overwrites
-      # /app/generated/prisma (the Prisma Client output built into the
-      # image during `docker build`) with whatever's on the host --
-      # usually nothing, since it's typically gitignored. Same protective
-      # trick as the node_modules line above, just for the generated client.
       - /app/generated
     networks:
       - quanta_network

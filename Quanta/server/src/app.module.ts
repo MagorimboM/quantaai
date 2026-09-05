@@ -10,6 +10,7 @@ import { SettingsModule } from '@/modules/settings/settings.module';
 import { DashBoardModule } from '@/modules/dashboard/dashboard.module';
 import { ProjectsModule } from '@/modules/projects/projects.module';
 import { BillOfQuantsModule } from '@/modules/billOfQuants/boq.module';
+import { RecipeLibraryModule } from '@/modules/recipeLibrary/recipeLibrary.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { BillOfQuantsModule } from '@/modules/billOfQuants/boq.module';
     DashBoardModule,
     ProjectsModule,
     BillOfQuantsModule,
+    RecipeLibraryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -143,14 +143,17 @@ VALUES
 
 -- ============================================================
 -- RECIPES
+-- categoryId now required on every recipe (one category has many
+-- recipes). Mapped to match the same category each recipe's own
+-- materials/labour already belong to.
 -- ============================================================
 
-INSERT INTO recipes (id, "userId", "companyId", name, description, unit, "isArchived", "createdAt", "updatedAt")
+INSERT INTO recipes (id, "userId", "companyId", "categoryId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
-  ('seed-rec-001', 'seed-user-001', 'seed-company-001', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
-  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
-  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW());
+  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
+  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
+  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 

@@ -1,11 +1,9 @@
-
-
 import { useState, useEffect } from "react";
 import { getUserRecipeCategories } from "@/modules/recipeLibrary/api/api";
 import { SearchBar } from "@/modules/recipeLibrary/components/searchBar";
 import { RecipeCategoryList } from "@/modules/recipeLibrary/components/recipeCategory";
 import { RecipeList } from "@/modules/recipeLibrary/components/recipeList";
-import type { Category, Recipe } from "@/modules/recipeLibrary/contracts/types";
+import type { Category, Recipe } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 
 // TODO :: finish off useEffect for on mount it shoots categories requests and recipe lists.
 // TODO :: New Recipe Form -> create form and connect it to the backend
@@ -33,7 +31,6 @@ export function RecipeLibraryPage() {
   return (
     <div className="flex flex-1 flex-col bg-background text-foreground">
       <header className="w-full flex flex-col gap-4 border- px-4 py-3">
-        {/* Title + page actions */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <h1 className="font-bold text-3xl">Recipe Library</h1>
@@ -65,7 +62,6 @@ export function RecipeLibraryPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex flex-1 gap-6 p-4">
         <RecipeCategoryList
           recipeListUpdater={setRecipeList}

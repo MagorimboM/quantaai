@@ -1,15 +1,3 @@
-/**
- * Recipe Category
- *
- * - read categoryListState (global) → { categoryName, categoryId, numberOfRecipes }[]
- * - display the list of categories
- * - on click: send a network request for the recipes belonging to that category
- * - get response from network: recipeListState-shaped array
- * - overwrite recipeListState (global) with the response
- *
- * - Args: categoryListState (global), setRecipeListState (global updater)
- */
-
 import { getCategoryRecipe } from "@/modules/recipeLibrary/api/api";
 import type {
   Category,
@@ -30,6 +18,8 @@ export function RecipeCategoryList({
     const response = await getCategoryRecipe({
       categoryId: request.categoryId,
       companyId: request.companyId,
+      page: 1,
+      limit: 10,
     });
 
     recipeListUpdater(response);

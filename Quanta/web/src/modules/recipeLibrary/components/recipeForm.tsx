@@ -1,35 +1,17 @@
-/**
- * Recipe Form
- *
- * - receives one recipe (prop, forwarded via RecipeCard) →
- *   { recipeId, categoryId, recipeName, category, description, tags, materials[] + quantities }
- * - shows the recipe's current values in the form
- * - user edits the values
- * - send the updated recipe over the network
- * - receive the updated recipe back from the network
- * - patch that single recipe inside recipeListState by recipeId
- *   (NOT an overwrite of the whole list — only Search Bar / Recipe Category do that)
- *
- * - Args (from RecipeCard): recipe (single item), setRecipeListState (global updater)
- */
-
 import { useEffect, useState } from "react";
 import { getUserRecipeCategories } from "@/modules/recipeLibrary/api/api";
 import type {
   Category,
   Materials,
-  SetRecipeListState,
-} from "@/modules/recipeLibrary/contracts/types";
+} from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
+import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import { MdClose } from "react-icons/md";
 import { FiTrash2 } from "react-icons/fi";
 
-// TODO :: move contracts to the contracts folder
 // TODO :: do sanitization of the input -> throw errors and message if user inputs invalid data. 
 // TODO :: connect api requests : update recipe to the backend
 // TODO :: import or implement the confirmation that the request was executed successfully at the backend. 
 // TODO :: filter out the recipe, with the old data from the list and replace it with the new updated recipe. 
-
-
 
 type EditableRecipe = {
   recipeId: string;
@@ -75,15 +57,12 @@ export function RecipeForm({
 
   useEffect(() => {
     async function getCategoryList() {
-      // use the companyId and userId to grab category list
       const response = await getUserRecipeCategories({
         companyId: "seed-company-001",
       });
-      // filter out the categoryId from the list that has been brought back
       const filteredCategories = response.categories.filter(
         (category) => category.categoryId !== categoryId,
       );
-      // save the category list into state
       setCategoryList(filteredCategories);
     }
 

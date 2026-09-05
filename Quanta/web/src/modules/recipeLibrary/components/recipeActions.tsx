@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RecipeForm } from "@/modules/recipeLibrary/components/recipeForm";
-import type { Materials, SetRecipeListState } from "@/modules/recipeLibrary/contracts/types";
+import type { Materials } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
+import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import { FiEdit2, FiArchive, FiTrash2 } from "react-icons/fi";
 
 // TODO :: archive recipe -> connect it to the backend
@@ -8,7 +9,6 @@ import { FiEdit2, FiArchive, FiTrash2 } from "react-icons/fi";
 // TODO :: edit recipe -> connect it to the backend
 // TODO :: asks for user confirmation before deleting the recipe -> show deletion confirmation -> remove it from the recipe list
 // TODO :: show confirmation when recipe is archived, remove it from the recipe list. 
-
 
 export function RecipeActions({
   recipeId,

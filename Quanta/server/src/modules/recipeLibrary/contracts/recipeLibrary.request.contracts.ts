@@ -5,5 +5,12 @@ export type GetCategoryRecipeRequest = {
 
 export type UserRecipeCategoriesRequest = {
   companyId: string;
-  userId?: string;
+};
+
+export type SearchRecipeRequest = {
+  companyId: string;
+  categoryId: string;
+  term: string;
+  limit: number;
+  page: number;
 };

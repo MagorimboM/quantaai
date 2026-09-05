@@ -1,17 +1,6 @@
-/**
- * Recipe List
- * import RecipeCard Component
- *
- * - read recipeListState (global) and render one RecipeCard per recipe
- * - pass each individual recipe down to RecipeCard as a prop (not the whole list)
- * - forward setRecipeListState down to RecipeCard, so edits/archives further
- *   down the tree can still update the global list
- *
- * - Args: recipeListState (global), setRecipeListState (global updater)
- */
-
 import { RecipeCard } from "@/modules/recipeLibrary/components/recipeCard";
-import type { Recipe, SetRecipeListState } from "@/modules/recipeLibrary/contracts/types";
+import type { Recipe } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
+import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 
 export function RecipeList({
   recipeList,

@@ -2,10 +2,11 @@ import { apiClient } from "@/core/api/axios.api";
 import type {
   UserRecipeCategoriesRequest,
   SearchRecipeRequest,
-  Recipe,
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
-
-import type { UserRecipeCategoriesResponse } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
+import type {
+  Recipe,
+  UserRecipeCategoriesResponse,
+} from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 
 // TODO :: move the contracts to the contracts folders
 // TODO :: create api request to the backend on updating recipes, archiving recipes, deleting recipes
@@ -15,14 +16,7 @@ export async function searchRecipe(
   request: SearchRecipeRequest,
 ): Promise<Recipe[]> {
   const response = await apiClient.get(
-    `/companies/${request.companyId}/categories/${request.categoryId}/recipes/search`,
-    {
-      params: {
-        query: request.term,
-        page: request.page,
-        limit: request.pageLimit,
-      },
-    },
+    `recipe-library/companies/${request.companyId}/categories/${request.categoryId}/recipes/search?term=${request.term}&page=${request.page}&limit=${request.limit}`,
   );
   return response.data;
 }
@@ -31,7 +25,7 @@ export async function getUserRecipeCategories(
   request: UserRecipeCategoriesRequest,
 ): Promise<UserRecipeCategoriesResponse> {
   const response = await apiClient.get(
-    `/companies/${request.companyId}/categories`,
+    `recipe-library/companies/${request.companyId}/categories`,
   );
 
   return response.data;
@@ -40,9 +34,11 @@ export async function getUserRecipeCategories(
 export async function getCategoryRecipe(request: {
   categoryId: string;
   companyId: string;
+  page: number;
+  limit: number;
 }): Promise<Recipe[]> {
   const response = await apiClient.get(
-    `/companies/${request.companyId}/categories/${request.categoryId}/`,
+    `recipe-library/companies/${request.companyId}/categories/${request.categoryId}/recipes?page=${request.page}&limit=${request.limit}`,
   );
 
   return response.data;

@@ -172,6 +172,7 @@ model Category {
   materials Material[]
   labour    Labour[]
   overheads Overhead[]
+  recipes   Recipe[]
 
   @@map("categories")
 }
@@ -257,12 +258,15 @@ model Overhead {
 // userId = owner
 // companyId = null  → John's personal template
 // companyId = set   → company specific recipe
+// categoryId = required — every recipe belongs to exactly one category,
+//              but a category can have many recipes (one-to-many)
 // ============================================================
 
 model Recipe {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  categoryId  String
   name        String
   description String?
   unit        String
@@ -271,6 +275,7 @@ model Recipe {
   updatedAt   DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category        Category         @relation(fields: [categoryId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]

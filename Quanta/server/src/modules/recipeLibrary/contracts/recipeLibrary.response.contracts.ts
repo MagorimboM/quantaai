@@ -28,3 +28,5 @@ export type UserRecipeCategoriesResponse = {
   companyName: string;
   categories: Category[];
 };
+
+

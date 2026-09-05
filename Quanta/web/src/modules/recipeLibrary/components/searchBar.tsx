@@ -1,18 +1,6 @@
-/**
- * Search Bar
- *
- * - collect user input
- * - send user input over the network
- * - get response from network: recipeListState-shaped array →
- *   { categoryName, categoryId, recipeId, recipeName, description, tags, materials[] }[]
- * - overwrite recipeListState (global) with the response
- *
- * - Args: setRecipeListState (global updater)
- */
-
 import { useState, useEffect } from "react";
 import { searchRecipe } from "@/modules/recipeLibrary/api/api";
-import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/types";
+import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import { FiSearch } from "react-icons/fi";
 
 // TODO:: Need the companyId, CategoryID from somewhere
@@ -26,26 +14,22 @@ export function SearchBar({
   const [userInput, setUserInput] = useState<string>("");
 
   useEffect(() => {
-    // don't search on an empty term
     if (userInput.length === 0) {
       return;
     }
 
-    // debounce: wait 2s of no typing before firing the request
     const debounceTimer = setTimeout(async () => {
       const response = await searchRecipe({
         companyId: "seed-company-001",
         categoryId: "seed-cat-001",
         term: userInput,
-        pageLimit: 20,
+        limit: 20,
         page: 1,
       });
       setRecipeListState(response);
       setUserInput("");
     }, 2000);
 
-    // cancel the previous timer whenever userInput changes again (or unmounts)
-    // so we don't fire one request per keystroke
     return () => clearTimeout(debounceTimer);
   }, [userInput]);
 
