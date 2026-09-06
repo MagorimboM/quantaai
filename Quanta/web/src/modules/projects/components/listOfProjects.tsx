@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getListOfProjects } from "@/modules/projects/api/api";
 import { ProjectCard } from "@/modules/projects/components/projectCard";
 
-// TODO:: fix the scoll of the list
+// TODO:: fix the scroll of the list
 // TODO :: create contracts of these pages
 
 export function ListOfProjects() {
