@@ -5,6 +5,7 @@ import { SearchBarComp } from "@/modules/projects/components/searchBarComp";
 import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 import { MdOutlineUploadFile } from "react-icons/md";
 import { FiFolder } from "react-icons/fi";
+import { ListOfProjects } from "@/modules/projects/components/listOfProjects";
 
 // TODO:: currently working on view libray button and modal
 // TODO :: onclick the card -> navigate to bill of quantities...
@@ -25,7 +26,6 @@ export function ProjectsPage() {
     }
     setViewListOfDocuments(true);
   }
-
 
   // on mount get projects
   useEffect(() => {}, []);
@@ -79,6 +79,7 @@ export function ProjectsPage() {
 
       {/* Main Content */}
       <main className="flex-1 p-4">
+        <ListOfProjects />
         <AiAssistant />
       </main>
       {/* Upload Modal — page tells it when to open and how to close */}

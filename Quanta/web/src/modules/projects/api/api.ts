@@ -22,7 +22,6 @@ export async function sendUploadedFilesToBackEnd(
       },
     },
   );
-  console.log(response.data);
   return response.data;
 }
 
@@ -42,5 +41,30 @@ export async function deleteFiles(
   const response = await apiClient.delete(
     `${request.companyId}/files/${request.projectId}/${request.documentId}`,
   );
+  return response.data;
+}
+
+export async function getListOfProjects(request: {
+  companyId: string;
+}): Promise<
+  {
+    companyId: string | null;
+    createdAt: Date;
+    description: string | null;
+    id: string;
+    name: string;
+    status: string;
+    takeoffItems: {
+      description: string;
+      id: string;
+      projectId: string;
+    }[];
+    type: string;
+    updatedAt: Date;
+  }[]
+> {
+  const response = await apiClient.get(`${request.companyId}/projects`);
+  console.log("here is the list of companies" + `:${request.companyId}`);
+
   return response.data;
 }

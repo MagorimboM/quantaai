@@ -1,11 +1,30 @@
+import { Injectable } from '@nestjs/common';
+import { prisma } from '@/core/database/postgres';
 
-import { Controller, Get, Param } from '@nestjs/common';
-
-@Controller(':companyId/projects')
+@Injectable()
 export class ProjectsRepository {
-  @Get('/')
-  async getListOfProjects(@Param(':companyId') companyId: string) {
+  async getListOfProjects(request: { companyId: string }) {
+    const response = await prisma.project.findMany({
+      select: {
+        id: true,
+        companyId: true,
+        name: true,
+        description: true,
+        type: true,
+        createdAt: true,
+        updatedAt: true,
+        status: true,
+        takeoffItems: {
+          select: {
+            id: true,
+            description: true,
+            projectId: true,
+          },
+        },
+      },
+      where: { companyId: request.companyId },
+    });
 
-    
-
-  }}
+    return response;
+  }
+}

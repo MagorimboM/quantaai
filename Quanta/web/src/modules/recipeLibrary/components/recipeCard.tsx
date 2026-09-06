@@ -1,15 +1,3 @@
-/**
- * Recipe Card
- * import RecipeActions Component
- *
- * - receives one recipe (prop passed down from RecipeList — not the global list itself)
- * - displays: category, title, description, tags, number of materials
- * - has a 3-dot menu: Archive Recipe, Edit Recipe
- * - forwards recipe + setRecipeListState down to RecipeActions
- *
- * - Args (from RecipeList): recipe (single item), setRecipeListState (global updater)
- */
-
 import { useState } from "react";
 import { RecipeActions } from "@/modules/recipeLibrary/components/recipeActions";
 import type {

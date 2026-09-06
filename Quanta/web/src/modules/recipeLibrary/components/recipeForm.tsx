@@ -88,16 +88,6 @@ export function RecipeForm({
 
   async function requestRecipeUpdate() {
     // TODO: no "update recipe" endpoint exists in api.ts yet.
-    // Once it does, send `updatedRecipe` over the network, then patch the
-    // single recipe back into recipeListState by recipeId, e.g.:
-    //
-    // const updated = await updateRecipe(updatedRecipe);
-    // setRecipeListState((prevList) =>
-    //   prevList.map((recipe) =>
-    //     recipe.recipeId === updated.recipeId ? updated : recipe,
-    //   ),
-    // );
-
     showRecipeForm();
   }
 
