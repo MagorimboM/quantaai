@@ -44,7 +44,7 @@ export function UploadModalComp({ closeModal }: UploadModalProps) {
       onClick={closeModal}
     >
       <div
-        className="w-[600px] rounded-lg border bg-white p-6 shadow-lg"
+        className="w-150 rounded-lg border bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-4 text-xl font-semibold">Upload Project Files</h2>

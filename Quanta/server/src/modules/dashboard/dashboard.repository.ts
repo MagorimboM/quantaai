@@ -91,7 +91,7 @@ export class DashboardRepository {
       orderBy: {
         updatedAt: 'desc',
       },
-      take: 4,
+      take: 10,
     });
 
     return projects;
@@ -100,13 +100,34 @@ export class DashboardRepository {
   async getRecentActivity(
     request: GetRecentActivityRequest,
   ): Promise<RecentActivityResponse> {
-    // get recent activity
-
-    const projects = await prisma.project.findMany({
+    const auditLogs = await prisma.auditLog.findMany({
       where: { companyId: request.companyId },
-      orderBy: { updatedAt: 'desc' },
-      take: 4,
+      orderBy: { changedAt: 'desc' },
+      take: 10,
     });
-    return projects;
+    
+    const distinctUserIds = [
+      ...new Set(
+        auditLogs.map((log) => log.userId).filter((id): id is string => id !== null),
+      ),
+    ];
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: distinctUserIds } },
+      select: { id: true, firstName: true, lastName: true },
+    });
+
+    const userNameById = new Map(
+      users.map((user) => [user.id, `${user.firstName} ${user.lastName}`]),
+    );
+
+    return auditLogs.map((log) => ({
+      id: log.id,
+      userName: log.userId ? (userNameById.get(log.userId) ?? 'Unknown user') : 'System',
+      entityType: log.entityType,
+      action: log.action,
+      reason: log.reason,
+      changedAt: log.changedAt,
+    }));
   }
 }

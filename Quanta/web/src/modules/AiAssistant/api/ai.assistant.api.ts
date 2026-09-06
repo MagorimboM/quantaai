@@ -1,10 +1,5 @@
 import { apiClient } from "@/core/api/axios.api";
-
-type Message = {
-  id?: string;
-  role: "user" | "assistant";
-  content: string;
-};
+import type { Message } from "@/modules/aiAssistant/contracts/aiAssistant.request.contract";
 
 async function getChatHistory(): Promise<Message[]> {
   const response = await apiClient.get(

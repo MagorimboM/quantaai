@@ -44,7 +44,7 @@ export type RecentActivityItem = {
   entityType: string;
   action: string;
   reason: string | null;
-  changedAt: Date;
+  changedAt: string; // dates arrive as strings over JSON, not Date objects
 };
 
 export type RecentActivityResponse = RecentActivityItem[];

@@ -10,7 +10,7 @@ import { DashboardService } from '@/modules/dashboard/dashboard.service';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get('/kpi')
+  @Get('kpi')
   async getKPIInformation(
     @Param('companyId') companyId: string,
   ): Promise<KPIInformationResponse> {
