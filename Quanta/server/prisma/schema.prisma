@@ -3,13 +3,17 @@
 // Stack: NestJS + PostgreSQL + Prisma + pgvector
 //
 // OWNERSHIP MODEL:
-// userId    = owner of ALL data
-// companyId = optional tag (null = personal template)
+// userId      = owner of ALL data
+// companyId   = optional tag (null = personal template)
+// workspaceId = optional tag (null = not workspace-scoped)
 //
 // companyId = null   → John's personal template
 // companyId = set    → tagged to a specific company
 //
-// NOTE: All userId and companyId are optional for development.
+// workspaceId = null → not scoped to a specific workspace
+// workspaceId = set  → tagged to a specific workspace
+//
+// NOTE: All userId, companyId and workspaceId are optional for development.
 //       Make required before production.
 // ============================================================
 
@@ -91,6 +95,7 @@ model Company {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
+  workspaces         Workspace[]
   companyTradeCodes  CompanyTradeCode[]
   categories         Category[]
   materials          Material[]
@@ -103,6 +108,42 @@ model Company {
   companyTeamMembers CompanyTeamMembers[]
 
   @@map("companies")
+}
+
+// ============================================================
+// WORKSPACES
+// userId    = owner
+// companyId = null  → personal workspace
+// companyId = set   → company specific workspace
+//
+// ASSUMPTION: Workspace is an additional optional scoping layer,
+// same shape as companyId, applied across the models that already
+// carry companyId. Adjust if Workspace should sit only above
+// Project, or contain a different subset of entities.
+// ============================================================
+
+model Workspace {
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  name        String
+  description String?
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company           Company?           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyTradeCodes CompanyTradeCode[]
+  categories        Category[]
+  materials         Material[]
+  labour            Labour[]
+  overheads         Overhead[]
+  recipes           Recipe[]
+  projects          Project[]
+  documents         Document[]
+  chatMessages      ChatMessage[]
+
+  @@map("workspaces")
 }
 
 // ============================================================
@@ -128,14 +169,16 @@ model AustralianTradeCode {
 // ============================================================
 // COMPANY TRADE CODES
 // userId = owner
-// companyId = null  → John's personal trade codes
-// companyId = set   → company specific trade codes
+// companyId   = null  → John's personal trade codes
+// companyId   = set   → company specific trade codes
+// workspaceId = optional workspace scope
 // ============================================================
 
 model CompanyTradeCode {
   id                    String   @id @default(uuid())
   userId                String?
   companyId             String?
+  workspaceId           String?
   australianTradeCodeId String?
   code                  String
   name                  String
@@ -145,6 +188,7 @@ model CompanyTradeCode {
   createdAt             DateTime @default(now())
 
   company             Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace           Workspace?           @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   australianTradeCode AustralianTradeCode? @relation(fields: [australianTradeCodeId], references: [id])
 
   @@map("company_trade_codes")
@@ -153,8 +197,9 @@ model CompanyTradeCode {
 // ============================================================
 // CATEGORIES
 // userId = owner
-// companyId = null  → personal category
-// companyId = set   → company category
+// companyId   = null  → personal category
+// companyId   = set   → company category
+// workspaceId = optional workspace scope
 // isDefault = true  → pre-loaded global defaults
 // ============================================================
 
@@ -162,6 +207,7 @@ model Category {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  workspaceId String?
   name        String
   description String?
   isDefault   Boolean  @default(false)
@@ -169,6 +215,7 @@ model Category {
   updatedAt   DateTime @updatedAt
 
   company   Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   materials Material[]
   labour    Labour[]
   overheads Overhead[]
@@ -180,14 +227,16 @@ model Category {
 // ============================================================
 // MATERIALS
 // userId = owner
-// companyId = null  → John's personal material
-// companyId = set   → company specific material
+// companyId   = null  → John's personal material
+// companyId   = set   → company specific material
+// workspaceId = optional workspace scope
 // ============================================================
 
 model Material {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  workspaceId String?
   categoryId  String
   name        String
   description String?
@@ -196,6 +245,7 @@ model Material {
   updatedAt   DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   category        Category         @relation(fields: [categoryId], references: [id])
   recipeMaterials RecipeMaterial[]
 
@@ -205,14 +255,16 @@ model Material {
 // ============================================================
 // LABOUR
 // userId = owner
-// companyId = null  → John's personal labour
-// companyId = set   → company specific labour
+// companyId   = null  → John's personal labour
+// companyId   = set   → company specific labour
+// workspaceId = optional workspace scope
 // ============================================================
 
 model Labour {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  workspaceId String?
   categoryId  String
   name        String
   description String?
@@ -222,6 +274,7 @@ model Labour {
   updatedAt   DateTime @updatedAt
 
   company      Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace    Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   category     Category       @relation(fields: [categoryId], references: [id])
   recipeLabour RecipeLabour[]
 
@@ -231,14 +284,16 @@ model Labour {
 // ============================================================
 // OVERHEADS
 // userId = owner
-// companyId = null  → John's personal overhead
-// companyId = set   → company specific overhead
+// companyId   = null  → John's personal overhead
+// companyId   = set   → company specific overhead
+// workspaceId = optional workspace scope
 // ============================================================
 
 model Overhead {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  workspaceId String?
   categoryId  String
   name        String
   description String?
@@ -247,6 +302,7 @@ model Overhead {
   updatedAt   DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   category        Category         @relation(fields: [categoryId], references: [id])
   recipeOverheads RecipeOverhead[]
 
@@ -256,8 +312,9 @@ model Overhead {
 // ============================================================
 // RECIPES
 // userId = owner
-// companyId = null  → John's personal template
-// companyId = set   → company specific recipe
+// companyId   = null  → John's personal template
+// companyId   = set   → company specific recipe
+// workspaceId = optional workspace scope
 // categoryId = required — every recipe belongs to exactly one category,
 //              but a category can have many recipes (one-to-many)
 // ============================================================
@@ -266,6 +323,7 @@ model Recipe {
   id          String   @id @default(uuid())
   userId      String?
   companyId   String?
+  workspaceId String?
   categoryId  String
   name        String
   description String?
@@ -275,6 +333,7 @@ model Recipe {
   updatedAt   DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   category        Category         @relation(fields: [categoryId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
@@ -344,14 +403,16 @@ model RecipeOverhead {
 // ============================================================
 // PROJECTS
 // userId = owner
-// companyId = null  → personal project
-// companyId = set   → company project
+// companyId   = null  → personal project
+// companyId   = set   → company project
+// workspaceId = optional workspace scope
 // ============================================================
 
 model Project {
   id               String    @id @default(uuid())
   userId           String?
   companyId        String?
+  workspaceId      String?
   projectNumber    String
   name             String
   description      String?
@@ -377,6 +438,7 @@ model Project {
   updatedAt        DateTime  @updatedAt
 
   company      Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace    Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   takeoffItems TakeoffItem[]
   documents    Document[]
   chatMessages ChatMessage[]
@@ -440,8 +502,9 @@ model AuditLog {
 // ============================================================
 // DOCUMENTS
 // userId = owner
-// companyId = null  → company policy document
-// projectId = null  → personal document
+// companyId   = null  → company policy document
+// projectId   = null  → personal document
+// workspaceId = optional workspace scope
 // all optional — covers personal, company, and project scoped docs
 // isArchived = true → excluded from AI search / active use
 // archivedAt        → timestamp when archived
@@ -452,6 +515,7 @@ model Document {
   id              String    @id @default(uuid())
   userId          String?
   companyId       String?
+  workspaceId     String?
   projectId       String?
   name            String
   fileUrl         String
@@ -470,6 +534,7 @@ model Document {
   uploadedAt      DateTime  @default(now())
 
   company    Company?            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace  Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   project    Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   embeddings DocumentEmbedding[]
 
@@ -508,23 +573,26 @@ model DocumentEmbedding {
 // ============================================================
 // CHAT MESSAGES
 // userId = owner
-// companyId = null  → general AI chat
-// companyId = set   → company scoped AI
-// projectId = null  → general or company AI
-// projectId = set   → project scoped AI
+// companyId   = null  → general AI chat
+// companyId   = set   → company scoped AI
+// workspaceId = optional workspace scope
+// projectId   = null  → general or company AI
+// projectId   = set   → project scoped AI
 // ============================================================
 
 model ChatMessage {
-  id        String   @id @default(uuid())
-  userId    String?
-  companyId String?
-  projectId String?
-  role      String
-  content   String
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  userId      String?
+  companyId   String?
+  workspaceId String?
+  projectId   String?
+  role        String
+  content     String
+  createdAt   DateTime @default(now())
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  company   Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  project   Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
 }

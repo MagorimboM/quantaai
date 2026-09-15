@@ -1,8 +1,9 @@
 -- ============================================================
 -- QUANTA — SQL SEED FILE
 -- Multiple companies, each owned by a distinct user.
--- Each company has: categories, materials, labour, overheads,
--- recipes, and TWO projects (one completed, one incomplete).
+-- Each company has: a workspace, categories, materials, labour,
+-- overheads, recipes, and TWO projects (one completed, one
+-- incomplete).
 -- ============================================================
 
 -- ── CLEAN EXISTING DATA ──────────────────────────────────────
@@ -26,6 +27,7 @@ TRUNCATE TABLE
   temp_file_cache,
   company_team_members,
   projects,
+  workspaces,
   companies,
   users
 RESTART IDENTITY CASCADE;
@@ -53,6 +55,16 @@ VALUES
   ('seed-company-001', 'seed-user-001', 'ABC Construction',   '123 Builder Street', 'Perth',    'WA', '6000', 'Australia', '08 9000 0000', 'info@abcconstruction.com.au', 'Jane Smith',  '0412 000 000', 'jane@abcconstruction.com.au', 'residential', false, NOW(), NOW()),
   ('seed-company-002', 'seed-user-002', 'XYZ Builders',       '88 Industrial Ave',  'Perth',    'WA', '6000', 'Australia', '08 9111 2222', 'info@xyzbuilders.com.au',     'Tom Reeves',  '0413 555 666', 'tom@xyzbuilders.com.au',      'commercial',  false, NOW(), NOW()),
   ('seed-company-003', 'seed-user-003', 'Coastal Concrete Co', '5 Foreshore Rd',    'Fremantle','WA', '6160', 'Australia', '08 9222 3333', 'info@coastalconcrete.com.au', 'Lisa Chen',   '0414 222 999', 'lisa@coastalconcrete.com.au', 'concrete',    false, NOW(), NOW());
+
+-- ============================================================
+-- WORKSPACES  (one workspace per company)
+-- ============================================================
+
+INSERT INTO workspaces (id, "userId", "companyId", name, description, "isArchived", "createdAt", "updatedAt")
+VALUES
+  ('seed-ws-001', 'seed-user-001', 'seed-company-001', 'ABC Construction — Main Workspace',    'Default workspace for ABC Construction jobs',   false, NOW(), NOW()),
+  ('seed-ws-002', 'seed-user-002', 'seed-company-002', 'XYZ Builders — Main Workspace',        'Default workspace for XYZ Builders jobs',       false, NOW(), NOW()),
+  ('seed-ws-003', 'seed-user-003', 'seed-company-003', 'Coastal Concrete Co — Main Workspace', 'Default workspace for Coastal Concrete jobs',   false, NOW(), NOW());
 
 -- ============================================================
 -- COMPANY TEAM MEMBERS
@@ -85,75 +97,75 @@ VALUES
 -- CATEGORIES
 -- ============================================================
 
-INSERT INTO categories (id, "userId", "companyId", name, description, "isDefault", "createdAt", "updatedAt")
+INSERT INTO categories (id, "userId", "companyId", "workspaceId", name, description, "isDefault", "createdAt", "updatedAt")
 VALUES
   -- ABC Construction (residential)
-  ('seed-cat-001', 'seed-user-001', 'seed-company-001', 'Masonry',  'Bricks, blocks and mortar',    true, NOW(), NOW()),
-  ('seed-cat-002', 'seed-user-001', 'seed-company-001', 'Concrete', 'Concrete and reinforcement',   true, NOW(), NOW()),
-  ('seed-cat-003', 'seed-user-001', 'seed-company-001', 'General',  'General labour and overheads', true, NOW(), NOW()),
+  ('seed-cat-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'Masonry',  'Bricks, blocks and mortar',    true, NOW(), NOW()),
+  ('seed-cat-002', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'Concrete', 'Concrete and reinforcement',   true, NOW(), NOW()),
+  ('seed-cat-003', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'General',  'General labour and overheads', true, NOW(), NOW()),
   -- XYZ Builders (commercial roofing)
-  ('seed-cat-004', 'seed-user-002', 'seed-company-002', 'Roofing',  'Roofing materials and labour',  true, NOW(), NOW()),
-  ('seed-cat-005', 'seed-user-002', 'seed-company-002', 'General',  'General labour and overheads',  true, NOW(), NOW()),
+  ('seed-cat-004', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'Roofing',  'Roofing materials and labour',  true, NOW(), NOW()),
+  ('seed-cat-005', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'General',  'General labour and overheads',  true, NOW(), NOW()),
   -- Coastal Concrete Co (concrete specialists)
-  ('seed-cat-006', 'seed-user-003', 'seed-company-003', 'Concrete', 'Concrete and reinforcement',    true, NOW(), NOW()),
-  ('seed-cat-007', 'seed-user-003', 'seed-company-003', 'General',  'General labour and overheads',  true, NOW(), NOW());
+  ('seed-cat-006', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'Concrete', 'Concrete and reinforcement',    true, NOW(), NOW()),
+  ('seed-cat-007', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'General',  'General labour and overheads',  true, NOW(), NOW());
 
 -- ============================================================
 -- MATERIALS
 -- ============================================================
 
-INSERT INTO materials (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO materials (id, "userId", "companyId", "workspaceId", "categoryId", name, description, unit, "createdAt", "updatedAt")
 VALUES
   -- ABC Construction
-  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
-  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
-  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW()),
+  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-001', 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
+  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-001', 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
+  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-002', 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW()),
   -- XYZ Builders
-  ('seed-mat-004', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Colorbond Sheet', 'Corrugated colorbond roofing sheet', 'm²', NOW(), NOW()),
-  ('seed-mat-005', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Roof Batten',      'Timber roof batten',                 'm',  NOW(), NOW()),
+  ('seed-mat-004', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-004', 'Colorbond Sheet', 'Corrugated colorbond roofing sheet', 'm²', NOW(), NOW()),
+  ('seed-mat-005', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-004', 'Roof Batten',      'Timber roof batten',                 'm',  NOW(), NOW()),
   -- Coastal Concrete Co
-  ('seed-mat-006', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Concrete 32MPa', 'Ready mix concrete 32MPa',   'm³', NOW(), NOW()),
-  ('seed-mat-007', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Steel Mesh SL82', 'Reinforcement mesh SL82',    'm²', NOW(), NOW());
+  ('seed-mat-006', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-006', 'Concrete 32MPa', 'Ready mix concrete 32MPa',   'm³', NOW(), NOW()),
+  ('seed-mat-007', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-006', 'Steel Mesh SL82', 'Reinforcement mesh SL82',    'm²', NOW(), NOW());
 
 -- ============================================================
 -- LABOUR
 -- ============================================================
 
-INSERT INTO labour (id, "userId", "companyId", "categoryId", name, description, "labourType", unit, "createdAt", "updatedAt")
+INSERT INTO labour (id, "userId", "companyId", "workspaceId", "categoryId", name, description, "labourType", unit, "createdAt", "updatedAt")
 VALUES
   -- ABC Construction
-  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW()),
+  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-001', 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-003', 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW()),
   -- XYZ Builders
-  ('seed-lab-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Roofer',   'Qualified roofer', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-004', 'seed-user-002', 'seed-company-002', 'seed-cat-005', 'Labourer', 'General labourer',  'labourer', 'hr', NOW(), NOW()),
+  ('seed-lab-003', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-004', 'Roofer',   'Qualified roofer', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-004', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-005', 'Labourer', 'General labourer',  'labourer', 'hr', NOW(), NOW()),
   -- Coastal Concrete Co
-  ('seed-lab-005', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Concretor', 'Qualified concretor', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-006', 'seed-user-003', 'seed-company-003', 'seed-cat-007', 'Labourer',  'General labourer',    'labourer', 'hr', NOW(), NOW());
+  ('seed-lab-005', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-006', 'Concretor', 'Qualified concretor', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-006', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-007', 'Labourer',  'General labourer',    'labourer', 'hr', NOW(), NOW());
 
 -- ============================================================
 -- OVERHEADS
 -- ============================================================
 
-INSERT INTO overheads (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO overheads (id, "userId", "companyId", "workspaceId", "categoryId", name, description, unit, "createdAt", "updatedAt")
 VALUES
-  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW()),
-  ('seed-ovh-002', 'seed-user-002', 'seed-company-002', 'seed-cat-005', 'Crane Hire',    'Mobile crane hire',         'day',  NOW(), NOW()),
-  ('seed-ovh-003', 'seed-user-003', 'seed-company-003', 'seed-cat-007', 'Concrete Pump', 'Concrete pump hire',        'day',  NOW(), NOW());
+  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-003', 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW()),
+  ('seed-ovh-002', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-005', 'Crane Hire',    'Mobile crane hire',         'day',  NOW(), NOW()),
+  ('seed-ovh-003', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-007', 'Concrete Pump', 'Concrete pump hire',        'day',  NOW(), NOW());
 
 -- ============================================================
 -- RECIPES
--- categoryId now required on every recipe (one category has many
+-- categoryId required on every recipe (one category has many
 -- recipes). Mapped to match the same category each recipe's own
 -- materials/labour already belong to.
 -- ============================================================
 
-INSERT INTO recipes (id, "userId", "companyId", "categoryId", name, description, unit, "isArchived", "createdAt", "updatedAt")
+INSERT INTO recipes (id, "userId", "companyId", "workspaceId", "categoryId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
-  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
-  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
-  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW());
+  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-001', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'seed-cat-002', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
+  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'seed-cat-004', 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
+  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'seed-cat-006', 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 
@@ -193,7 +205,7 @@ VALUES
 -- ============================================================
 
 INSERT INTO projects (
-  id, "userId", "companyId", "projectNumber", name, description,
+  id, "userId", "companyId", "workspaceId", "projectNumber", name, description,
   type, status, stage, "clientName", "clientEmail", "clientPhone",
   "siteContactName", "siteContactPhone", address, city, state,
   postcode, "startDate", "endDate", completed, "completedAt",
@@ -202,7 +214,7 @@ INSERT INTO projects (
 VALUES
   -- ABC Construction — incomplete
   (
-    'seed-proj-001', 'seed-user-001', 'seed-company-001', 'ABC-2026-001', 'Smith Residence',
+    'seed-proj-001', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'ABC-2026-001', 'Smith Residence',
     'Single storey residential dwelling', 'single_storey', 'in_progress', 'superstructure',
     'Mr & Mrs Smith', 'smith@email.com.au', '0412 111 222',
     'Bob Smith', '0412 333 444', '45 Riverside Drive', 'Subiaco', 'WA', '6008',
@@ -210,7 +222,7 @@ VALUES
   ),
   -- ABC Construction — completed
   (
-    'seed-proj-002', 'seed-user-001', 'seed-company-001', 'ABC-2025-014', 'Turner Extension',
+    'seed-proj-002', 'seed-user-001', 'seed-company-001', 'seed-ws-001', 'ABC-2025-014', 'Turner Extension',
     'Rear extension and renovation', 'renovation', 'completed', 'closed',
     'Mrs Turner', 'turner@email.com.au', '0412 555 111',
     'Bob Smith', '0412 333 444', '7 Hawthorn Street', 'Nedlands', 'WA', '6009',
@@ -218,7 +230,7 @@ VALUES
   ),
   -- XYZ Builders — incomplete
   (
-    'seed-proj-003', 'seed-user-002', 'seed-company-002', 'XYZ-2026-002', 'Malaga Industrial Shed',
+    'seed-proj-003', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'XYZ-2026-002', 'Malaga Industrial Shed',
     'New build steel-frame industrial shed', 'commercial', 'in_progress', 'roofing',
     'Malaga Storage Pty Ltd', 'ops@malagastorage.com.au', '0413 222 333',
     'Nina Osei', '0413 444 555', '20 Enterprise Way', 'Malaga', 'WA', '6090',
@@ -226,7 +238,7 @@ VALUES
   ),
   -- XYZ Builders — completed
   (
-    'seed-proj-004', 'seed-user-002', 'seed-company-002', 'XYZ-2025-014', 'Warehouse Reroof',
+    'seed-proj-004', 'seed-user-002', 'seed-company-002', 'seed-ws-002', 'XYZ-2025-014', 'Warehouse Reroof',
     'Full reroof of commercial warehouse', 'commercial', 'completed', 'closed',
     'XYZ Logistics Pty Ltd', 'ops@xyzlogistics.com.au', '0412 777 888',
     'Dave Cole', '0412 999 000', '12 Freight Rd', 'Welshpool', 'WA', '6106',
@@ -234,7 +246,7 @@ VALUES
   ),
   -- Coastal Concrete Co — incomplete
   (
-    'seed-proj-005', 'seed-user-003', 'seed-company-003', 'CCC-2026-003', 'Fremantle Boardwalk Slab',
+    'seed-proj-005', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'CCC-2026-003', 'Fremantle Boardwalk Slab',
     'Concrete slab for foreshore boardwalk extension', 'civil', 'in_progress', 'pouring',
     'City of Fremantle', 'works@fremantle.wa.gov.au', '08 9432 9999',
     'Carlos Diaz', '0414 666 777', 'Marine Terrace', 'Fremantle', 'WA', '6160',
@@ -242,7 +254,7 @@ VALUES
   ),
   -- Coastal Concrete Co — completed
   (
-    'seed-proj-006', 'seed-user-003', 'seed-company-003', 'CCC-2025-009', 'Rockingham Driveway',
+    'seed-proj-006', 'seed-user-003', 'seed-company-003', 'seed-ws-003', 'CCC-2025-009', 'Rockingham Driveway',
     'Residential driveway and carport slab', 'residential', 'completed', 'closed',
     'Mr Alvarez', 'alvarez@email.com.au', '0414 888 111',
     'Carlos Diaz', '0414 666 777', '9 Shoalwater Ave', 'Rockingham', 'WA', '6168',

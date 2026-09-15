@@ -40,6 +40,16 @@ export function SideBarComp() {
     setIsCollapsed((prev) => !prev);
   }
 
+
+    // TODO ::  check if the current URL is '/' of the url is that then return another version of the side bar
+
+
+
+
+
+
+
+
   return (
     <aside
       className={`

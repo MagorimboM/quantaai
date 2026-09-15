@@ -11,6 +11,7 @@ import { DashBoardModule } from '@/modules/dashboard/dashboard.module';
 import { ProjectsModule } from '@/modules/projects/projects.module';
 import { BillOfQuantsModule } from '@/modules/billOfQuants/boq.module';
 import { RecipeLibraryModule } from '@/modules/recipeLibrary/recipeLibrary.module';
+import { WorkspaceModule } from '@/modules/workspace/workspace.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { RecipeLibraryModule } from '@/modules/recipeLibrary/recipeLibrary.modul
     ProjectsModule,
     BillOfQuantsModule,
     RecipeLibraryModule,
+    WorkspaceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
