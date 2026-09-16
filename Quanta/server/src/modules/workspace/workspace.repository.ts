@@ -2,11 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import { NotAcceptableException } from '@nestjs/common';
 
+// TODO :: implement last activity
+// TODO :: get the userId from the headers
+// TODO :: implement types and validators
+// TODO :: for the form create a table of classes or get the api to locations and addresses
+// TODO :: work on phone numbers
+// TODO :: serialize user input
+
 @Injectable()
 export class WorkspaceRepository {
   async getWorkspaces(request: { userId: string }) {
-    // TODO :: implement last activity
-
     const response = await prisma.$transaction(async (tx) => {
       const response = await tx.$queryRaw`
     SELECT
@@ -72,18 +77,15 @@ export class WorkspaceRepository {
     }
 
     const response = await prisma.$transaction(async (tx) => {
-      // create new company
-
       const newCompany: any = await tx.$queryRaw`
       INSERT INTO companies 
       (id,"userId", name, address, state, postcode, country, phone, email, "contactName", "contactPhone", "contactEmail", "companyType", "updatedAt")
       VALUES (gen_random_uuid(), ${'seed-user-001'}, ${request.name}, ${request.address}, ${request.state}, ${request.postcode}, ${request.country}, ${request.phone}, ${request.email}, ${request.contactName}, ${request.contactPhone}, ${request.contactEmail}, ${request.companyType}, ${'NOW()'}) RETURNING id`;
       const newWorkspace: any = await tx.$queryRaw`
-  INSERT INTO workspaces 
-  (id, "userId", "companyId", name,"updatedAt")
-  VALUES (gen_random_uuid(), ${'seed-user-001'}, ${newCompany[0].id}, ${request.name}, ${'NOW()'})
-  RETURNING id
-`;
+      INSERT INTO workspaces 
+      (id, "userId", "companyId", name,"updatedAt")
+      VALUES (gen_random_uuid(), ${'seed-user-001'}, ${newCompany[0].id}, ${request.name}, ${'NOW()'})
+      RETURNING id`;
       const response = await tx.$queryRaw`
       SELECT w.id, c.name, 
       (SELECT COUNT(*)::int FROM projects p where p."companyId" = c.id AND p."userId" = ${'seed-user-001'}) AS numberOfProjects, 
