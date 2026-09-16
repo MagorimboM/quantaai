@@ -6,7 +6,9 @@ import { WorkspaceSwitcherSidebar } from "@/modules/workspaceSwitcher/components
 import {
   getWorkspaces,
   getUserWorkspace,
+  postNewWorkspace
 } from "@/modules/workspaceSwitcher/api/api";
+
 
 export function WorkspaceSwitcherPage() {
   // TODO :: check if the user has workspace id in the localStorage, if so then navigate them to the dashboard.

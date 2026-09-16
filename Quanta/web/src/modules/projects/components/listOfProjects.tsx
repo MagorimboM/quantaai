@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getListOfProjects } from "@/modules/projects/api/api";
 import { ProjectCard } from "@/modules/projects/components/projectCard";
 
-// TODO:: fix the scroll of the list
 // TODO :: create contracts of these pages
 
 export function ListOfProjects() {
@@ -33,7 +32,7 @@ export function ListOfProjects() {
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex w-full flex-1 min-h-0 flex-col">
       <div className="flex flex-col gap-4 p-4">
         <h1 className="font-bold text-2xl">Projects</h1>
         <p>Manage your quantity take offs</p>

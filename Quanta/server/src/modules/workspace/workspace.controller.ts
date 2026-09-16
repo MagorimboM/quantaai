@@ -18,7 +18,23 @@ export class WorkspaceController {
     return await this.workspaceService.getPersonalWorkspace({ userId: userId });
   }
   @Post('create')
-  async createNewWorkspace(@Body() request: any) {
-    // take in the new company workspace details
+  async createNewWorkspace(
+    @Body()
+    request: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
+      postcode: string;
+      country: 'Australia';
+      phone: string;
+      email: string;
+      contactName: string;
+      contactPhone: string;
+      contactEmail: string;
+      companyType: string;
+    },
+  ) {
+    return await this.workspaceService.createNewWorkspace(request);
   }
 }

@@ -12,7 +12,20 @@ export class WorkspaceService {
     return await this.workspaceRepository.getPersonalWorkspace(request);
   }; 
 
-  async createNewWorkspace(request: any) {
-    // take in the new company workspace details
+  async createNewWorkspace(request: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
+      postcode: string;
+      country: 'Australia';
+      phone: string;
+      email: string;
+      contactName: string;
+      contactPhone: string;
+      contactEmail: string;
+      companyType: string;
+    }) {
+     return await this.workspaceRepository.createNewWorkspace(request)
   }
 }

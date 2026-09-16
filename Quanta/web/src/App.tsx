@@ -11,11 +11,11 @@ import { HomeShell } from "@/common/components/homeShell";
 function App() {
   // TODO :: check of the workspaceid is there:
 
-  const workspaceId = localStorage.getItem("workspaceId");
+  /* const workspaceId = localStorage.getItem("workspaceId");
 
   if (workspaceId == null || workspaceId?.length == 0) {
-    return <HomeShell></HomeShell>;
-  }; 
+    return <HomeShell/>;
+  };  */
 
   return (
     <AppShell>

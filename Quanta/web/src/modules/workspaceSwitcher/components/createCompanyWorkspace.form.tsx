@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MdClose } from "react-icons/md";
+import { postNewWorkspace } from "@/modules/workspaceSwitcher/api/api";
 
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
@@ -30,8 +31,14 @@ export function CreateCompanyWorkspaceForm({
 
   async function submitForm() {
     // TODO :: submit to the backend
-    // TODO :: while waiting for reponse show creating workspace
-    // TODO :: onSuccess show success and then navigate the user to the workspace
+    const response = postNewWorkspace(form);
+    if (!response) {
+      console.log("something is up");
+
+      return;
+    }
+
+    onClose();
   }
 
   return (

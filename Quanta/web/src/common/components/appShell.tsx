@@ -8,8 +8,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <GlobalErrorComp>
       <div className="flex h-screen w-screen overflow-hidden">
         <SideBarComp />
-        <main className="h-full w-full flex-col overflow-auto">
-          <div className="flex border-b justify-end gap-2 p-2.5">
+        <main className="flex h-full w-full flex-1 flex-col">
+          <div className="flex border-b justify-end gap-2 p-2.5 shrink-0">
             <button
               title="notifications"
               className="rounded-md p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <MdOutlineAccountCircle size={24} />
             </button>
           </div>
-          <div className="flex flex-1 ">{children}</div>
+          <div className="flex flex-1 min-h-0">{children}</div>
         </main>
       </div>
     </GlobalErrorComp>

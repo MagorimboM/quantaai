@@ -19,3 +19,22 @@ export async function getUserWorkspace() {
   }
   return response.data;
 }
+
+export async function postNewWorkspace(request: {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  phone: string;
+  email: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+  companyType: string;
+}) {
+  const response = await apiClient.post("workspaces/create", request);
+
+  return response.data;
+}

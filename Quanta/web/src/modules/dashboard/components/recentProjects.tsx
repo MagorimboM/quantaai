@@ -24,8 +24,8 @@ export function RecentProjects() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-6 rounded-lg border bg-card p-4 text-card-foreground">
-      <div className="flex flex-1 flex-row justify-between items-center">
+    <div className="flex h-full min-h-0 flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">
+      <div className="flex flex-row justify-between items-center shrink-0">
         <div className="flex flex-row items-center gap-2">
           <HiOutlineDocumentText size={20} className="text-muted-foreground" />
           <h1 className="text-lg font-semibold text-foreground">
@@ -37,7 +37,7 @@ export function RecentProjects() {
         </button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-1 min-h-0 flex-col gap-2 overflow-y-auto">
         {recentProjects.length > 0 ? (
           recentProjects.map((project, key) => (
             <ProjectCard

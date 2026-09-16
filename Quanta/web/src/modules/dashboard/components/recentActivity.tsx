@@ -4,8 +4,6 @@ import { getRecentActivity } from "@/modules/dashboard/api/api";
 import type { RecentActivityResponse } from "@/modules/dashboard/contracts/dashboard.response.contract";
 
 // TODO :: replace company id with dynamic reference.
-// TODO :: make sure it scrollable
-
 
 function timeAgo(dateString: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -31,13 +29,13 @@ export function RecentActivity() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">
-      <div className="flex flex-row items-center gap-2">
+    <div className="flex h-full min-h-0 flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">
+      <div className="flex flex-row items-center gap-2 shrink-0">
         <HiOutlineClock size={20} className="text-muted-foreground" />
         <h1 className="text-lg font-semibold text-foreground">Recent Activity</h1>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-1 min-h-0 flex-col gap-2 overflow-y-auto">
         {activity.length > 0 ? (
           activity.map((item) => (
             <div

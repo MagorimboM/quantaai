@@ -78,7 +78,7 @@ export function ProjectsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="w-full h-full p-4">
+      <main className="flex flex-1 min-h-0 w-full flex-col">
         <ListOfProjects />
         <AiAssistant />
       </main>
