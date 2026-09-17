@@ -13,26 +13,27 @@ export function ProjectCard({
   name?: string;
   type?: string;
   status?: string;
-  projectId?: string;
-  companyId?: string | null;
+  projectId: string;
+  companyId: string;
   numberOfLineItems: number;
   time: Date;
 }) {
   function navigateToProjectBillOfQuants() {
-    // on click navigate to project bill of Quants
+    localStorage.setItem("projectId", projectId);
+    localStorage.setItem("companyId", companyId);
+    navigation.navigate('/projects/bill-of-quants'); 
   }
 
   function timeAgo() {
     // current time
 
-    const currentTime = new Date()
-    const lastUpdatedTime = time
+    const currentTime = new Date();
+    const lastUpdatedTime = time;
 
     console.log(
       `currentMilliseconds: ${currentTime.getMilliseconds.toString()}, lastUpdatedMilliseconds : ${lastUpdatedTime.getMilliseconds.toString}`,
     );
   }
-
 
   return (
     <div

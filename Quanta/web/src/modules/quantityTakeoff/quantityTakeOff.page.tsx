@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Navigate } from "react-router";
 import {
   getProjectBillOfQuantities,
   updateLineItem,
@@ -33,11 +34,22 @@ export function BillOfQuantsPage() {
   const [showSavingModal, setShowSavingModal] = useState<boolean>(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const workspaceId = localStorage.getItem("workspaceId");
+  const companyId = localStorage.getItem("companyId");
+  const projectId = localStorage.getItem("projectId");
+
+  const hasNoScopeIds =
+    (workspaceId == null || workspaceId == "") &&
+    (companyId == null || companyId == "") &&
+    (projectId == null || projectId == "");
+
   useEffect(() => {
+    if (hasNoScopeIds) return;
+
     async function getProjectBillOfQuants() {
       const response = await getProjectBillOfQuantities({
-        companyId: "seed-company-001",
-        projectId: "seed-proj-001",
+        companyId: companyId || "",
+        projectId: projectId || "",
         limit: 10,
         page: 1,
         query: "",
@@ -61,15 +73,15 @@ export function BillOfQuantsPage() {
 
     searchTimeoutRef.current = setTimeout(async () => {
       const results = await getProjectBillOfQuantities({
-        companyId: "seed-company-001",
-        projectId: "seed-proj-001",
+        companyId: companyId || "",
+        projectId: projectId || "",
         query: searchedTerm,
         page: page,
         limit: 10,
       });
 
       setLineItems(results);
-    }, 400);
+    });
   }
 
   async function showStartAfreshModal() {
@@ -89,15 +101,15 @@ export function BillOfQuantsPage() {
       body: LineItems.map((lineItem, key) => ({
         id: lineItem.id,
         userId: "",
-        companyId: "seed-company-001",
-        projectId: "seed-proj-001",
+        companyId: companyId || "",
+        projectId: projectId || "",
         recipeId: lineItem.recipe?.id || "",
         description: lineItem.description,
         measurement: lineItem.measurement,
         unit: lineItem.unit,
         notes: lineItem.notes,
       })),
-      projectId: "seed-proj-001",
+      projectId: projectId || "",
     });
     setShowSavingModal(false);
     return;
@@ -105,9 +117,9 @@ export function BillOfQuantsPage() {
 
   async function completeTakeOff() {
     const response = await updateProjectStatus({
-      companyId: "seed-company-001",
+      companyId: companyId || "",
       completed: true,
-      projectId: "seed-proj-001",
+      projectId: projectId || "",
     });
 
     if (response) {
@@ -136,9 +148,13 @@ export function BillOfQuantsPage() {
     setDeletedLineItems(LineItems.map((lineItem) => ({ id: lineItem.id })));
   }
 
+  if (hasNoScopeIds) {
+    return <Navigate to="/projects" replace />;
+  }
+
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-background text-foreground">
+    <div className="flex h-full w-full flex-col bg-background text-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b shrink-0">
         <div className="flex items-center p-2 gap-6">
           <button className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-foreground hover:text-background active:scale-95 cursor-pointer">
             <IoLibraryOutline size={18} /> View Library
@@ -154,7 +170,7 @@ export function BillOfQuantsPage() {
         </div>
         <div className="flex flex-wrap gap-3 p-2 justify-end items-center">
           <button
-            disabled={LineItems.length == 0 ? (true ): (false)}
+            disabled={LineItems.length == 0 ? true : false}
             className={
               LineItems.length > 0
                 ? "text-secondary-foreground bg-secondary hover:bg-secondary/70 active:scale-95 cursor-pointer inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
@@ -206,7 +222,7 @@ export function BillOfQuantsPage() {
         </div>
       </div>
 
-      <div className="flex flex-row justify-start border-b p-2 bg-background">
+      <div className="flex flex-row justify-start border-b p-2 shrink-0">
         <div className="flex flex-row items-center gap-2 border border-input rounded-md px-2 py-1.5 bg-background">
           <MdOutlineSearch size={20} className="text-muted-foreground" />
           <input
@@ -220,10 +236,10 @@ export function BillOfQuantsPage() {
 
       <div
         title="bill-of-quants"
-        className="flex-1 bg-background text-foreground"
+        className="flex flex-1 min-h-0 flex-col overflow-y-auto"
       >
         <table className="flex flex-col flex-1 rounded-lg border bg-card text-card-foreground">
-          <thead className="border-b p-2 bg-muted/40">
+          <thead className="border-b p-2 bg-muted sticky top-0">
             <tr className="grid grid-cols-[70px_90px_1fr_1fr_100px_80px_160px_140px_120px] items-center gap-2">
               <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
                 SELECT
@@ -296,6 +312,6 @@ export function BillOfQuantsPage() {
       ) : null}
 
       <SavingBillOfQuantsModal show={showSavingModal} />
-    </>
+    </div>
   );
 }

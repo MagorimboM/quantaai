@@ -48,7 +48,7 @@ export async function getListOfProjects(request: {
   companyId: string;
 }): Promise<
   {
-    companyId: string | null;
+    companyId: string 
     createdAt: Date;
     description: string | null;
     id: string;

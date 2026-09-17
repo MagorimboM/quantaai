@@ -11,16 +11,17 @@ import { HomeShell } from "@/common/components/homeShell";
 function App() {
   // TODO :: check of the workspaceid is there:
 
-  /* const workspaceId = localStorage.getItem("workspaceId");
+  const workspaceId = localStorage.getItem("workspaceId");
+  const companyId = localStorage.getItem("companyId"); 
 
-  if (workspaceId == null || workspaceId?.length == 0) {
-    return <HomeShell/>;
-  };  */
+  if (workspaceId == null || workspaceId?.length == 0 || workspaceId == "") {
+    return <HomeShell />;
+  }
 
   return (
     <AppShell>
       <Routes>
-        <Route path="/" element={<WorkspaceSwitcherPage />} />
+        <Route path="*" element={<DashBoardPage />} />
         <Route path="/dashboard" element={<DashBoardPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/recipes" element={<RecipeLibraryPage />} />

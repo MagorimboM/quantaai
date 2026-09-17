@@ -55,8 +55,8 @@ export function LineItem({
   }
   return (
     <>
-      <tr className="grid grid-cols-[70px_90px_1fr_1fr_100px_80px_160px_140px_120px] items-center border-b gap-2 ">
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+      <tr className="grid grid-cols-[70px_90px_1fr_1fr_100px_80px_160px_140px_120px] items-center border-b gap-2 transition-colors hover:bg-muted/30">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <input
             checked={deletedList.some(
               (deletedLineItem) => takeOffLineItem.id === deletedLineItem.id,
@@ -68,60 +68,60 @@ export function LineItem({
             className="h-4 w-4 rounded border-input accent-foreground"
           />
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <button
             onClick={() => {
               showRecipeMaterials();
             }}
-            className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+            className="rounded-md p-1.5 cursor-pointer text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {showRecipeItems == false ? (
-              <MdOutlineExpandLess />
+              <MdOutlineExpandLess size={18} />
             ) : (
-              <MdOutlineExpandMore />
+              <MdOutlineExpandMore size={18} />
             )}
           </button>
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <input
             className="rounded-md border border-input bg-background px-2 py-2 text-sm w-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             placeholder="scope"
             type="text"
           />
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <input
             className="rounded-md border border-input bg-background px-2 py-2 text-sm w-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             placeholder="item"
             type="text"
           />
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <input
             className="rounded-md border border-input bg-background px-2 py-2 text-sm w-full placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             placeholder={`${takeOffLineItem.measurement}`}
             type="number"
           />
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <p className="rounded-md border bg-muted px-2 py-2 text-sm text-muted-foreground">
             {"m2"}
           </p>
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <p className="rounded-md border bg-muted px-2 py-2 text-sm text-muted-foreground">
             {"Concrete"}
           </p>
         </td>
-        <td className="flex gap-2 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-          <button className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-            <MdOutlineChangeCircle />
+        <td className="flex gap-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
+          <button className="rounded-md p-1.5 cursor-pointer text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <MdOutlineChangeCircle size={18} />
           </button>
-          <button className="cursor-pointer text-muted-foreground hover:text-destructive transition-colors">
-            <MdDeleteOutline />
+          <button className="rounded-md p-1.5 cursor-pointer text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive">
+            <MdDeleteOutline size={18} />
           </button>
         </td>
-        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <td className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap py-2">
           <p className="inline-flex items-center rounded-full border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {"Validated.."}
           </p>

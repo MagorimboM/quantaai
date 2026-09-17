@@ -10,7 +10,7 @@ export class WorkspaceController {
     // TODO :: fetch the userId from the headers of the request
     const userId = 'seed-user-001';
     return await this.workspaceService.getWorkspaces({ userId: userId });
-  }
+  }; 
 
   @Get('/personal')
   async getPersonalWorkspace() {

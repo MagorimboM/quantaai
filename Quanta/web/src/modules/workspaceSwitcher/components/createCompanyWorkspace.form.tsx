@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MdClose } from "react-icons/md";
 import { postNewWorkspace } from "@/modules/workspaceSwitcher/api/api";
+import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/creatingWorkspace.modal";
 
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
@@ -25,19 +26,24 @@ export function CreateCompanyWorkspaceForm({
     companyType: "",
   });
 
+  const [showCreatingWorkspaceModal, setShowCreatingWorkspaceModal] =
+    useState<boolean>(false);
+
   function updateField(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value.trim() }));
   }
 
   async function submitForm() {
     // TODO :: submit to the backend
+    // TODO :: on success trigger a page reload. or pass page state to this so that it gets updated with the form.
+    setShowCreatingWorkspaceModal(true);
     const response = postNewWorkspace(form);
     if (!response) {
       console.log("something is up");
-
+      setShowCreatingWorkspaceModal(false);
       return;
     }
-
+    setShowCreatingWorkspaceModal(false);
     onClose();
   }
 
@@ -259,6 +265,8 @@ export function CreateCompanyWorkspaceForm({
           </div>
         </div>
       </div>
+
+      <CreatingWorkspaceModal show={showCreatingWorkspaceModal} />
     </>
   );
 }

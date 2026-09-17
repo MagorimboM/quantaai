@@ -7,7 +7,7 @@ import { ProjectCard } from "@/modules/projects/components/projectCard";
 export function ListOfProjects() {
   const [listofProjects, setListOfprojects] = useState<
     {
-      companyId: string | null;
+      companyId: string; 
       createdAt: Date;
       description: string | null;
       id: string;
