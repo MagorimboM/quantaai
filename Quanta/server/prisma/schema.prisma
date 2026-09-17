@@ -195,6 +195,24 @@ model CompanyTradeCode {
 }
 
 // ============================================================
+// RECIPE TYPES
+// Lookup table — every recipe belongs to exactly one type,
+// but a type can have many recipes (one-to-many, same shape
+// as Category <-> Recipe)
+// ============================================================
+
+model RecipeType {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  recipes Recipe[]
+
+  @@map("recipe_types")
+}
+
+// ============================================================
 // CATEGORIES
 // userId = owner
 // companyId   = null  → personal category
@@ -317,11 +335,14 @@ model Overhead {
 // workspaceId = optional workspace scope
 // categoryId = required — every recipe belongs to exactly one category,
 //              but a category can have many recipes (one-to-many)
+// typeId     = required — every recipe belongs to exactly one recipe
+//              type (see RecipeType above), same one-to-many shape
 // ============================================================
 
 model Recipe {
   id          String   @id @default(uuid())
   userId      String?
+  typeId      String
   companyId   String?
   workspaceId String?
   categoryId  String
@@ -335,6 +356,7 @@ model Recipe {
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   workspace       Workspace?       @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   category        Category         @relation(fields: [categoryId], references: [id])
+  type            RecipeType       @relation(fields: [typeId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]

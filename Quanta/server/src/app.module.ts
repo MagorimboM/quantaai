@@ -12,6 +12,7 @@ import { ProjectsModule } from '@/modules/projects/projects.module';
 import { BillOfQuantsModule } from '@/modules/billOfQuants/boq.module';
 import { RecipeLibraryModule } from '@/modules/recipeLibrary/recipeLibrary.module';
 import { WorkspaceModule } from '@/modules/workspace/workspace.module';
+import {RecipeBuilderModule} from "@/modules/recipeBuilder/recipe.builder.module"
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { WorkspaceModule } from '@/modules/workspace/workspace.module';
     BillOfQuantsModule,
     RecipeLibraryModule,
     WorkspaceModule,
+    RecipeBuilderModule
   ],
   controllers: [AppController],
   providers: [AppService],

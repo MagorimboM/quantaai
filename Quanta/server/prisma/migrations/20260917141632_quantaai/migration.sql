@@ -99,6 +99,16 @@ CREATE TABLE "company_trade_codes" (
 );
 
 -- CreateTable
+CREATE TABLE "recipe_types" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "recipe_types_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
@@ -166,6 +176,7 @@ CREATE TABLE "overheads" (
 CREATE TABLE "recipes" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
+    "typeId" TEXT NOT NULL,
     "companyId" TEXT,
     "workspaceId" TEXT,
     "categoryId" TEXT NOT NULL,
@@ -415,6 +426,9 @@ ALTER TABLE "recipes" ADD CONSTRAINT "recipes_workspaceId_fkey" FOREIGN KEY ("wo
 
 -- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "recipes" ADD CONSTRAINT "recipes_typeId_fkey" FOREIGN KEY ("typeId") REFERENCES "recipe_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "recipe_materials" ADD CONSTRAINT "recipe_materials_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "recipes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
