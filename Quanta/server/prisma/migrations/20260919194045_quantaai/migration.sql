@@ -86,7 +86,6 @@ CREATE TABLE "company_trade_codes" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "australianTradeCodeId" TEXT,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -99,21 +98,10 @@ CREATE TABLE "company_trade_codes" (
 );
 
 -- CreateTable
-CREATE TABLE "recipe_types" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "recipe_types_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
@@ -128,7 +116,6 @@ CREATE TABLE "materials" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -144,7 +131,6 @@ CREATE TABLE "labour" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -161,7 +147,6 @@ CREATE TABLE "overheads" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -176,9 +161,7 @@ CREATE TABLE "overheads" (
 CREATE TABLE "recipes" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
-    "typeId" TEXT NOT NULL,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "categoryId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -231,7 +214,6 @@ CREATE TABLE "projects" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "projectNumber" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -298,7 +280,6 @@ CREATE TABLE "documents" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "projectId" TEXT,
     "name" TEXT NOT NULL,
     "fileUrl" TEXT NOT NULL,
@@ -339,7 +320,6 @@ CREATE TABLE "chat_messages" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "companyId" TEXT,
-    "workspaceId" TEXT,
     "projectId" TEXT,
     "role" TEXT NOT NULL,
     "content" TEXT NOT NULL,
@@ -380,22 +360,13 @@ ALTER TABLE "workspaces" ADD CONSTRAINT "workspaces_companyId_fkey" FOREIGN KEY 
 ALTER TABLE "company_trade_codes" ADD CONSTRAINT "company_trade_codes_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "company_trade_codes" ADD CONSTRAINT "company_trade_codes_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "company_trade_codes" ADD CONSTRAINT "company_trade_codes_australianTradeCodeId_fkey" FOREIGN KEY ("australianTradeCodeId") REFERENCES "australian_trade_codes"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "categories" ADD CONSTRAINT "categories_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "categories" ADD CONSTRAINT "categories_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "materials" ADD CONSTRAINT "materials_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "materials" ADD CONSTRAINT "materials_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "materials" ADD CONSTRAINT "materials_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -404,16 +375,10 @@ ALTER TABLE "materials" ADD CONSTRAINT "materials_categoryId_fkey" FOREIGN KEY (
 ALTER TABLE "labour" ADD CONSTRAINT "labour_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "labour" ADD CONSTRAINT "labour_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "labour" ADD CONSTRAINT "labour_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "overheads" ADD CONSTRAINT "overheads_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "overheads" ADD CONSTRAINT "overheads_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "overheads" ADD CONSTRAINT "overheads_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -422,13 +387,7 @@ ALTER TABLE "overheads" ADD CONSTRAINT "overheads_categoryId_fkey" FOREIGN KEY (
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "recipes" ADD CONSTRAINT "recipes_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "recipes" ADD CONSTRAINT "recipes_typeId_fkey" FOREIGN KEY ("typeId") REFERENCES "recipe_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "recipe_materials" ADD CONSTRAINT "recipe_materials_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "recipes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -452,9 +411,6 @@ ALTER TABLE "recipe_overheads" ADD CONSTRAINT "recipe_overheads_overheadId_fkey"
 ALTER TABLE "projects" ADD CONSTRAINT "projects_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "projects" ADD CONSTRAINT "projects_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "takeoff_items" ADD CONSTRAINT "takeoff_items_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -467,9 +423,6 @@ ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_takeoffItemId_fkey" FOREIGN 
 ALTER TABLE "documents" ADD CONSTRAINT "documents_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "documents" ADD CONSTRAINT "documents_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "documents" ADD CONSTRAINT "documents_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -477,9 +430,6 @@ ALTER TABLE "document_embeddings" ADD CONSTRAINT "document_embeddings_documentId
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "workspaces"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
