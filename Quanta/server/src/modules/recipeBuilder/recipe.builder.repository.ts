@@ -1,8 +1,7 @@
 import { prisma } from '@/core/database/postgres';
-import { NotAcceptableException } from '@nestjs/common';
+import { NotAcceptableException, Query } from '@nestjs/common';
 
 type NewRecipe = {
-  companyId: string;
   categoryId: string;
   recipeName: string;
   recipeCode: string;
@@ -16,7 +15,7 @@ type NewRecipe = {
 };
 
 export class RecipeBuilderRepository {
-  async createNewRecipe(userId: string, request: NewRecipe) {
+  async createNewRecipe(companyId: string, userId: string, request: NewRecipe) {
     const response = await prisma.$transaction(async (tx) => {
       // check if no similar recipe is there. if there is a similar recipe raise an error
       const recipeExists: { name: string; id: string }[] = await tx.$queryRaw`
@@ -38,7 +37,7 @@ export class RecipeBuilderRepository {
           gen_random_uuid(),
           ${userId},
           ${request.categoryId},
-          ${request.companyId},
+          ${companyId},
           ${request.recipeName},
           ${request.recipeDescription},
           ${request.recipeUnitMeasure},
@@ -92,6 +91,51 @@ export class RecipeBuilderRepository {
 
       return addedRecipe[0];
     });
+
+    return response;
+  }
+
+  async getListOfCategories(companyId: string, userId: string) {
+    const response = await prisma.$queryRaw`
+    SELECT c.id , c.name 
+    FROM categories c 
+    WHERE c."companyId" = ${companyId}
+    AND  c."userId" = ${userId}
+    ORDER BY c.name ASC `;
+    return response;
+  }
+
+  async getListOfMaterialsAndCategories(
+    companyId: string,
+    categoryId: string,
+    userId: string,
+    query: string,
+  ) {
+    const response = await prisma.$queryRaw`
+    SELECT m.id, m.name,m.unit, c.id , c.name
+    FROM materials m
+    JOIN categories c 
+    ON m."categoryId" = c.id
+    WHERE m."companyId" = ${companyId}
+    AND m."categoryId" = ${categoryId} 
+    AND m."userId" = ${userId}
+    AND m.name ILIKE ${'%' + query + '%'}
+    GROUP BY c.name, m.id, c.id, m.name, m.unit
+    ORDER BY m.name ASC`;
+
+    return response;
+  }
+
+  async materialCategories(userId: string, companyId: string) {
+    const response = await prisma.$queryRaw`
+      SELECT c.name, c.id 
+      FROM categories c 
+      JOIN users u 
+      ON u.id = c."userId"
+      WHERE c."companyId" = ${companyId} 
+      AND u.id = ${userId}
+      GROUP BY c.id, c.name
+      ORDER BY c.name ASC`;
 
     return response;
   }

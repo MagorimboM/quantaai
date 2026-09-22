@@ -183,6 +183,29 @@ model CompanyTradeCode {
 }
 
 // ============================================================
+// SITE CONDITIONS
+// Lookup table — a material, labour item, overhead, or recipe
+// can optionally be tied to a specific ground/site condition
+// (e.g. muddy, sandy, coastal), since these change what's
+// needed to do the same work. Null = general purpose, not
+// site-specific.
+// ============================================================
+
+model SiteCondition {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  materials Material[]
+  labour    Labour[]
+  overheads Overhead[]
+  recipes   Recipe[]
+
+  @@map("site_conditions")
+}
+
+// ============================================================
 // CATEGORIES
 // userId = owner
 // companyId = null  → personal category
@@ -221,18 +244,20 @@ model Category {
 // ============================================================
 
 model Material {
-  id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
-  categoryId  String
-  name        String
-  description String?
-  unit        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  companyId       String?
+  categoryId      String
+  siteConditionId String?
+  name            String
+  description     String?
+  unit            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
+  siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
 
   @@map("materials")
@@ -246,20 +271,22 @@ model Material {
 // ============================================================
 
 model Labour {
-  id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
-  categoryId  String
-  name        String
-  description String?
-  labourType  String
-  unit        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  companyId       String?
+  categoryId      String
+  siteConditionId String?
+  name            String
+  description     String?
+  labourType      String
+  unit            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  company      Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  category     Category       @relation(fields: [categoryId], references: [id])
-  recipeLabour RecipeLabour[]
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category      Category       @relation(fields: [categoryId], references: [id])
+  siteCondition SiteCondition? @relation(fields: [siteConditionId], references: [id])
+  recipeLabour  RecipeLabour[]
 
   @@map("labour")
 }
@@ -272,18 +299,20 @@ model Labour {
 // ============================================================
 
 model Overhead {
-  id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
-  categoryId  String
-  name        String
-  description String?
-  unit        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  companyId       String?
+  categoryId      String
+  siteConditionId String?
+  name            String
+  description     String?
+  unit            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
+  siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeOverheads RecipeOverhead[]
 
   @@map("overheads")
@@ -292,27 +321,35 @@ model Overhead {
 // ============================================================
 // RECIPES
 // userId = owner
-// companyId  = null  → John's personal template
-// companyId  = set   → company specific recipe
-// categoryId = required — every recipe belongs to exactly one category,
-//              but a category can have many recipes (one-to-many).
-//              Category now also covers what RecipeType used to.
+// companyId       = null  → John's personal template
+// companyId       = set   → company specific recipe
+// categoryId      = required — every recipe belongs to exactly one
+//                    category, but a category can have many recipes
+//                    (one-to-many). Category now also covers what
+//                    RecipeType used to.
+// siteConditionId = optional — null means this recipe isn't tied to
+//                    a specific ground/site condition; set means it's
+//                    the version of this recipe designed for that
+//                    condition (e.g. "110mm Brick Wall - Muddy Site"
+//                    vs "110mm Brick Wall" as a plain, general recipe)
 // ============================================================
 
 model Recipe {
-  id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
-  categoryId  String
-  name        String
-  description String?
-  unit        String
-  isArchived  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  companyId       String?
+  categoryId      String
+  siteConditionId String?
+  name            String
+  description     String?
+  unit            String
+  isArchived      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
+  siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]

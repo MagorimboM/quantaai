@@ -7,16 +7,17 @@ import { BillOfQuantsPage } from "@/modules/quantityTakeoff/quantityTakeOff.page
 import { DashBoardPage } from "@/modules/dashboard/dashboard.page";
 import { WorkspaceSwitcherPage } from "@/modules/workspaceSwitcher/workspace.page";
 import { HomeShell } from "@/common/components/homeShell";
+import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
 
 function App() {
   // TODO :: check of the workspaceid is there:
 
-  const workspaceId = localStorage.getItem("workspaceId");
+  /*   const workspaceId = localStorage.getItem("workspaceId");
   const companyId = localStorage.getItem("companyId"); 
 
   if (workspaceId == null || workspaceId?.length == 0 || workspaceId == "") {
-    return <HomeShell />;
-  }
+    return <RecipeLibraryPage />;
+  } */
 
   return (
     <AppShell>

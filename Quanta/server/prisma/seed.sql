@@ -1,3 +1,15 @@
+-- ============================================================
+-- QUANTA — SQL SEED FILE
+-- Multiple companies, each owned by a distinct user.
+-- Each company has: a workspace, categories, materials, labour,
+-- overheads, recipes, and TWO projects (one completed, one
+-- incomplete). Workspaces sit under companies only. Category
+-- alone classifies recipes (no separate RecipeType). Site
+-- conditions are optional -- null means general purpose, set
+-- means the material/labour/overhead/recipe is specifically
+-- for that ground/site condition.
+-- ============================================================
+
 -- ── CLEAN EXISTING DATA ──────────────────────────────────────
 
 TRUNCATE TABLE
@@ -13,6 +25,7 @@ TRUNCATE TABLE
   overheads,
   labour,
   materials,
+  site_conditions,
   categories,
   company_trade_codes,
   australian_trade_codes,
@@ -87,6 +100,18 @@ VALUES
   (gen_random_uuid(), '06100', 'Metal Roof Sheet', 'Roofing',    'item',     'm²', 'Corrugated metal roof sheeting',      NOW());
 
 -- ============================================================
+-- SITE CONDITIONS
+-- Global lookup -- shared across all companies. Null on a
+-- material/labour/overhead/recipe means general purpose.
+-- ============================================================
+
+INSERT INTO site_conditions (id, name, description, "createdAt")
+VALUES
+  ('seed-site-001', 'Muddy',   'Soft, waterlogged or unstable ground requiring stabilisation', NOW()),
+  ('seed-site-002', 'Sandy',   'Loose, free-draining sandy ground',                             NOW()),
+  ('seed-site-003', 'Coastal', 'Near-shore, salt-exposed conditions',                           NOW());
+
+-- ============================================================
 -- CATEGORIES
 -- ============================================================
 
@@ -105,59 +130,68 @@ VALUES
 
 -- ============================================================
 -- MATERIALS
+-- All general-purpose (siteConditionId NULL) except the last
+-- row, which is specific to muddy ground.
 -- ============================================================
 
-INSERT INTO materials (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO materials (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "createdAt", "updatedAt")
 VALUES
   -- ABC Construction
-  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
-  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
-  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW()),
+  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
+  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
+  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-cat-002', NULL, 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW()),
   -- XYZ Builders
-  ('seed-mat-004', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Colorbond Sheet', 'Corrugated colorbond roofing sheet', 'm²', NOW(), NOW()),
-  ('seed-mat-005', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Roof Batten',      'Timber roof batten',                 'm',  NOW(), NOW()),
+  ('seed-mat-004', 'seed-user-002', 'seed-company-002', 'seed-cat-004', NULL, 'Colorbond Sheet', 'Corrugated colorbond roofing sheet', 'm²', NOW(), NOW()),
+  ('seed-mat-005', 'seed-user-002', 'seed-company-002', 'seed-cat-004', NULL, 'Roof Batten',      'Timber roof batten',                 'm',  NOW(), NOW()),
   -- Coastal Concrete Co
-  ('seed-mat-006', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Concrete 32MPa', 'Ready mix concrete 32MPa',   'm³', NOW(), NOW()),
-  ('seed-mat-007', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Steel Mesh SL82', 'Reinforcement mesh SL82',    'm²', NOW(), NOW());
+  ('seed-mat-006', 'seed-user-003', 'seed-company-003', 'seed-cat-006', NULL, 'Concrete 32MPa', 'Ready mix concrete 32MPa',   'm³', NOW(), NOW()),
+  ('seed-mat-007', 'seed-user-003', 'seed-company-003', 'seed-cat-006', NULL, 'Steel Mesh SL82', 'Reinforcement mesh SL82',    'm²', NOW(), NOW()),
+  -- Muddy-site-specific: extra material needed only on soft ground
+  ('seed-mat-008', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'seed-site-001', 'Geotextile Matting', 'Ground stabilisation membrane for soft/muddy sites', 'm²', NOW(), NOW());
 
 -- ============================================================
 -- LABOUR
 -- ============================================================
 
-INSERT INTO labour (id, "userId", "companyId", "categoryId", name, description, "labourType", unit, "createdAt", "updatedAt")
+INSERT INTO labour (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, "labourType", unit, "createdAt", "updatedAt")
 VALUES
   -- ABC Construction
-  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW()),
+  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-cat-003', NULL, 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW()),
   -- XYZ Builders
-  ('seed-lab-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Roofer',   'Qualified roofer', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-004', 'seed-user-002', 'seed-company-002', 'seed-cat-005', 'Labourer', 'General labourer',  'labourer', 'hr', NOW(), NOW()),
+  ('seed-lab-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', NULL, 'Roofer',   'Qualified roofer', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-004', 'seed-user-002', 'seed-company-002', 'seed-cat-005', NULL, 'Labourer', 'General labourer',  'labourer', 'hr', NOW(), NOW()),
   -- Coastal Concrete Co
-  ('seed-lab-005', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Concretor', 'Qualified concretor', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-006', 'seed-user-003', 'seed-company-003', 'seed-cat-007', 'Labourer',  'General labourer',    'labourer', 'hr', NOW(), NOW());
+  ('seed-lab-005', 'seed-user-003', 'seed-company-003', 'seed-cat-006', NULL, 'Concretor', 'Qualified concretor', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-006', 'seed-user-003', 'seed-company-003', 'seed-cat-007', NULL, 'Labourer',  'General labourer',    'labourer', 'hr', NOW(), NOW()),
+  -- Muddy-site-specific: extra ground prep labour
+  ('seed-lab-007', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'seed-site-001', 'Ground Prep Labourer', 'Site stabilisation and matting installation', 'labourer', 'hr', NOW(), NOW());
 
 -- ============================================================
 -- OVERHEADS
 -- ============================================================
 
-INSERT INTO overheads (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO overheads (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "createdAt", "updatedAt")
 VALUES
-  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW()),
-  ('seed-ovh-002', 'seed-user-002', 'seed-company-002', 'seed-cat-005', 'Crane Hire',    'Mobile crane hire',         'day',  NOW(), NOW()),
-  ('seed-ovh-003', 'seed-user-003', 'seed-company-003', 'seed-cat-007', 'Concrete Pump', 'Concrete pump hire',        'day',  NOW(), NOW());
+  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', NULL, 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW()),
+  ('seed-ovh-002', 'seed-user-002', 'seed-company-002', 'seed-cat-005', NULL, 'Crane Hire',    'Mobile crane hire',         'day',  NOW(), NOW()),
+  ('seed-ovh-003', 'seed-user-003', 'seed-company-003', 'seed-cat-007', NULL, 'Concrete Pump', 'Concrete pump hire',        'day',  NOW(), NOW());
 
 -- ============================================================
 -- RECIPES
--- categoryId is the only classification a recipe needs now --
--- RecipeType no longer exists, Category covers that role too.
+-- categoryId is required; siteConditionId is optional. The
+-- last recipe is the muddy-site variant of Slab on Ground
+-- 32MPa -- same company/category, different ground condition,
+-- genuinely different materials and labour.
 -- ============================================================
 
-INSERT INTO recipes (id, "userId", "companyId", "categoryId", name, description, unit, "isArchived", "createdAt", "updatedAt")
+INSERT INTO recipes (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
-  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
-  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
-  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW());
+  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
+  ('seed-rec-003', 'seed-user-002', 'seed-company-002', 'seed-cat-004', NULL, 'Colorbond Roof',      'Standard colorbond roof installation',           'm²', false, NOW(), NOW()),
+  ('seed-rec-004', 'seed-user-003', 'seed-company-003', 'seed-cat-006', NULL, 'Slab on Ground 32MPa','High-strength slab on ground, 32MPa mix',        'm²', false, NOW(), NOW()),
+  ('seed-rec-005', 'seed-user-003', 'seed-company-003', 'seed-cat-006', 'seed-site-001', 'Slab on Ground 32MPa - Muddy Site', 'Same 32MPa slab, plus ground stabilisation for soft/muddy sites', 'm²', false, NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 
@@ -169,7 +203,11 @@ VALUES
   (gen_random_uuid(), 'seed-user-002', 'seed-rec-003', 'seed-mat-004', 1,    'm²'),
   (gen_random_uuid(), 'seed-user-002', 'seed-rec-003', 'seed-mat-005', 2,    'm'),
   (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-mat-006', 0.18, 'm³'),
-  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-mat-007', 1,    'm²');
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-mat-007', 1,    'm²'),
+  -- Muddy-site variant: same concrete + mesh, PLUS the extra matting a normal slab doesn't need
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-mat-006', 0.18, 'm³'),
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-mat-007', 1,    'm²'),
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-mat-008', 1,    'm²');
 
 -- ── RECIPE LABOUR ────────────────────────────────────────────
 
@@ -181,7 +219,10 @@ VALUES
   (gen_random_uuid(), 'seed-user-002', 'seed-rec-003', 'seed-lab-003', 0.4, 'hr'),
   (gen_random_uuid(), 'seed-user-002', 'seed-rec-003', 'seed-lab-004', 0.2, 'hr'),
   (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-lab-005', 0.6, 'hr'),
-  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-lab-006', 0.3, 'hr');
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-lab-006', 0.3, 'hr'),
+  -- Muddy-site variant: same concretor time, PLUS extra ground prep labour
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-lab-005', 0.6, 'hr'),
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-lab-007', 0.8, 'hr');
 
 -- ── RECIPE OVERHEADS ─────────────────────────────────────────
 
@@ -189,7 +230,8 @@ INSERT INTO recipe_overheads (id, "userId", "recipeId", "overheadId", quantity, 
 VALUES
   (gen_random_uuid(), 'seed-user-001', 'seed-rec-001', 'seed-ovh-001', 0.1,  'week'),
   (gen_random_uuid(), 'seed-user-002', 'seed-rec-003', 'seed-ovh-002', 0.05, 'day'),
-  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-ovh-003', 0.08, 'day');
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-004', 'seed-ovh-003', 0.08, 'day'),
+  (gen_random_uuid(), 'seed-user-003', 'seed-rec-005', 'seed-ovh-003', 0.08, 'day');
 
 -- ============================================================
 -- PROJECTS
