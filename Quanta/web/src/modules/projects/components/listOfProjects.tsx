@@ -1,36 +1,30 @@
-import { useEffect, useState } from "react";
-import { getListOfProjects } from "@/modules/projects/api/api";
 import { ProjectCard } from "@/modules/projects/components/projectCard";
+
+type ProjectSummary = {
+  companyId: string | null;
+  createdAt: Date;
+  description: string | null;
+  id: string;
+  name: string;
+  status: string;
+  takeoffItems: {
+    description: string;
+    id: string;
+    projectId: string;
+  }[];
+  type: string;
+  updatedAt: Date;
+};
 
 // TODO :: create contracts of these pages
 
-export function ListOfProjects() {
-  const [listofProjects, setListOfprojects] = useState<
-    {
-      companyId: string; 
-      createdAt: Date;
-      description: string | null;
-      id: string;
-      name: string;
-      status: string;
-      takeoffItems: {
-        description: string;
-        id: string;
-        projectId: string;
-      }[];
-      type: string;
-      updatedAt: Date;
-    }[]
-  >([]);
-
-  useEffect(() => {
-    async function getProjectsList() {
-      const result = await getListOfProjects({ companyId: "seed-company-002" });
-      setListOfprojects(result);
-    }
-    getProjectsList();
-  }, []);
-
+export function ListOfProjects({
+  projects,
+  isLoading,
+}: {
+  projects: ProjectSummary[];
+  isLoading: boolean;
+}) {
   return (
     <div className="flex w-full flex-1 min-h-0 flex-col">
       <div className="flex flex-col gap-4 p-4">
@@ -38,12 +32,15 @@ export function ListOfProjects() {
         <p>Manage your quantity take offs</p>
       </div>
       <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto p-4">
-        {listofProjects.length > 0 ? (
-          listofProjects.map((project, key) => (
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading projects...</p>
+        ) : projects.length > 0 ? (
+          projects.map((project) => (
             <ProjectCard
-              key={key}
+              key={project.id}
               name={project.name}
               type={project.type}
+              status={project.status}
               numberOfLineItems={project.takeoffItems.length}
               companyId={project.companyId}
               time={project.updatedAt}
@@ -51,7 +48,7 @@ export function ListOfProjects() {
             />
           ))
         ) : (
-          <p>{"No projects"}</p>
+          <p className="text-sm text-muted-foreground">Nothing found</p>
         )}
       </div>
     </div>

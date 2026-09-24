@@ -12,11 +12,18 @@ import type {
 // TODO :: create api request to the backend on updating recipes, archiving recipes, deleting recipes
 // TODO :: create api request to the backend on creating new recipe, grab list of archived recipes.
 
+type PaginatedRecipes = {
+  totalCount: number;
+  page: number;
+  limit: number;
+  recipes: Recipe[];
+};
+
 export async function searchRecipe(
   request: SearchRecipeRequest,
-): Promise<Recipe[]> {
+): Promise<PaginatedRecipes> {
   const response = await apiClient.get(
-    `recipe-library/companies/${request.companyId}/categories/${request.categoryId}/recipes/search?term=${request.term}&page=${request.page}&limit=${request.limit}`,
+    `recipe-library/companies/${request.companyId}/categories/${request.categoryId}/recipes/search?term=${encodeURIComponent(request.term)}&page=${request.page}&limit=${request.limit}`,
   );
   return response.data;
 }
@@ -36,7 +43,7 @@ export async function getCategoryRecipe(request: {
   companyId: string;
   page: number;
   limit: number;
-}): Promise<Recipe[]> {
+}): Promise<PaginatedRecipes> {
   const response = await apiClient.get(
     `recipe-library/companies/${request.companyId}/categories/${request.categoryId}/recipes?page=${request.page}&limit=${request.limit}`,
   );

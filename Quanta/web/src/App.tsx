@@ -9,8 +9,10 @@ import { WorkspaceSwitcherPage } from "@/modules/workspaceSwitcher/workspace.pag
 import { HomeShell } from "@/common/components/homeShell";
 import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
 
+// TODO :: fix the flow, implement proper flow between pages. 
+
 function App() {
-  // TODO :: check of the workspaceid is there:
+  
 
   /*   const workspaceId = localStorage.getItem("workspaceId");
   const companyId = localStorage.getItem("companyId"); 

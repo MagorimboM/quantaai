@@ -111,6 +111,21 @@ export class RecipeBuilderRepository {
     userId: string,
     query: string,
   ) {
+    if (query == 'all' || query == 'All' || query == null) {
+      const response = await prisma.$queryRaw`
+    SELECT m.id, m.name,m.unit, c.id , c.name
+    FROM materials m
+    JOIN categories c 
+    ON m."categoryId" = c.id
+    WHERE m."companyId" = ${companyId}
+    AND m."categoryId" = ${categoryId} 
+    AND m."userId" = ${userId}
+    GROUP BY c.name, m.id, c.id, m.name, m.unit
+    ORDER BY m.name ASC`;
+
+      return response;
+    }
+
     const response = await prisma.$queryRaw`
     SELECT m.id, m.name,m.unit, c.id , c.name
     FROM materials m

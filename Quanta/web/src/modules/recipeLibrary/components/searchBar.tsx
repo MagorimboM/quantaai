@@ -1,40 +1,34 @@
-import { useState, useEffect } from "react";
-import { searchRecipe } from "@/modules/recipeLibrary/api/api";
-import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
+import { useState, useEffect, useRef } from "react";
 import { FiSearch } from "react-icons/fi";
 
 // TODO:: Need the companyId, CategoryID from somewhere
-// TODO :: Implement Pagination
 
 export function SearchBar({
-  setRecipeListState,
+  onSearch,
 }: {
-  setRecipeListState: SetRecipeListState;
+  onSearch: (term: string) => void;
 }) {
   const [userInput, setUserInput] = useState<string>("");
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (userInput.length === 0) {
-      return;
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
 
-    const debounceTimer = setTimeout(async () => {
-      const response = await searchRecipe({
-        companyId: "seed-company-001",
-        categoryId: "seed-cat-001",
-        term: userInput,
-        limit: 20,
-        page: 1,
-      });
-      setRecipeListState(response);
-      setUserInput("");
-    }, 2000);
+    debounceTimerRef.current = setTimeout(() => {
+      onSearch(userInput);
+    }, 400);
 
-    return () => clearTimeout(debounceTimer);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [userInput]);
 
   function saveUserInput(e: React.ChangeEvent<HTMLInputElement>) {
-    setUserInput(e.target.value.toLowerCase().trim());
+    setUserInput(e.target.value.trim());
   }
 
   return (
@@ -44,6 +38,7 @@ export function SearchBar({
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
       />
       <input
+        value={userInput}
         onChange={saveUserInput}
         type="text"
         placeholder="Search recipes..."

@@ -21,7 +21,8 @@ export function ProjectCard({
   return (
     <div
       onClick={() => navigateToProjectBillOfQuants()}
-      className="flex flex-1 flex-row justify-between rounded-lg border bg-muted/40 cursor-pointer transition-colors hover:bg-muted"
+      /* Removed flex-1 from here so the card doesn't stretch vertically */
+      className="flex w-full flex-row justify-between rounded-lg border bg-muted/40 cursor-pointer transition-colors hover:bg-muted"
     >
       <div className="flex flex-1 flex-col gap-1 p-4">
         <h1 className="text-sm font-medium text-foreground">{name}</h1>

@@ -1,6 +1,8 @@
 export type GetCategoryRecipeRequest = {
   categoryId: string;
   companyId: string;
+  page:number
+  limit:number
 };
 
 export type UserRecipeCategoriesRequest = {

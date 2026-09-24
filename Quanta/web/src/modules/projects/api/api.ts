@@ -31,7 +31,6 @@ export async function getFiles(
   const response = await apiClient.get(
     `/${request.companyId}/files/${request.projectId}`,
   );
-  console.log({ message: "the bytes from backend", bytes: response.data });
   return response.data;
 }
 
@@ -44,27 +43,38 @@ export async function deleteFiles(
   return response.data;
 }
 
+type ProjectSummary = {
+  companyId: string | null;
+  createdAt: Date;
+  description: string | null;
+  id: string;
+  name: string;
+  status: string;
+  takeoffItems: {
+    description: string;
+    id: string;
+    projectId: string;
+  }[];
+  type: string;
+  updatedAt: Date;
+};
+
+type PaginatedProjects = {
+  totalCount: number;
+  page: number;
+  limit: number;
+  projects: ProjectSummary[];
+};
+
 export async function getListOfProjects(request: {
   companyId: string;
-}): Promise<
-  {
-    companyId: string 
-    createdAt: Date;
-    description: string | null;
-    id: string;
-    name: string;
-    status: string;
-    takeoffItems: {
-      description: string;
-      id: string;
-      projectId: string;
-    }[];
-    type: string;
-    updatedAt: Date;
-  }[]
-> {
-  const response = await apiClient.get(`${request.companyId}/projects`);
-  console.log("here is the list of companies" + `:${request.companyId}`);
-
+  userId: string;
+  term?: string;
+  page: number;
+  limit: number;
+}): Promise<PaginatedProjects> {
+  const response = await apiClient.get(
+    `/${request.companyId}/projects?userId=${request.userId}&term=${encodeURIComponent(request.term ?? "")}&page=${request.page}&limit=${request.limit}`,
+  );
   return response.data;
 }

@@ -19,8 +19,14 @@ export async function getMaterialsAndCategories(
 ) {
   // localhost:3000/api/seed-company-001/recipe/new-recipe/i/seed-cat-001/materials_and_categories
 
+  let term: string = "all";
+
+  if (query.length > 0) {
+    term = query;
+  }; 
+
   const response = await apiClient.get(
-    `/${companyId}/recipe/new-recipe/${query}/${categoryId}/materials_and_categories`,
+    `/${companyId}/recipe/new-recipe/${term}/${categoryId}/materials_and_categories`,
   );
   return response.data;
 }

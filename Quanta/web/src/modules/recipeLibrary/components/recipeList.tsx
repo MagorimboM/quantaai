@@ -5,11 +5,13 @@ import type { SetRecipeListState } from "@/modules/recipeLibrary/contracts/recip
 export function RecipeList({
   recipeList,
   setRecipeListState,
+  isLoading,
 }: {
   recipeList: Recipe[];
   setRecipeListState: SetRecipeListState;
+  isLoading: boolean;
 }) {
-  if (recipeList.length === 0) {
+  if (isLoading === true) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -35,6 +37,19 @@ export function RecipeList({
             <div className="mt-3 h-3 w-1/3 rounded bg-zinc-100" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (recipeList.length === 0) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-200 bg-white py-16">
+          <p className="text-sm font-medium text-zinc-700">No recipes found</p>
+          <p className="text-xs text-zinc-400">
+            Try a different search term or category.
+          </p>
+        </div>
       </div>
     );
   }

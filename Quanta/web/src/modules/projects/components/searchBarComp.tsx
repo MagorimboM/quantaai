@@ -1,12 +1,22 @@
 import { useState } from "react";
 import type React from "react";
 import { MdOutlineSearch } from "react-icons/md";
-export function SearchBarComp() {
+
+export function SearchBarComp({
+  onSearch,
+}: {
+  onSearch: (term: string) => void;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
+      onSearch(searchTerm.trim());
     }
+  }
+
+  function submitSearch() {
+    onSearch(searchTerm.trim());
   }
 
   return (
@@ -22,6 +32,7 @@ export function SearchBarComp() {
 
       <button
         title="submit-search-term"
+        onClick={submitSearch}
         className="cursor-pointer rounded-lg p-1 hover:bg-zinc-400 flex flex-row"
       >
         <MdOutlineSearch size={20} />

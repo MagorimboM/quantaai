@@ -116,7 +116,7 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
     GetMaterialsAndRecipeCategories();
   }, []);
 
-  // TODO :: fetch real site conditions once the backend endpoint exists
+  // TODO :: fetch real site conditions once the backend endpoint exists 
   useEffect(() => {
     async function GetSiteConditions() {
       const conditions = await getSiteConditionsPlaceholder();
@@ -202,18 +202,22 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      onClick={() => onClose()}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 backdrop-blur-sm"
     >
       <div
-        onClick={() => onClose()}
         className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-zinc-50 p-6 shadow-lg space-y-8"
       >
         {/* Recipe Details */}
         <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5">
+          <div className="flex flex-row justify-between p-2">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
             Recipe Details
           </h2>
+          <button className="cursor-pointer p-2  rounded-lg border-2 " onClick={()=>onClose()}>
+            x
+          </button>
+          </div>
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">

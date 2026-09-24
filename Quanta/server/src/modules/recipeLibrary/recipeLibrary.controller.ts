@@ -1,4 +1,13 @@
-import { Controller, Body, Get, Post, Put, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Get,
+  Post,
+  Put,
+  Param,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { RecipeLibraryService } from '@/modules/recipeLibrary/recipeLibrary.service';
 
 @Controller('recipe-library')
@@ -10,8 +19,8 @@ export class RecipeLibraryController {
     @Param('companyId') companyId: string,
     @Param('categoryId') categoryId: string,
     @Query('term') term: string,
-    @Query('limit') limit: number,
-    @Query('page') page: number,
+    @Query('limit', ParseIntPipe) limit: number,
+    @Query('page', ParseIntPipe) page: number,
   ) {
     return await this.recipeLibraryService.searchRecipe({
       companyId: companyId,
@@ -33,10 +42,14 @@ export class RecipeLibraryController {
   async getCategoryRecipe(
     @Param('companyId') companyId: string,
     @Param('categoryId') categoryId: string,
+    @Query('limit', ParseIntPipe) limit: number,
+    @Query('page', ParseIntPipe) page: number,
   ) {
     return await this.recipeLibraryService.getCategoryRecipe({
       categoryId: categoryId,
       companyId: companyId,
+      limit: limit,
+      page: page,
     });
   }
 }

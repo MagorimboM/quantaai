@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import type { RecentProjectsResponse } from "@/modules/dashboard/contracts/dashboard.response.contract";
 import { getRecentProjects } from "@/modules/dashboard/api/api";
 
-// TODO :: create new project form modal, wire it a the backend
-// TODO :: wire the dashboard to the backend
+// TODO :: implement routing create new project form
+// 
 
 export function RecentProjects() {
   const [recentProjects, setRecentProjects] = useState<RecentProjectsResponse>(
