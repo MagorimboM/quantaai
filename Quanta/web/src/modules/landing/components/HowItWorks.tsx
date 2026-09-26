@@ -21,34 +21,34 @@ export function HowItWorks() {
   ]
 
   return (
-    <section id="how-it-works" className="py-24" style={{ background: '#0C0C0E' }}>
+    <section id="how-it-works" className="py-24" style={{ background: '#FFEFDD' }}>
       <div className="max-w-6xl mx-auto px-6">
-        <p className="font-mono text-xs mb-4" style={{ color: '#52525B' }}>HOW IT WORKS</p>
+        <p className="font-mono text-xs mb-4" style={{ color: '#B89B6E' }}>HOW IT WORKS</p>
         <h2
           className="font-display font-800 leading-none mb-14"
-          style={{ fontSize: 'clamp(32px, 4.5vw, 52px)', color: '#FAFAFA', letterSpacing: '-0.01em' }}
+          style={{ fontSize: 'clamp(32px, 4.5vw, 52px)', color: '#2B1B0E', letterSpacing: '-0.01em' }}
         >
           THREE STEPS.
           <br />
           ONE MEASUREMENT.
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-px" style={{ background: '#27272A' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-px" style={{ background: '#F3DEC0' }}>
           {steps.map(step => (
-            <div key={step.n} className="p-8" style={{ background: '#0C0C0E' }}>
+            <div key={step.n} className="p-8" style={{ background: '#FFEFDD' }}>
               <div
                 className="w-9 h-9 flex items-center justify-center font-display font-800 text-base mb-6 rounded"
-                style={{ background: '#18181B', color: '#FAFAFA', border: '1px solid #3F3F46' }}
+                style={{ background: '#FFFFFF', color: '#2B1B0E', border: '1px solid #F3DEC0' }}
               >
                 {step.n}
               </div>
-              <h3 className="font-display font-700 text-base tracking-wide mb-3" style={{ color: '#FAFAFA' }}>
+              <h3 className="font-display font-700 text-base tracking-wide mb-3" style={{ color: '#2B1B0E' }}>
                 {step.title}
               </h3>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: '#71717A' }}>{step.body}</p>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: '#9C7B4F' }}>{step.body}</p>
               <div
                 className="font-mono text-xs px-3 py-2 rounded"
-                style={{ background: '#18181B', color: '#A1A1AA', border: '1px solid #3F3F46' }}
+                style={{ background: '#FFFFFF', color: '#6B4F2E', border: '1px solid #F3DEC0' }}
               >
                 {step.detail}
               </div>

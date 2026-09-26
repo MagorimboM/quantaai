@@ -10,9 +10,9 @@ import {SiteConditions} from "@/modules/landing/components/SiteConditions"
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 
-export default function App() {
+export function LandingPage() {
   return (
-    <div style={{ background: '#09090B', color: '#FAFAFA' }}>
+   <div style={{ background: '#FFF8F0', color: '#2B1B0E' }}>
       <Nav />
       <Hero />
       <ProblemSection />

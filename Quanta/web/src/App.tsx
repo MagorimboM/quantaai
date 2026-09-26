@@ -8,18 +8,25 @@ import { DashBoardPage } from "@/modules/dashboard/dashboard.page";
 import { WorkspaceSwitcherPage } from "@/modules/workspaceSwitcher/workspace.page";
 import { HomeShell } from "@/common/components/homeShell";
 import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
+import {LandingPage} from "@/modules/landing/landing.page"
 
 // TODO :: fix the flow, implement proper flow between pages. 
 
 function App() {
+
+  // on mount Check if the user is logged in or there is cookies. 
+  // if user is logged in take them to the workspace switcher routes
+  // if the user is not logged in take them to the landing page. 
+  // if the user has an expired token take them to the landing page and let them know that their session is expired
+  
   
 
-  /*   const workspaceId = localStorage.getItem("workspaceId");
+    const workspaceId = localStorage.getItem("workspaceId");
   const companyId = localStorage.getItem("companyId"); 
 
   if (workspaceId == null || workspaceId?.length == 0 || workspaceId == "") {
-    return <RecipeLibraryPage />;
-  } */
+    return <LandingPage />;
+  } 
 
   return (
     <AppShell>
