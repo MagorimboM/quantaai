@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import { BRICK_WALL_RECIPE } from '@/modules/landing/components/Data'
 import { fmt, typeTag, typeColor } from '@/modules/landing/components/Utils'
 import { ArrowRightIcon } from '@/modules/landing/components/Icons'
@@ -8,9 +9,9 @@ function HeroDemo() {
   const [area, setArea] = useState(40.8)
   const [key, setKey] = useState(0)
   const [isAuto, setIsAuto] = useState(true)
-
+ 
   const DEMO_VALUES = [40.8, 65.2, 28.5, 52.0]
-
+ 
   useEffect(() => {
     if (!isAuto) return
     let i = 0
@@ -21,7 +22,7 @@ function HeroDemo() {
     }, 2200)
     return () => clearInterval(interval)
   }, [isAuto])
-
+ 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #F3DEC0', borderRadius: '6px', overflow: 'hidden' }}>
       {/* Header */}
@@ -47,7 +48,7 @@ function HeroDemo() {
         </div>
         <p className="font-mono text-xs" style={{ color: '#B89B6E' }}>Masonry · per m²</p>
       </div>
-
+ 
       {/* Per-unit items */}
       <div className="px-5 py-3" style={{ borderBottom: '1px solid #F3DEC0' }}>
         <p className="font-mono text-xs mb-2" style={{ color: '#B89B6E' }}>PER 1 m²</p>
@@ -65,7 +66,7 @@ function HeroDemo() {
           </div>
         ))}
       </div>
-
+ 
       {/* Input */}
       <div className="px-5 py-4" style={{ borderBottom: '1px solid #F3DEC0' }}>
         <p className="font-mono text-xs mb-2" style={{ color: '#B89B6E' }}>MEASUREMENT</p>
@@ -86,7 +87,7 @@ function HeroDemo() {
           <span className="font-display font-600 text-lg" style={{ color: '#9C7B4F' }}>m²</span>
         </div>
       </div>
-
+ 
       {/* Output */}
       <div className="px-5 py-4">
         <p className="font-mono text-xs mb-3" style={{ color: '#9C7B4F' }}>QUANTITIES</p>
@@ -108,8 +109,10 @@ function HeroDemo() {
     </div>
   )
 }
-
+ 
 export function Hero() {
+  const navigate = useNavigate()
+ 
   return (
     <section className="relative min-h-screen flex flex-col justify-center pt-14">
       <div className="max-w-6xl mx-auto px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center py-24">
@@ -121,7 +124,7 @@ export function Hero() {
             <span className="w-1.5 h-1.5 rounded-full bg-white opacity-60" />
             QUANTITY TAKEOFF SOFTWARE
           </div>
-
+ 
           <h1
             className="font-display font-900 leading-none mb-6"
             style={{ fontSize: 'clamp(48px, 6.5vw, 80px)', color: '#2B1B0E', letterSpacing: '-0.01em' }}
@@ -134,19 +137,21 @@ export function Hero() {
             <br />
             EVERYTHING ELSE.
           </h1>
-
+ 
           <p className="text-base mb-8 max-w-md leading-relaxed" style={{ color: '#9C7B4F' }}>
             Build a recipe for each type of work. Enter one measurement on site. Get every material quantity, labour hour, and overhead worked out automatically.
           </p>
-
+ 
           <div className="flex flex-wrap items-center gap-4">
-            <a
-              href="#cta"
-              className="inline-flex items-center gap-2 px-5 py-2.5 font-display font-700 text-sm tracking-widest transition-all duration-150 hover:bg-zinc-100 rounded"
+            <button
+              onClick={() => navigate('/register')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 font-display font-700 text-sm tracking-widest transition-all duration-150 rounded cursor-pointer"
               style={{ background: '#FF6B35', color: '#FFFFFF' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#E85A28')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#FF6B35')}
             >
-              REQUEST ACCESS <ArrowRightIcon />
-            </a>
+              REGISTER <ArrowRightIcon />
+            </button>
             <a
               href="#how-it-works"
               className="text-sm transition-colors hover:text-white"
@@ -155,7 +160,7 @@ export function Hero() {
               See how it works →
             </a>
           </div>
-
+ 
           <div className="flex items-center gap-10 mt-12 pt-8" style={{ borderTop: '1px solid #F3DEC0' }}>
             {[
               { val: '40+', label: 'Recipe types' },
@@ -169,7 +174,7 @@ export function Hero() {
             ))}
           </div>
         </div>
-
+ 
         <div className="w-full max-w-md mx-auto md:mx-0 md:ml-auto">
           <HeroDemo />
         </div>
@@ -177,3 +182,4 @@ export function Hero() {
     </section>
   )
 }
+ 

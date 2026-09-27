@@ -8,37 +8,48 @@ import { DashBoardPage } from "@/modules/dashboard/dashboard.page";
 import { WorkspaceSwitcherPage } from "@/modules/workspaceSwitcher/workspace.page";
 import { HomeShell } from "@/common/components/homeShell";
 import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
-import {LandingPage} from "@/modules/landing/landing.page"
+import { LandingPage } from "@/modules/landing/landing.page";
+import {RegisterPage} from "@/modules/landing/auth/register/RegisterPage"
+import {LoginPage} from "@/modules/landing/auth/login/LoginPage"
+import { useState, useEffect } from "react";
 
-// TODO :: fix the flow, implement proper flow between pages. 
+// TODO :: fix the flow, implement proper flow between pages.
+// TODO :: build real login/register pages -- currently both fall back to LandingPage.
 
 function App() {
+  const [loggedIn, setLoggedIn] = useState<any>(false);
+  // check if loggedIn
 
-  // on mount Check if the user is logged in or there is cookies. 
-  // if user is logged in take them to the workspace switcher routes
-  // if the user is not logged in take them to the landing page. 
-  // if the user has an expired token take them to the landing page and let them know that their session is expired
-  
-  
+  useEffect(() => {
+    // check if user is logged in
+    // if user is logged in then update state ( though need to check if this holds or if page is refreshed this wont be disturbed)
+  }, []);
 
-    const workspaceId = localStorage.getItem("workspaceId");
-  const companyId = localStorage.getItem("companyId"); 
-
-  if (workspaceId == null || workspaceId?.length == 0 || workspaceId == "") {
-    return <LandingPage />;
-  } 
+  if (loggedIn == true) {
+    return (
+      <AppShell>
+        <Routes>
+          <Route path="*" element={<DashBoardPage />} />
+          <Route path="/dashboard" element={<DashBoardPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/recipes" element={<RecipeLibraryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/projects/bill-of-quants"
+            element={<BillOfQuantsPage />}
+          />
+        </Routes>
+      </AppShell>
+    );
+  }
 
   return (
-    <AppShell>
-      <Routes>
-        <Route path="*" element={<DashBoardPage />} />
-        <Route path="/dashboard" element={<DashBoardPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/recipes" element={<RecipeLibraryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/projects/bill-of-quants" element={<BillOfQuantsPage />} />
-      </Routes>
-    </AppShell>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="*" element={<LandingPage />} />
+    </Routes>
   );
 }
 
