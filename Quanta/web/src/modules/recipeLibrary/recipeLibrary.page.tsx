@@ -13,9 +13,23 @@ import type {
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
 
-// TODO :: implement show Archived Recipes
-// TODO :: implement edit recipe
-// TODO :: implement delete recipe
+// TODO :: [cleanup] Recipe quantity calculations: recipe quantity x measurement per line item, aggregated across items, shown via the Preview Quantities button (currently has no onClick)
+// TODO :: [cleanup] LineItem measurement input uses placeholder instead of a controlled value, so it isn't editable yet
+// TODO :: [cleanup] Convert typed input values with Number() before calculating (inputs are always strings)
+// TODO :: [cleanup] ProjectsPage: implement View Library
+// TODO :: [cleanup] ProjectsPage: implement View Quantities
+// TODO :: [cleanup] ViewFileModalComp: deleting a file doesn't remove it from the parent list, pass an updater callback
+// TODO :: [cleanup] FileModalComp: rename the document.document data structure and double check the orchestrator
+// TODO :: [cleanup] UploadModalComp: add a loading UI while an upload is in flight
+// TODO :: [cleanup] Recipe library: Show Archived button does nothing yet
+// TODO :: [cleanup] Recipe library: edit recipe and archive recipe, plus update and delete API calls
+// TODO :: [cleanup] Recipe library: move contracts to the contracts folder, add page and limit to GetCategoryRecipeRequest and the paginated response
+// TODO :: [cleanup] Recipe library: remove the unused setRecipeListState prop from RecipeList
+// TODO :: [cleanup] Recipe builder: decide on recipeCode (no column on Recipe today)
+// TODO :: [cleanup] Recipe builder: unitMeasureId has no UnitMeasure table behind it
+// TODO :: [cleanup] Recipe builder: replace searchMaterialsPlaceholder with a real API call
+// TODO :: [cleanup] Recipe builder: replace getSiteConditionsPlaceholder with a real endpoint
+// TODO :: [cleanup] recipeTags is hardcoded to [] everywhere, no schema behind it
 
 const ALL_CATEGORIES_ID = "all";
 const PAGE_SIZE = 10;

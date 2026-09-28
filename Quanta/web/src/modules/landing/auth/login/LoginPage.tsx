@@ -4,6 +4,15 @@ import { LoggingInModal } from "@/modules/landing/auth/login/components/LoggingI
 import { LoginSuccessModal } from "@/modules/landing/auth/login/components/LoginSuccessModal";
 import { useNavigate } from "react-router";
 
+// TODO :: [auth] Frontend: replace the placeholder loginUser in login/api.ts with the real call
+// TODO :: [auth] Frontend: replace the placeholder registerUser in register/api.ts with the real call
+// TODO :: [auth] App.tsx: /login and /register routes still render LandingPage, point them at LoginPage and RegisterPage
+// TODO :: [auth] App.tsx: replace the empty useEffect with a real logged-in check (call /me on load) so a refresh keeps the session
+// TODO :: [auth] After login or register success, the Continue button should navigate to the workspace switcher (it only closes the modal now)
+// TODO :: [auth] Route guard: logged-out users can't reach app routes, logged-in users skip the landing page
+// TODO :: [auth] Backend: re-validate workspace access on every request, never trust localStorage or the URL alone
+
+
 export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");

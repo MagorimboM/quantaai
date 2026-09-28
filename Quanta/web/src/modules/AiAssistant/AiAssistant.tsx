@@ -27,6 +27,9 @@ export function AiAssistant() {
     fetchChatHistory();
   }, []);
 
+  // TODO :: [cleanup] FileModalComp: DUMMY_DATA still hardcodes project, company and document ids
+
+
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setChatInput(e.target.value);
     chatInputRef.current = e.target.value;

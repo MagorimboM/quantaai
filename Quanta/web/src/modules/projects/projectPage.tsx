@@ -8,8 +8,11 @@ import { FiFolder } from "react-icons/fi";
 import { ListOfProjects } from "@/modules/projects/components/listOfProjects";
 import { getListOfProjects } from "@/modules/projects/api/api";
 
-// TODO :: implement view library
-// TODO :: implement view Quantities (big one here)
+
+// ---- 3. Clean-ups: hardcoded ids ----
+// TODO :: [cleanup] ProjectsPage: companyId and userId hardcoded
+// TODO :: [cleanup] UploadModalComp: hardcoded ids in uploadFiles
+// TODO :: [cleanup] ListOfProjects: replace the inline/any project types with real contracts
 
 const PAGE_SIZE = 10;
 

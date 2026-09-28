@@ -20,6 +20,9 @@ import { ConfirmDeletionModal } from "@/modules/quantityTakeoff/components/confi
 import { StartAfreshModalConfirmation } from "@/modules/quantityTakeoff/components/startAfreshModal";
 import { SavingBillOfQuantsModal } from "@/modules/quantityTakeoff/components/savingModal";
 
+// TODO :: [cleanup] BillOfQuants: saveBillOfQuants and completeTakeOff still hardcode companyId 'seed-company-001'
+
+
 export type LineItemId = {
   id: string;
 };
