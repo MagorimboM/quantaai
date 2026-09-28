@@ -16,11 +16,6 @@ export class AuthController {
 
     @Post('register')
     async registerNewUser ( @Body() request: {email:string; password:string}){
-
         
-
-
-
     }; 
-
 }
