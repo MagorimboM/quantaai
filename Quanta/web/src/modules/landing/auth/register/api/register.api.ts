@@ -11,6 +11,6 @@ export type RegisterResponse = {
 };
 
 // TODO :: replace with the real registration API call once backend auth is wired up
-export async function registerUser(request: RegisterRequest): Promise<RegisterResponse> {
+export async function registerUser(_request: RegisterRequest): Promise<RegisterResponse> {
   return { success: false, message: "Not implemented yet" };
 }

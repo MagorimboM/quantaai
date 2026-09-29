@@ -9,6 +9,6 @@ export type LoginResponse = {
 };
 
 // TODO :: replace with the real login API call once backend auth is wired up
-export async function loginUser(request: LoginRequest): Promise<LoginResponse> {
+export async function loginUser(_request: LoginRequest): Promise<LoginResponse> {
   return { success: false, message: "Not implemented yet" };
 }
