@@ -1,7 +1,5 @@
 import type { Category } from "@/modules/recipeLibrary/contracts/types";
 
-const ALL_CATEGORIES_ID = "all";
-
 export function RecipeCategoryList({
   categoryList,
   selectedCategoryId,

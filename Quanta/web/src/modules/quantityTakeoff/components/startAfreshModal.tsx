@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { deleteLineItem } from "@/modules/quantityTakeoff/api/services";
-import { globalErrorState } from "@/common/storage/globalState";
-import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
+// import { deleteLineItem } from "@/modules/quantityTakeoff/api/services";
+//import { globalErrorState } from "@/common/storage/globalState";
+//import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -22,7 +22,6 @@ export type LineItemId = {
 
 export function StartAfreshModalConfirmation({
   billOfQuantsUpdater,
-  showModal,
   openCloseModal,
 }: {
   billOfQuantsUpdater: (something?: any) => void;

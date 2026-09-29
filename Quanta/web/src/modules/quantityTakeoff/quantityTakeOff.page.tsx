@@ -22,7 +22,6 @@ import { SavingBillOfQuantsModal } from "@/modules/quantityTakeoff/components/sa
 
 // TODO :: [cleanup] BillOfQuants: saveBillOfQuants and completeTakeOff still hardcode companyId 'seed-company-001'
 
-
 export type LineItemId = {
   id: string;
 };
@@ -99,9 +98,9 @@ export function BillOfQuantsPage() {
 
   async function saveBillOfQuants() {
     setShowSavingModal(true);
-    const response = await updateLineItem({
+    await updateLineItem({
       companyId: "seed-company-001",
-      body: LineItems.map((lineItem, key) => ({
+      body: LineItems.map((lineItem) => ({
         id: lineItem.id,
         userId: "",
         companyId: companyId || "",
@@ -308,8 +307,8 @@ export function BillOfQuantsPage() {
 
       {showStartAfreshConfirmation ? (
         <StartAfreshModalConfirmation
+          showModal
           openCloseModal={showStartAfreshModal}
-          showModal={showStartAfreshConfirmation}
           billOfQuantsUpdater={setLineItems}
         />
       ) : null}

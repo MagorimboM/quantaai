@@ -86,7 +86,7 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
     term: "",
   });
 
-  const [materialCategories, setMaterialCategories] =
+  const [materialCategories] =
     useState<MaterialCategories>([]);
 
   const [siteConditions, setSiteConditions] = useState<SiteCondition[]>([]);
@@ -194,7 +194,7 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
 
     setShowLoadingModal(true);
 
-    await createNewRecipe({
+    await createNewRecipe(companyId,{
       ...newRecipe,
       ingredients,
     });

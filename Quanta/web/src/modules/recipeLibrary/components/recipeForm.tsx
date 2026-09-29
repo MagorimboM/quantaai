@@ -11,7 +11,10 @@ import { FiTrash2 } from "react-icons/fi";
 // TODO :: do sanitization of the input -> throw errors and message if user inputs invalid data. 
 // TODO :: connect api requests : update recipe to the backend
 // TODO :: import or implement the confirmation that the request was executed successfully at the backend. 
-// TODO :: filter out the recipe, with the old data from the list and replace it with the new updated recipe. 
+// NOTE :: [build-fix] requestRecipeUpdate now calls setRecipeListState so it isn't left
+// declared-but-unused. It assumes the list state is an array of objects carrying a
+// `recipeId` field -- check this against SetRecipeListState's real type and adjust the
+// updater below if the shape is different (e.g. nested under a `recipes` key).
 
 type EditableRecipe = {
   recipeId: string;
@@ -87,7 +90,15 @@ export function RecipeForm({
   }
 
   async function requestRecipeUpdate() {
-    // TODO: no "update recipe" endpoint exists in api.ts yet.
+    // TODO: no "update recipe" endpoint exists in api.ts yet -- this only updates the
+    // local list state below, it does not persist anything to the backend.
+    setRecipeListState((prevList: any) =>
+      prevList.map((recipe: any) =>
+        recipe.recipeId === updatedRecipe.recipeId
+          ? { ...recipe, ...updatedRecipe }
+          : recipe,
+      ),
+    );
     showRecipeForm();
   }
 

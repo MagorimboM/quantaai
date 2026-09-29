@@ -6,17 +6,20 @@ import { WorkspaceSwitcherSidebar } from "@/modules/workspaceSwitcher/components
 import {
   getWorkspaces,
   getUserWorkspace,
-  postNewWorkspace,
 } from "@/modules/workspaceSwitcher/api/api";
 
-export function WorkspaceSwitcherPage() {
-  // TODO :: check if the user has workspace id in the localStorage, if so then navigate them to the dashboard.
-  // TODO :: if user workspace has no id then show the create personal workspaces.
-  // TODO :: onclick navigate to workspace. Page.
+// TODO :: check if the user has workspace id in the localStorage, if so then navigate them to the dashboard.
+// TODO :: if user workspace has no id then show the create personal workspaces.
+// TODO :: onclick navigate to workspace. Page.
+// NOTE :: [build-fix] postNewWorkspace was imported but never called in this file -- the
+// "Create New Workspace" button only opens CreateCompanyWorkspaceForm, which presumably
+// calls postNewWorkspace itself. Removed the unused import here.
 
+export function WorkspaceSwitcherPage() {
   const [workspaces, setWorkspaces] = useState<
     {
       id: string;
+      companyId: string;
       name: string;
       numberOfProjects: number;
       numberOfRecipes: number;
@@ -93,6 +96,7 @@ export function WorkspaceSwitcherPage() {
                       <CompanyWorkSpaceCard
                         key={key}
                         id={workspace.id}
+                        companyId={workspace.companyId}
                         companyName={workspace.name}
                         numberOfProjects={workspace.numberOfProjects}
                         numberOfRecipes={workspace.numberOfRecipes}

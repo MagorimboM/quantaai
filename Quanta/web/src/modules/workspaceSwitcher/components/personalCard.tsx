@@ -1,7 +1,6 @@
 import { MdOutlinePersonOutline, MdOutlineCalendarMonth } from "react-icons/md";
 import { MdMenuBook } from "react-icons/md";
 import { GrProjects } from "react-icons/gr";
-import { useState, useEffect } from "react";
 
 export function PersonalWorkSpaceCard({
   numberOfProjects,

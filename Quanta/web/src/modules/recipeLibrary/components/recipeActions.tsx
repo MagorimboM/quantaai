@@ -42,9 +42,11 @@ export function RecipeActions({
     recipeId: string;
     categoryId: string;
   }) {
-    // TODO: send a request to the backend (no archive endpoint exists in api.ts yet)
+    // TODO: send a request to the backend, using recipeId and categoryId (no archive
+    // endpoint exists in api.ts yet)
     // get confirmation report,
     // trigger a re-render or label the recipe as archived...
+    console.log("archive requested for", recipeId, categoryId);
   }
 
   async function deleteRecipe({
@@ -54,9 +56,11 @@ export function RecipeActions({
     recipeId: string;
     categoryId: string;
   }) {
-    // TODO: send a request to the backend (no delete endpoint exists in api.ts yet)
+    // TODO: send a request to the backend, using recipeId and categoryId (no delete
+    // endpoint exists in api.ts yet)
     // confirmed deletion
     // remove the recipe from the list.
+    console.log("delete requested for", recipeId, categoryId);
   }
 
   return (

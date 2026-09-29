@@ -9,11 +9,6 @@ type TeamMember = {
   position: string;
 };
 
-type Documents = {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-};
 // TODO :: move types to the contracts folder
 // TODO :: add the team member form
 

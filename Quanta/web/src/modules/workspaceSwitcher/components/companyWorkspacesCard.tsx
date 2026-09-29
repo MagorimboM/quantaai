@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
 import { LuBuilding2 } from "react-icons/lu";
 import { MdOutlineCalendarMonth } from "react-icons/md";
 import { MdMenuBook } from "react-icons/md";
 import { GrProjects } from "react-icons/gr";
+import { useNavigate } from "react-router";
 
 // TODO :: implement navigate to workspace route
 
@@ -21,10 +21,12 @@ export function CompanyWorkSpaceCard({
   numberOfRecipes: number;
   lastActivity: string;
 }) {
+  const navigate = useNavigate();
+
   function goToWorkSpace() {
     localStorage.setItem("workspaceId", id);
     localStorage.setItem("companyId", companyId)
-    navigation.navigate('/dashboard'); 
+    navigate('/dashboard');
   }
   return (
     <>
