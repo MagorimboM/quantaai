@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { deleteProjectBillOfQuantities } from "@/modules/quantityTakeoff/api/services";
-import { NfcIcon } from "lucide-react";
 
 export type LineItemId = {
   id: string;
