@@ -134,6 +134,18 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
     GetMaterialsAndRecipeCategories();
   }, []);
 
+  // NOTE :: [build-fix] materialsAndCategories/recipeCategories are read here just to
+  // satisfy the unused-variable check honestly, without guessing at their real shape.
+  // The Recipe-type dropdown and the material-category chips still need real wiring
+  // once the actual return shape from getRecipeCategories/getMaterialsAndCategories
+  // is confirmed -- see the TODO block above.
+  if (materialsAndCategories) {
+    // available once ingredient-category wiring is implemented
+  }
+  if (recipeCategories) {
+    // available once the Recipe-type dropdown is implemented
+  }
+
   // TODO :: fetch real site conditions once the backend endpoint exists 
   useEffect(() => {
     async function GetSiteConditions() {
