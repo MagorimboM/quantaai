@@ -19,7 +19,6 @@ export type LineItemId = {
 
 export function ConfirmDeletionModal({
   deletedLineItemsList,
-  showDeleteModal,
   billOfQuantsUpdater,
   message,
   header,
@@ -30,7 +29,6 @@ export function ConfirmDeletionModal({
   deletedLineItemsList: LineItemId[];
   message: string;
   openClose: (show: boolean) => void;
-  showDeleteModal: boolean;
 }) {
   const [showDeletingItems, setShowDeletingItems] = useState<boolean>(false);
   const globalErrorMessage = globalErrorState(
@@ -79,6 +77,9 @@ export function ConfirmDeletionModal({
             <AlertDialogTitle>{header}</AlertDialogTitle>
             <AlertDialogDescription>{message}</AlertDialogDescription>
           </AlertDialogHeader>
+          {globalErrorMessage ? (
+            <p className="text-sm text-destructive">{globalErrorMessage}</p>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
               className="cursor-pointer"

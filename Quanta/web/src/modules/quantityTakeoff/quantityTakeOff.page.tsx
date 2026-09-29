@@ -286,7 +286,6 @@ export function BillOfQuantsPage() {
                     takeOffLineItem={lineItem}
                     deletedListUpdater={setDeletedLineItems}
                     deletedList={deletedLineItems}
-                    takeOffLineItemsList={LineItems}
                   />
                 ))
               : null}
@@ -297,7 +296,6 @@ export function BillOfQuantsPage() {
       {showDeletedSelectedItems ? (
         <ConfirmDeletionModal
           billOfQuantsUpdater={setLineItems}
-          showDeleteModal={showDeletedSelectedItems}
           deletedLineItemsList={deletedLineItems}
           openClose={setShowDeletedSelectedItems}
           header="Delete Selected Items"
@@ -307,9 +305,9 @@ export function BillOfQuantsPage() {
 
       {showStartAfreshConfirmation ? (
         <StartAfreshModalConfirmation
-          showModal
           openCloseModal={showStartAfreshModal}
           billOfQuantsUpdater={setLineItems}
+          showModal={showStartAfreshConfirmation}
         />
       ) : null}
 

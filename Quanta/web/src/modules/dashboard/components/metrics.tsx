@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getKPIInformation } from "@/modules/dashboard/api/api";
 import type {
   KPIInformationResponse,
-  DashboardProject,
 } from "@/modules/dashboard/contracts/dashboard.response.contract";
 import { GrProjects } from "react-icons/gr";
 import { MdMenuBook, MdOutlineTrendingUp } from "react-icons/md";

@@ -16,11 +16,9 @@ export function LineItem({
   deletedList,
   takeOffLineItem,
   deletedListUpdater,
-  takeOffLineItemsList,
 }: {
   deletedList: LineItemId[];
   takeOffLineItem: GetBillOfQuantsResponse;
-  takeOffLineItemsList: GetBillOfQuantsResponse[];
   deletedListUpdater: Dispatch<SetStateAction<LineItemId[]>>;
 }) {
   const [showRecipeItems, setShowRecipeItems] = useState<boolean>(false);

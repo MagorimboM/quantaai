@@ -1,5 +1,6 @@
 import { MdOutlineArrowRightAlt } from "react-icons/md";
 import { HiOutlineClock } from "react-icons/hi2";
+import { useNavigate } from "react-router";
 
 export function ProjectCard({
   name,
@@ -14,8 +15,16 @@ export function ProjectCard({
   projectId?: string;
   companyId?: string | null;
 }) {
+  const navigate = useNavigate();
+
   function navigateToProjectBillOfQuants() {
-    // on click navigate to project bill of Quants
+    if (projectId) {
+      localStorage.setItem("projectId", projectId);
+    }
+    if (companyId) {
+      localStorage.setItem("companyId", companyId);
+    }
+    navigate("/projects/bill-of-quants");
   }
 
   return (

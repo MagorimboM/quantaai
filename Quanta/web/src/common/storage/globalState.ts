@@ -6,7 +6,13 @@ type GlobalError = {
   type: string;
 } | null;
 
-export const globalErrorState = create((set) => ({
+type GlobalErrorState = {
+  globalErrorMessage: GlobalError;
+  setGlobalError: (errorMessage: GlobalError) => void;
+  clearGlobalError: () => void;
+};
+
+export const globalErrorState = create<GlobalErrorState>()((set) => ({
   globalErrorMessage: null,
   setGlobalError: (errorMessage: GlobalError) =>
     set(() => ({
@@ -18,5 +24,3 @@ export const globalErrorState = create((set) => ({
       globalErrorMessage: null,
     })),
 }));
-
-

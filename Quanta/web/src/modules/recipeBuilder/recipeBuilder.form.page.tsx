@@ -10,6 +10,19 @@ import { RecipeSuccessModal } from "@/modules/recipeBuilder/components/RecipeSuc
 import { MaterialSearchResultsModal } from "@/modules/recipeBuilder/components/MaterialSearchResultsModal";
 
 // TODO :: [cleanup] RecipeBuilderFormPage: companyId hardcoded
+// TODO :: [build-fix] getRecipeCategories(companyId) is called with 1 argument below -- if its
+//         real signature in api.ts expects 2, that's the TS2554 "Expected 2 arguments, but got 1"
+//         error. Check api.ts and add the missing argument.
+// TODO :: [build-fix] recipeCategories is fetched but never rendered -- the Recipe-type <select>
+//         below still has a single empty <option></option> and never maps over recipeCategories.
+//         Wire it up once you confirm the real return shape from getRecipeCategories.
+// TODO :: [build-fix] materialsAndCategories is fetched but never used -- materialCategories
+//         (the chip buttons below) is a separate, permanently-empty array with no setter kept.
+//         These two were likely meant to be connected: populate materialCategories from
+//         materialsAndCategories once the real return shape is confirmed.
+// TODO :: [build-fix] setQuery is declared but never called -- no input in this form updates
+//         `query` (the material search box updates a different, separate piece of state).
+//         Either wire an input to it, or fold `query` into that search box's own state.
 
 
 type NewRecipe = {
@@ -50,8 +63,8 @@ type SiteCondition = {
 
 // TODO :: replace with the real search-materials API call once wired up
 async function searchMaterialsPlaceholder(
-  term: string,
-  categoryId: string,
+  _term: string,
+  _categoryId: string,
 ): Promise<MaterialResult[]> {
   return [];
 }
@@ -68,7 +81,7 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
 
   const [materialsAndCategories, setMaterialsAndCategories] = useState<any>();
   const [recipeCategories, setRecipeCategories] = useState<any>();
-  const [query, setQuery] = useState<string>("");
+  const [query] = useState<string>("");
   const [newRecipe, setNewRecipe] = useState<NewRecipe>({
     categoryId: "",
     recipeName: "",
@@ -112,6 +125,8 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
         companyId,
         categoryId,
       );
+      // NOTE :: check the real signature of getRecipeCategories in api.ts --
+      // this single-argument call is the likely source of the TS2554 build error.
       const recCategories = await getRecipeCategories(companyId);
       setRecipeCategories(recCategories);
       setMaterialsAndCategories(materials);
@@ -274,6 +289,8 @@ export function RecipeBuilderFormPage({ onClose }: { onClose: () => void }) {
                   title="recipe-types"
                   className="w-full appearance-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                 >
+                  {/* TODO :: [build-fix] map over recipeCategories here once its real shape
+                      is confirmed -- right now this dropdown never shows any category */}
                   <option></option>
                 </select>
                 <svg

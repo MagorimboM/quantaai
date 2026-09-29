@@ -3,7 +3,7 @@ import { Sparkles, X, Send } from "lucide-react";
 import {
   getChatHistory,
   sendUserMessage,
-} from "@/modules/aiAssistant/api/ai.assistant.api";
+} from "@/modules/aiAssistant/api/ai.assistant.api"
 
 type Message = {
   id?: string;

@@ -1,7 +1,6 @@
 import { apiClient } from "@/core/api/axios.api";
 import type {
   KPIInformationResponse,
-  DashboardProject,
   RecentActivityResponse,
 } from "@/modules/dashboard/contracts/dashboard.response.contract";
 import type {
