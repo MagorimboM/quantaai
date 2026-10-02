@@ -14,7 +14,6 @@ export function SideBarComp() {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [dropDownListModal, setDropDownListModal] = useState(false);
-  const workspaceId = localStorage.getItem("workspaceId");
 
   const dropDownList = [
     {
@@ -56,11 +55,6 @@ export function SideBarComp() {
     localStorage.removeItem("projectId");
     navigate("/");
   }
-
-  if (!workspaceId) {
-    return null;
-  }
-
   return (
     <aside
       className={`

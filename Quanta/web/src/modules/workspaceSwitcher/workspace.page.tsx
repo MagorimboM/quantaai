@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { useUser } from "@clerk/react";
 import { PersonalWorkSpaceCard } from "@/modules/workspaceSwitcher/components/personalCard";
 import { CompanyWorkSpaceCard } from "@/modules/workspaceSwitcher/components/companyWorkspacesCard";
@@ -12,7 +13,10 @@ import {
   SkeletonPersonalCard,
   SkeletonProjectRow,
 } from "@/modules/workspaceSwitcher/components/workspaceSwitcherSkeleton";
-import { SearchIcon, PlusIcon } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
+import {
+  SearchIcon,
+  PlusIcon,
+} from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
 import type {
   CompanyWorkspace,
   PersonalWorkspace,
@@ -24,27 +28,27 @@ import {
   getAllProjects,
 } from "@/modules/workspaceSwitcher/api/api";
 
-// NOTE :: [backend] isArchived on CompanyWorkspace and the entire projects
-// panel both assume backend fields/endpoints that may not exist yet --
-// see workspaceSwitcher.types.ts and api.ts's getAllProjects for exactly
-// what's assumed and what's still needed.
-// TODO :: check if the user has workspace id in localStorage -- if so,
-// navigate straight to the dashboard instead of showing this page at all.
 
 export function WorkspaceSwitcherPage() {
   const { user } = useUser();
   const userName = user?.firstName ?? "there";
+  const navigate = useNavigate();
+  const workspaceId: any = localStorage.getItem("workspaceId");
+
+  if (workspaceId?.length > 0) {
+    navigate("/dashboard");
+  }
 
   const [workspaces, setWorkspaces] = useState<CompanyWorkspace[]>([]);
-  const [personalWorkspace, setPersonalWorkspace] = useState<PersonalWorkspace | null>(null);
+  const [personalWorkspace, setPersonalWorkspace] =
+    useState<PersonalWorkspace | null>(null);
   const [allProjects, setAllProjects] = useState<ProjectSummary[]>([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [search, setSearch] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [viewCreateCompanyWorkspaceForm, setViewCreateCompanyWorkspace] = useState(false);
-
-
+  const [viewCreateCompanyWorkspaceForm, setViewCreateCompanyWorkspace] =
+    useState(false);
 
   useEffect(() => {
     async function fetchAll() {
@@ -66,30 +70,41 @@ export function WorkspaceSwitcherPage() {
   const activeCompanies = useMemo(
     () =>
       workspaces.filter(
-        (w) => !w.isArchived && w.name.toLowerCase().includes(search.toLowerCase()),
+        (w) =>
+          !w.isArchived && w.name.toLowerCase().includes(search.toLowerCase()),
       ),
     [workspaces, search],
   );
-  const archivedCompanies = useMemo(() => workspaces.filter((w) => w.isArchived), [workspaces]);
+  const archivedCompanies = useMemo(
+    () => workspaces.filter((w) => w.isArchived),
+    [workspaces],
+  );
 
   const hasNoWorkspaces =
-    !isLoading && workspaces.length === 0 && (!personalWorkspace || personalWorkspace.id === "");
-
-
-
+    !isLoading &&
+    workspaces.length === 0 &&
+    (!personalWorkspace || personalWorkspace.id === "");
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden" style={{ background: "#FFF8F0" }}>
+    <div
+      className="flex h-screen flex-col overflow-hidden"
+      style={{ background: "#FFF8F0" }}
+    >
       <WorkspaceSwitcherSidebar />
 
       <header
         className="flex-shrink-0 px-8 pt-10 pb-7"
         style={{ borderBottom: "1px solid #F3DEC0" }}
       >
-        <h1 className="text-3xl font-bold tracking-tight mb-1" style={{ color: "#2B1B0E" }}>
+        <h1
+          className="text-3xl font-bold tracking-tight mb-1"
+          style={{ color: "#2B1B0E" }}
+        >
           Welcome back, {userName}.
         </h1>
-        <p className="text-sm" style={{ color: "#9C7B4F" }}>Select a workspace to continue.</p>
+        <p className="text-sm" style={{ color: "#9C7B4F" }}>
+          Select a workspace to continue.
+        </p>
       </header>
 
       {hasNoWorkspaces ? (
@@ -98,12 +113,17 @@ export function WorkspaceSwitcherPage() {
           onCreateWorkspace={() => setViewCreateCompanyWorkspace(true)}
         />
       ) : (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[5fr_4fr_4fr] divide-x" style={{ borderColor: "#F3DEC0" }}>
-
+        <div
+          className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[5fr_4fr_4fr] divide-x"
+          style={{ borderColor: "#F3DEC0" }}
+        >
           {/* Panel 1: Companies */}
           <div className="overflow-y-auto px-8 py-7 flex flex-col gap-5">
             <div>
-              <h2 className="text-[10px] uppercase tracking-widest font-medium mb-4" style={{ color: "#B89B6E" }}>
+              <h2
+                className="text-[10px] uppercase tracking-widest font-medium mb-4"
+                style={{ color: "#B89B6E" }}
+              >
                 Companies
               </h2>
 
@@ -142,8 +162,13 @@ export function WorkspaceSwitcherPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm py-6 text-center" style={{ color: "#B89B6E" }}>
-                  {search ? `No companies match "${search}"` : "No company workspaces yet"}
+                <p
+                  className="text-sm py-6 text-center"
+                  style={{ color: "#B89B6E" }}
+                >
+                  {search
+                    ? `No companies match "${search}"`
+                    : "No company workspaces yet"}
                 </p>
               )}
             </div>
@@ -179,8 +204,12 @@ export function WorkspaceSwitcherPage() {
                 onClick={() => setViewCreateCompanyWorkspace(true)}
                 className="text-white text-sm font-semibold py-2.5 px-5 rounded-md transition-colors duration-150 flex items-center gap-2 cursor-pointer"
                 style={{ background: "#FF6B35" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#E85A26")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#FF6B35")}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "#E85A26")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "#FF6B35")
+                }
               >
                 <PlusIcon />
                 Create New Workspace
@@ -190,7 +219,10 @@ export function WorkspaceSwitcherPage() {
 
           {/* Panel 2: Personal */}
           <div className="overflow-y-auto px-8 py-7">
-            <h2 className="text-[10px] uppercase tracking-widest font-medium mb-4" style={{ color: "#B89B6E" }}>
+            <h2
+              className="text-[10px] uppercase tracking-widest font-medium mb-4"
+              style={{ color: "#B89B6E" }}
+            >
               Personal
             </h2>
             {isLoading ? (
@@ -203,17 +235,24 @@ export function WorkspaceSwitcherPage() {
                 lastActivity={personalWorkspace.lastActivity}
               />
             ) : (
-              <p className="text-sm" style={{ color: "#B89B6E" }}>No personal workspace yet.</p>
+              <p className="text-sm" style={{ color: "#B89B6E" }}>
+                No personal workspace yet.
+              </p>
             )}
           </div>
 
           {/* Panel 3: All projects */}
           <div className="overflow-y-auto px-8 py-7 flex flex-col">
             <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-[10px] uppercase tracking-widest font-medium" style={{ color: "#B89B6E" }}>
+              <h2
+                className="text-[10px] uppercase tracking-widest font-medium"
+                style={{ color: "#B89B6E" }}
+              >
                 All Projects
               </h2>
-              <span className="text-[10px]" style={{ color: "#B89B6E" }}>by due date</span>
+              <span className="text-[10px]" style={{ color: "#B89B6E" }}>
+                by due date
+              </span>
             </div>
 
             {isLoading ? (
@@ -230,17 +269,21 @@ export function WorkspaceSwitcherPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm py-6 text-center" style={{ color: "#B89B6E" }}>
+              <p
+                className="text-sm py-6 text-center"
+                style={{ color: "#B89B6E" }}
+              >
                 No active projects.
               </p>
             )}
           </div>
-
         </div>
       )}
 
       {viewCreateCompanyWorkspaceForm ? (
-        <CreateCompanyWorkspaceForm onClose={() => setViewCreateCompanyWorkspace(false)} />
+        <CreateCompanyWorkspaceForm
+          onClose={() => setViewCreateCompanyWorkspace(false)}
+        />
       ) : null}
     </div>
   );
