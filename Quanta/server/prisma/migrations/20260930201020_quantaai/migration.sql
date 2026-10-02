@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
+    "clerkId" TEXT,
     "email" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
@@ -98,6 +99,16 @@ CREATE TABLE "company_trade_codes" (
 );
 
 -- CreateTable
+CREATE TABLE "site_conditions" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "site_conditions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
@@ -117,6 +128,7 @@ CREATE TABLE "materials" (
     "userId" TEXT,
     "companyId" TEXT,
     "categoryId" TEXT NOT NULL,
+    "siteConditionId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "unit" TEXT NOT NULL,
@@ -132,6 +144,7 @@ CREATE TABLE "labour" (
     "userId" TEXT,
     "companyId" TEXT,
     "categoryId" TEXT NOT NULL,
+    "siteConditionId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "labourType" TEXT NOT NULL,
@@ -148,6 +161,7 @@ CREATE TABLE "overheads" (
     "userId" TEXT,
     "companyId" TEXT,
     "categoryId" TEXT NOT NULL,
+    "siteConditionId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "unit" TEXT NOT NULL,
@@ -163,6 +177,7 @@ CREATE TABLE "recipes" (
     "userId" TEXT,
     "companyId" TEXT,
     "categoryId" TEXT NOT NULL,
+    "siteConditionId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "unit" TEXT NOT NULL,
@@ -342,6 +357,9 @@ CREATE TABLE "temp_file_cache" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_clerkId_key" ON "users"("clerkId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
@@ -372,10 +390,16 @@ ALTER TABLE "materials" ADD CONSTRAINT "materials_companyId_fkey" FOREIGN KEY ("
 ALTER TABLE "materials" ADD CONSTRAINT "materials_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "materials" ADD CONSTRAINT "materials_siteConditionId_fkey" FOREIGN KEY ("siteConditionId") REFERENCES "site_conditions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "labour" ADD CONSTRAINT "labour_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "labour" ADD CONSTRAINT "labour_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "labour" ADD CONSTRAINT "labour_siteConditionId_fkey" FOREIGN KEY ("siteConditionId") REFERENCES "site_conditions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "overheads" ADD CONSTRAINT "overheads_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -384,10 +408,16 @@ ALTER TABLE "overheads" ADD CONSTRAINT "overheads_companyId_fkey" FOREIGN KEY ("
 ALTER TABLE "overheads" ADD CONSTRAINT "overheads_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "overheads" ADD CONSTRAINT "overheads_siteConditionId_fkey" FOREIGN KEY ("siteConditionId") REFERENCES "site_conditions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "recipes" ADD CONSTRAINT "recipes_siteConditionId_fkey" FOREIGN KEY ("siteConditionId") REFERENCES "site_conditions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "recipe_materials" ADD CONSTRAINT "recipe_materials_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "recipes"("id") ON DELETE CASCADE ON UPDATE CASCADE;

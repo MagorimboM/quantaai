@@ -1,9 +1,22 @@
 import axios, { AxiosError } from "axios";
+import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
   baseURL: "http://localhost:3000/api",
   timeout: 20000,
+});
+
+// Step 3 of the auth flow: attach Clerk's token to every outgoing request,
+// so ClerkAuthGuard on the backend has something to verify. Without this,
+// the guard correctly rejects everything with 401 -- there's nothing wrong
+// with the backend, there was just nothing here sending it a token at all.
+apiClient.interceptors.request.use(async (config) => {
+  const token = await getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 apiClient.interceptors.response.use(

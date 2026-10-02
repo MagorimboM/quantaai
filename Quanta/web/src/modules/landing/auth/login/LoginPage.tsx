@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { loginUser } from "@/modules/landing/auth/login/api/login.api";
+import { useSignIn } from "@clerk/react";
 import { LoggingInModal } from "@/modules/landing/auth/login/components/LoggingInModal";
 import { LoginSuccessModal } from "@/modules/landing/auth/login/components/LoginSuccessModal";
 import { useNavigate } from "react-router";
 
-// TODO :: [auth] Frontend: replace the placeholder loginUser in login/api.ts with the real call
-// TODO :: [auth] Frontend: replace the placeholder registerUser in register/api.ts with the real call
-// TODO :: [auth] App.tsx: /login and /register routes still render LandingPage, point them at LoginPage and RegisterPage
-// TODO :: [auth] App.tsx: replace the empty useEffect with a real logged-in check (call /me on load) so a refresh keeps the session
-// TODO :: [auth] After login or register success, the Continue button should navigate to the workspace switcher (it only closes the modal now)
+// NOTE :: [clerk] Replaces the old placeholder loginUser() call with Clerk's Core 3
+// custom-flow API. signIn.finalize() is what actually activates the session -- its
+// `navigate` callback is intentionally left empty here since we want to show the
+// success modal first; the real page navigation happens from the modal's Continue
+// button instead, once the session is already active.
 // TODO :: [auth] Route guard: logged-out users can't reach app routes, logged-in users skip the landing page
 // TODO :: [auth] Backend: re-validate workspace access on every request, never trust localStorage or the URL alone
-
+// TODO :: [clerk] confirm the actual post-login landing route -- using /dashboard for now
+//         since WorkspaceSwitcherPage isn't currently registered as a route in App.tsx
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { signIn, fetchStatus } = useSignIn();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginFailed, setLoginFailed] = useState(false);
@@ -25,14 +27,30 @@ export function LoginPage() {
     setLoginFailed(false);
     setShowLoggingInModal(true);
 
-    const response = await loginUser({ email, password });
+    const { error } = await signIn.password({
+      emailAddress: email,
+      password,
+    });
 
     setShowLoggingInModal(false);
 
-    if (response.success === false) {
+    if (error) {
+      console.error("Clerk sign-in error:", JSON.stringify(error, null, 2));
       setLoginFailed(true);
       return;
     }
+
+    if (signIn.status !== "complete") {
+      // e.g. needs_second_factor -- not handled yet, treat as failed for now
+      setLoginFailed(true);
+      return;
+    }
+
+    await signIn.finalize({
+      navigate: async () => {
+        // no-op: real navigation happens from the success modal's Continue button
+      },
+    });
 
     setShowSuccessModal(true);
   }
@@ -174,7 +192,8 @@ export function LoginPage() {
 
             <button
               onClick={handleLogin}
-              className="w-full rounded-md px-4 py-2 text-xs sm:text-sm font-medium font-mono transition-all active:scale-95 cursor-pointer mt-1"
+              disabled={fetchStatus === "fetching"}
+              className="w-full rounded-md px-4 py-2 text-xs sm:text-sm font-medium font-mono transition-all active:scale-95 cursor-pointer mt-1 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ background: "#FF6B35", color: "#FFFFFF" }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "#E85A28")
@@ -183,7 +202,7 @@ export function LoginPage() {
                 (e.currentTarget.style.background = "#FF6B35")
               }
             >
-              Log in
+              {fetchStatus === "fetching" ? "Logging in..." : "Log in"}
             </button>
 
             <p
@@ -237,7 +256,10 @@ export function LoginPage() {
       <LoggingInModal show={showLoggingInModal} />
       <LoginSuccessModal
         show={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate("/dashboard");
+        }}
       />
     </>
   );

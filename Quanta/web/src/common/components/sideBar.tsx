@@ -7,12 +7,14 @@ import {
   MdOutlineChevronRight,
 } from "react-icons/md";
 
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { useState } from "react";
 
 export function SideBarComp() {
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [dropDownListModal, setDropDownListModal] = useState(false);
+  const workspaceId = localStorage.getItem("workspaceId");
 
   const dropDownList = [
     {
@@ -49,33 +51,36 @@ export function SideBarComp() {
   }
 
   function gotToWorkSpaces() {
-    localStorage.setItem("workspaceId", "");
-    localStorage.setItem("companyId", "");
-    localStorage.setItem("projectId", "");
-    console.log("here is he workspace: " + localStorage.getItem("workspaceId"));
-    navigation.navigate("/");
+    localStorage.removeItem("workspaceId");
+    localStorage.removeItem("companyId");
+    localStorage.removeItem("projectId");
+    navigate("/");
   }
 
-  // TODO ::  check if the current URL is '/' of the url is that then return another version of the side bar
+  if (!workspaceId) {
+    return null;
+  }
 
   return (
     <aside
       className={`
         h-screen
         border-r
-        bg-white
+        border-sidebar-border
+        bg-sidebar
+        text-sidebar-foreground
         transition-all
         duration-300
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b p-3">
+      <div className="flex items-center justify-between border-b border-sidebar-border p-3">
         {!isCollapsed && <div className="font-semibold text-lg">Quanta</div>}
 
         <button
           onClick={() => toggleSidebar()}
-          className="rounded-md p-2 hover:bg-zinc-100"
+          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
         >
           {isCollapsed ? (
             <MdOutlineChevronRight size={20} />
@@ -89,45 +94,47 @@ export function SideBarComp() {
       <div className="relative p-2">
         <button
           onClick={() => toggleDropdown()}
-          className="flex w-full items-center gap-3 rounded-md p-2 hover:bg-zinc-100"
+          className="flex w-full items-center gap-3 rounded-md p-2 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold">
             Q
           </div>
 
           {!isCollapsed && (
             <div className="text-left">
               <div className="font-medium">Quanta</div>
-              <div className="text-xs text-zinc-500">Main Workspace</div>
+              <div className="text-xs text-muted-foreground">
+                Main Workspace
+              </div>
             </div>
           )}
         </button>
 
         {dropDownListModal && !isCollapsed && (
-          <div className="absolute mt-2 w-full rounded-md border bg-white p-2 shadow-md">
+          <div className="absolute mt-2 w-full rounded-md border border-border bg-popover p-2 shadow-md z-10">
             {dropDownList.map((option, key) => (
               <div
                 key={key}
-                className="cursor-pointer rounded-md p-2 hover:bg-zinc-100"
+                className="cursor-pointer rounded-md p-2 transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <div className="font-medium">{option.nameOfCompany}</div>
-                <div className="text-xs text-zinc-500">
+                <div className="text-xs text-muted-foreground">
                   {option.numberOfProjects} projects
                 </div>
               </div>
             ))}
 
-            <div className="mt-2 border-t pt-2">
+            <div className="mt-2 border-t border-border pt-2">
               <button
                 onClick={() => {
                   gotToWorkSpaces();
                 }}
-                className="w-full rounded-md p-2 text-left hover:bg-zinc-100"
+                className="w-full rounded-md p-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer"
               >
                 View all workspaces
               </button>
 
-              <button className="w-full rounded-md p-2 text-left hover:bg-zinc-100">
+              <button className="w-full rounded-md p-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer">
                 Create workspace
               </button>
             </div>
@@ -145,7 +152,11 @@ export function SideBarComp() {
               `
                 flex items-center gap-3 rounded-md p-3
                 transition-colors
-                ${isActive ? "bg-zinc-900 text-white" : "hover:bg-zinc-100"}
+                ${
+                  isActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                }
               `
             }
           >

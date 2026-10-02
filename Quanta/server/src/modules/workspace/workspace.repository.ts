@@ -2,13 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import { NotAcceptableException } from '@nestjs/common';
 
-// TODO :: implement last activity
-// TODO :: get the userId from the headers
-// TODO :: implement types and validators
-// TODO :: for the form create a table of classes or get the api to locations and addresses
-// TODO :: work on phone numbers
-// TODO :: serialize user input
-
 @Injectable()
 export class WorkspaceRepository {
   async getWorkspaces(request: { userId: string }) {
@@ -17,8 +10,10 @@ export class WorkspaceRepository {
     SELECT
       w.id,
       w.name,
-      (SELECT COUNT(*)::int FROM projects p WHERE p."workspaceId" = w.id) AS "numberOfProjects",
-      (SELECT COUNT(*)::int FROM recipes r WHERE r."workspaceId" = w.id) AS "numberOfRecipes"
+      w."companyId",
+      w."isArchived",
+      (SELECT COUNT(*)::int FROM projects p WHERE p."companyId" = w."companyId") AS "numberOfProjects",
+      (SELECT COUNT(*)::int FROM recipes r WHERE r."companyId" = w."companyId") AS "numberOfRecipes"
     FROM workspaces w
     WHERE w."userId" = ${request.userId}
   `;
@@ -28,13 +23,13 @@ export class WorkspaceRepository {
     return response;
   }
 
-  async getPersonalWorkspace(request: { userId: string }) {
+async getPersonalWorkspace(request: { userId: string }) {
     const response: any[] = await prisma.$queryRaw`SELECT
 
     w.id AS id,
     w.name AS name,
-    (SELECT COUNT(*)::int FROM projects p WHERE p."workspaceId" = w.id) AS "numberOfProjects",
-    (SELECT COUNT(*)::int FROM recipes r WHERE r."workspaceId" = w.id) AS "numberOfRecipes"
+    (SELECT COUNT(*)::int FROM projects p WHERE p."userId" = ${request.userId} AND p."companyId" IS NULL) AS "numberOfProjects",
+    (SELECT COUNT(*)::int FROM recipes r WHERE r."userId" = ${request.userId} AND r."companyId" IS NULL) AS "numberOfRecipes"
     FROM workspaces w
     LEFT JOIN companies c ON c.id = w."companyId"
     WHERE w."userId" = ${request.userId}

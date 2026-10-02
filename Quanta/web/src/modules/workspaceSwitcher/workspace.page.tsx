@@ -1,126 +1,247 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useUser } from "@clerk/react";
 import { PersonalWorkSpaceCard } from "@/modules/workspaceSwitcher/components/personalCard";
 import { CompanyWorkSpaceCard } from "@/modules/workspaceSwitcher/components/companyWorkspacesCard";
 import { CreateCompanyWorkspaceForm } from "@/modules/workspaceSwitcher/components/createCompanyWorkspace.form";
 import { WorkspaceSwitcherSidebar } from "@/modules/workspaceSwitcher/components/workspaceSwitcherSidebar";
+import { ProjectRow } from "@/modules/workspaceSwitcher/components/projectRow";
+import { ToggleSwitch } from "@/modules/workspaceSwitcher/components/toggleSwitch";
+import { WorkspaceEmptyState } from "@/modules/workspaceSwitcher/components/workspaceEmptyState";
+import {
+  SkeletonCompanyCard,
+  SkeletonPersonalCard,
+  SkeletonProjectRow,
+} from "@/modules/workspaceSwitcher/components/workspaceSwitcherSkeleton";
+import { SearchIcon, PlusIcon } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
+import type {
+  CompanyWorkspace,
+  PersonalWorkspace,
+  ProjectSummary,
+} from "@/modules/workspaceSwitcher/contracts/workspaceSwitcher.types";
 import {
   getWorkspaces,
   getUserWorkspace,
+  getAllProjects,
 } from "@/modules/workspaceSwitcher/api/api";
 
-// TODO :: check if the user has workspace id in the localStorage, if so then navigate them to the dashboard.
-// TODO :: if user workspace has no id then show the create personal workspaces.
-// TODO :: onclick navigate to workspace. Page.
-// NOTE :: [build-fix] postNewWorkspace was imported but never called in this file -- the
-// "Create New Workspace" button only opens CreateCompanyWorkspaceForm, which presumably
-// calls postNewWorkspace itself. Removed the unused import here.
+// NOTE :: [backend] isArchived on CompanyWorkspace and the entire projects
+// panel both assume backend fields/endpoints that may not exist yet --
+// see workspaceSwitcher.types.ts and api.ts's getAllProjects for exactly
+// what's assumed and what's still needed.
+// TODO :: check if the user has workspace id in localStorage -- if so,
+// navigate straight to the dashboard instead of showing this page at all.
 
 export function WorkspaceSwitcherPage() {
-  const [workspaces, setWorkspaces] = useState<
-    {
-      id: string;
-      companyId: string;
-      name: string;
-      numberOfProjects: number;
-      numberOfRecipes: number;
-    }[]
-  >([]);
+  const { user } = useUser();
+  const userName = user?.firstName ?? "there";
 
-  const [personalWorkspace, setPersonalWorkspace] = useState<{
-    id: string;
-    name: string;
-    numberOfProjects: number;
-    numberOfRecipes: number;
-  }>({
-    id: "",
-    name: "",
-    numberOfProjects: 0,
-    numberOfRecipes: 0,
-  });
+  const [workspaces, setWorkspaces] = useState<CompanyWorkspace[]>([]);
+  const [personalWorkspace, setPersonalWorkspace] = useState<PersonalWorkspace | null>(null);
+  const [allProjects, setAllProjects] = useState<ProjectSummary[]>([]);
 
-  const [viewCreateCompanyWorkspaceForm, setViewCreateCompanyWorkspace] =
-    useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [viewCreateCompanyWorkspaceForm, setViewCreateCompanyWorkspace] = useState(false);
+
+
 
   useEffect(() => {
-    async function fetchWorkspaces() {
-      const companyWorkspaces = await getWorkspaces();
-      const userWorkspace = await getUserWorkspace();
+    async function fetchAll() {
+      setIsLoading(true);
+      const [companyWorkspaces, userWorkspace, projects] = await Promise.all([
+        getWorkspaces(),
+        getUserWorkspace(),
+        getAllProjects(),
+      ]);
       setWorkspaces(companyWorkspaces);
       setPersonalWorkspace(userWorkspace);
+      setAllProjects(projects);
+      setIsLoading(false);
     }
 
-    fetchWorkspaces();
+    fetchAll();
   }, []);
 
+  const activeCompanies = useMemo(
+    () =>
+      workspaces.filter(
+        (w) => !w.isArchived && w.name.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [workspaces, search],
+  );
+  const archivedCompanies = useMemo(() => workspaces.filter((w) => w.isArchived), [workspaces]);
+
+  const hasNoWorkspaces =
+    !isLoading && workspaces.length === 0 && (!personalWorkspace || personalWorkspace.id === "");
+
+
+
+
   return (
-    <>
-      <div className="flex flex-col w-full">
-        <WorkspaceSwitcherSidebar />
-        <div className="flex flex-col w-full p-8 bg-background text-foreground">
-          <header className="flex flex-col w-full items-center-safe">
-            <h1 className="text-2xl font-semibold text-foreground">
-              Welcome back, {`${"User"}`}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Select a workspace to continue
-            </p>
-          </header>
-          <main className="w-full flex flex-col gap-8">
-            <div
-              title="personal-workspace-card"
-              className="flex flex-col gap-4 w-full rounded-lg"
-            >
-              <div className="w-full items-center flex flex-row">
-                <h1 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Personal
-                </h1>
+    <div className="flex h-screen flex-col overflow-hidden" style={{ background: "#FFF8F0" }}>
+      <WorkspaceSwitcherSidebar />
+
+      <header
+        className="flex-shrink-0 px-8 pt-10 pb-7"
+        style={{ borderBottom: "1px solid #F3DEC0" }}
+      >
+        <h1 className="text-3xl font-bold tracking-tight mb-1" style={{ color: "#2B1B0E" }}>
+          Welcome back, {userName}.
+        </h1>
+        <p className="text-sm" style={{ color: "#9C7B4F" }}>Select a workspace to continue.</p>
+      </header>
+
+      {hasNoWorkspaces ? (
+        <WorkspaceEmptyState
+          userName={userName}
+          onCreateWorkspace={() => setViewCreateCompanyWorkspace(true)}
+        />
+      ) : (
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[5fr_4fr_4fr] divide-x" style={{ borderColor: "#F3DEC0" }}>
+
+          {/* Panel 1: Companies */}
+          <div className="overflow-y-auto px-8 py-7 flex flex-col gap-5">
+            <div>
+              <h2 className="text-[10px] uppercase tracking-widest font-medium mb-4" style={{ color: "#B89B6E" }}>
+                Companies
+              </h2>
+
+              <div className="relative mb-4">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <SearchIcon />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Filter companies…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-white rounded-md pl-9 pr-4 py-2.5 text-sm outline-none"
+                  style={{ border: "1px solid #F3DEC0", color: "#2B1B0E" }}
+                />
               </div>
+
+              {isLoading ? (
+                <div className="space-y-2.5">
+                  <SkeletonCompanyCard />
+                  <SkeletonCompanyCard />
+                  <SkeletonCompanyCard />
+                </div>
+              ) : activeCompanies.length > 0 ? (
+                <div className="space-y-2.5">
+                  {activeCompanies.map((w) => (
+                    <CompanyWorkSpaceCard
+                      key={w.id}
+                      id={w.id}
+                      companyId={w.companyId}
+                      companyName={w.name}
+                      numberOfProjects={w.numberOfProjects}
+                      numberOfRecipes={w.numberOfRecipes}
+                      lastActivity={w.lastActivity}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm py-6 text-center" style={{ color: "#B89B6E" }}>
+                  {search ? `No companies match "${search}"` : "No company workspaces yet"}
+                </p>
+              )}
+            </div>
+
+            {archivedCompanies.length > 0 && !isLoading ? (
+              <div className="pt-4" style={{ borderTop: "1px solid #F3DEC0" }}>
+                <ToggleSwitch
+                  checked={showArchived}
+                  onChange={() => setShowArchived((prev) => !prev)}
+                  label={`Show archived (${archivedCompanies.length})`}
+                />
+                {showArchived ? (
+                  <div className="mt-3 space-y-2.5">
+                    {archivedCompanies.map((w) => (
+                      <div key={w.id} className="opacity-40">
+                        <CompanyWorkSpaceCard
+                          id={w.id}
+                          companyId={w.companyId}
+                          companyName={w.name}
+                          numberOfProjects={w.numberOfProjects}
+                          numberOfRecipes={w.numberOfRecipes}
+                          lastActivity={w.lastActivity}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="mt-auto pt-2">
+              <button
+                onClick={() => setViewCreateCompanyWorkspace(true)}
+                className="text-white text-sm font-semibold py-2.5 px-5 rounded-md transition-colors duration-150 flex items-center gap-2 cursor-pointer"
+                style={{ background: "#FF6B35" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#E85A26")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#FF6B35")}
+              >
+                <PlusIcon />
+                Create New Workspace
+              </button>
+            </div>
+          </div>
+
+          {/* Panel 2: Personal */}
+          <div className="overflow-y-auto px-8 py-7">
+            <h2 className="text-[10px] uppercase tracking-widest font-medium mb-4" style={{ color: "#B89B6E" }}>
+              Personal
+            </h2>
+            {isLoading ? (
+              <SkeletonPersonalCard />
+            ) : personalWorkspace && personalWorkspace.id ? (
               <PersonalWorkSpaceCard
+                id={personalWorkspace.id}
                 numberOfProjects={personalWorkspace.numberOfProjects}
                 numberOfRecipes={personalWorkspace.numberOfRecipes}
-                lastActivity="30 min ago"
+                lastActivity={personalWorkspace.lastActivity}
               />
-            </div>
-            <div
-              title="personal-workspace-card"
-              className="flex flex-col gap-4 w-full rounded-lg"
-            >
-              <div className="w-full items-center flex flex-row">
-                <h1 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Company Workspaces
-                </h1>
-              </div>
-              <div className="w-full overflow-y-auto grid grid-cols-3 gap-4">
-                {workspaces.length > 0
-                  ? workspaces.map((workspace, key) => (
-                      <CompanyWorkSpaceCard
-                        key={key}
-                        id={workspace.id}
-                        companyId={workspace.companyId}
-                        companyName={workspace.name}
-                        numberOfProjects={workspace.numberOfProjects}
-                        numberOfRecipes={workspace.numberOfRecipes}
-                        lastActivity="30 min ago"
-                      />
-                    ))
-                  : null}
-              </div>
-            </div>
-            <button
-              onClick={() => setViewCreateCompanyWorkspace(true)}
-              className="w-full p-3 rounded-lg text-sm font-medium bg-primary text-primary-foreground transition-all duration-300 ease-in-out hover:bg-primary/90 active:scale-95 cursor-pointer"
-            >
-              + Create New Workspace
-            </button>
-          </main>
-        </div>
-      </div>
+            ) : (
+              <p className="text-sm" style={{ color: "#B89B6E" }}>No personal workspace yet.</p>
+            )}
+          </div>
 
-      {viewCreateCompanyWorkspaceForm == true ? (
-        <CreateCompanyWorkspaceForm
-          onClose={() => setViewCreateCompanyWorkspace(false)}
-        />
+          {/* Panel 3: All projects */}
+          <div className="overflow-y-auto px-8 py-7 flex flex-col">
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="text-[10px] uppercase tracking-widest font-medium" style={{ color: "#B89B6E" }}>
+                All Projects
+              </h2>
+              <span className="text-[10px]" style={{ color: "#B89B6E" }}>by due date</span>
+            </div>
+
+            {isLoading ? (
+              <>
+                <SkeletonProjectRow />
+                <SkeletonProjectRow />
+                <SkeletonProjectRow />
+                <SkeletonProjectRow />
+              </>
+            ) : allProjects.length > 0 ? (
+              <div className="flex-1">
+                {allProjects.map((p) => (
+                  <ProjectRow key={p.id} project={p} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm py-6 text-center" style={{ color: "#B89B6E" }}>
+                No active projects.
+              </p>
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {viewCreateCompanyWorkspaceForm ? (
+        <CreateCompanyWorkspaceForm onClose={() => setViewCreateCompanyWorkspace(false)} />
       ) : null}
-    </>
+    </div>
   );
 }

@@ -29,11 +29,12 @@ datasource db {
 
 // ============================================================
 // USERS
-// Auth handled by Auth0
+// Auth handled by Clerk
 // ============================================================
 
 model User {
   id        String   @id @default(uuid())
+  clerkId   String?  @unique
   email     String   @unique
   firstName String
   lastName  String
@@ -41,7 +42,7 @@ model User {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+ 
   @@map("users")
 }
 

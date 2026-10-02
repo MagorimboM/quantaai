@@ -49,40 +49,45 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    /* Warm palette, matching the landing/auth/workspace-switcher rebuild */
+    --background: #FFF8F0;
+    --foreground: #2B1B0E;
+    --card: #FFFFFF;
+    --card-foreground: #2B1B0E;
+    --popover: #FFFFFF;
+    --popover-foreground: #2B1B0E;
+    --primary: #FF6B35;
+    --primary-foreground: #FFFFFF;
+    --secondary: #FFE9D2;
+    --secondary-foreground: #2B1B0E;
+    --muted: #F3DEC0;
+    --muted-foreground: #9C7B4F;
+    --accent: #FFE9D2;
+    --accent-foreground: #2B1B0E;
+    --destructive: #B85C4F;
+    --border: #F3DEC0;
+    --input: #F3DEC0;
+    --ring: #FF6B35;
+    --chart-1: #FF6B35;
+    --chart-2: #9C7B4F;
+    --chart-3: #4A7B6F;
+    --chart-4: #6B5B8A;
+    --chart-5: #B85C4F;
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #2B1B0E;
+    --sidebar-primary: #FF6B35;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #FFE9D2;
+    --sidebar-accent-foreground: #2B1B0E;
+    --sidebar-border: #F3DEC0;
+    --sidebar-ring: #FF6B35;
 }
 
+/* NOTE :: left unchanged -- nothing in the app currently toggles dark mode.
+   If you want this protected against an OS-level dark-mode preference ever
+   triggering it accidentally, say so and I'll give this a warm dark variant
+   too, rather than the current unrelated greyscale one. */
 .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);

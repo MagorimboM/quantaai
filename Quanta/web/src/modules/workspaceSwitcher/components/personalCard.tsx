@@ -1,54 +1,62 @@
-import { MdOutlinePersonOutline, MdOutlineCalendarMonth } from "react-icons/md";
-import { MdMenuBook } from "react-icons/md";
-import { GrProjects } from "react-icons/gr";
+import { useNavigate } from "react-router";
+import { ChevronRight } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
+
+// NOTE :: [behavior change] the original PersonalWorkSpaceCard had no click
+// handler at all -- it rendered as if clickable (cursor-pointer) but did
+// nothing. This now actually navigates, matching CompanyWorkSpaceCard's
+// pattern. Personal workspaces don't have a separate companyId, so only
+// workspaceId is set.
 
 export function PersonalWorkSpaceCard({
+  id,
   numberOfProjects,
-  lastActivity,
   numberOfRecipes,
+  lastActivity,
 }: {
+  id: string;
   numberOfProjects: number;
-  lastActivity: string;
   numberOfRecipes: number;
+  lastActivity: string;
 }) {
+  const navigate = useNavigate();
+
+  function goToWorkSpace() {
+    localStorage.setItem("workspaceId", id);
+    localStorage.removeItem("companyId");
+    navigate("/dashboard");
+  }
+
   return (
-    <>
-      <div className="w-full bg-primary/5 text-card-foreground rounded-lg p-6 border-2 border-primary/30 cursor-pointer transition-colors duration-300 ease-in-out hover:bg-primary/10">
-        <div className="flex flex-row w-full justify-center items-center">
-          <MdOutlinePersonOutline
-            className="rounded-lg p-2 bg-primary text-primary-foreground"
-            size={50}
-          />
-          <div className="flex flex-col p-2 w-full">
-            <h1 className="text-xl font-bold text-foreground">My Personal Workspace</h1>
-            <p className="text-sm text-muted-foreground">your private workspace</p>
-          </div>
+    <button
+      onClick={goToWorkSpace}
+      className="w-full text-left bg-white border border-[#F3DEC0] rounded-md p-6 transition-all duration-150 hover:border-[#E8C99A] hover:shadow-[0_3px_18px_rgba(43,27,14,0.08)] group cursor-pointer"
+    >
+      <div className="flex items-start justify-between mb-6">
+        <div className="w-12 h-12 rounded-full bg-[#F3DEC0] flex items-center justify-center text-[#9C7B4F] text-xl font-bold select-none">
+          ✦
         </div>
-        {/* //todo::  map this part  */}
-        <div className="flex flex-row items-center justify-between w-full cursor-pointer mt-4">
-          <div className="flex flex-row items-center gap-2">
-            <MdMenuBook size={24} className="text-muted-foreground" />
-            <div className="flex flex-col items-start gap-0.5">
-              <h1 className="text-sm font-semibold text-foreground">{numberOfRecipes}</h1>
-              <p className="text-xs text-muted-foreground">Recipes</p>
-            </div>
-          </div>
-          <div className="flex flex-row items-center gap-2">
-            <GrProjects size={24} className="text-muted-foreground" />
-            <div className="flex flex-col items-start gap-0.5">
-              <h1 className="text-sm font-semibold text-foreground">{numberOfProjects}</h1>
-              <p className="text-xs text-muted-foreground">Projects</p>
-            </div>
-          </div>
-          <div className="flex flex-row items-center gap-2">
-            <MdOutlineCalendarMonth size={24} className="text-muted-foreground" />
-            <div className="flex flex-col items-start gap-0.5">
-              <h1 className="text-sm font-semibold text-foreground">{lastActivity}</h1>
-              <p className="text-xs text-muted-foreground">Active</p>
-            </div>
-          </div>
+        <span className="mt-1 transition-transform duration-150 group-hover:translate-x-0.5">
+          <ChevronRight color="#9C7B4F" />
+        </span>
+      </div>
+
+      <p className="text-[#2B1B0E] font-semibold text-base mb-1">My Workspace</p>
+      <p className="text-[11px] text-[#B89B6E] mb-7">Active {lastActivity}</p>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-3xl font-bold text-[#2B1B0E] leading-none mb-1.5 tracking-tight">
+            {numberOfProjects}
+          </p>
+          <p className="text-[10px] text-[#9C7B4F] uppercase tracking-widest">Projects</p>
+        </div>
+        <div>
+          <p className="text-3xl font-bold text-[#2B1B0E] leading-none mb-1.5 tracking-tight">
+            {numberOfRecipes}
+          </p>
+          <p className="text-[10px] text-[#9C7B4F] uppercase tracking-widest">Recipes</p>
         </div>
       </div>
-    </>
+    </button>
   );
 }

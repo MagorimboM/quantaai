@@ -1,10 +1,9 @@
-import { LuBuilding2 } from "react-icons/lu";
-import { MdOutlineCalendarMonth } from "react-icons/md";
-import { MdMenuBook } from "react-icons/md";
-import { GrProjects } from "react-icons/gr";
 import { useNavigate } from "react-router";
+import { ChevronRight } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
+import { getInitials, getColorForName } from "@/modules/workspaceSwitcher/components/workspaceSwitcher.utils";
 
-// TODO :: implement navigate to workspace route
+// TODO :: [backend] badge (e.g. "5 due this week") needs per-company due-date
+// aggregation that doesn't exist yet -- left out until that data is real.
 
 export function CompanyWorkSpaceCard({
   id,
@@ -15,7 +14,7 @@ export function CompanyWorkSpaceCard({
   lastActivity,
 }: {
   id: string;
-  companyId:string
+  companyId: string;
   companyName: string;
   numberOfProjects: number;
   numberOfRecipes: number;
@@ -25,57 +24,48 @@ export function CompanyWorkSpaceCard({
 
   function goToWorkSpace() {
     localStorage.setItem("workspaceId", id);
-    localStorage.setItem("companyId", companyId)
-    navigate('/dashboard');
+    localStorage.setItem("companyId", companyId);
+    navigate("/dashboard");
   }
+
+  const initials = getInitials(companyName);
+  const color = getColorForName(companyName);
+
   return (
-    <>
-      <div className="flex flex-col gap-4 w-full border rounded-lg p-4 bg-card text-card-foreground">
-        <div className="w-full flex flex-row justify-between items-center">
-          <h1 className="text-lg font-medium text-foreground">{companyName}</h1>
-          <LuBuilding2 size={22} className="text-muted-foreground" />
+    <button
+      onClick={goToWorkSpace}
+      className="w-full text-left bg-white border border-[#F3DEC0] rounded-md p-4 transition-all duration-150 hover:border-[#E8C99A] hover:shadow-[0_2px_12px_rgba(43,27,14,0.07)] group cursor-pointer"
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 text-xs font-bold text-white select-none"
+          style={{ backgroundColor: color }}
+        >
+          {initials}
         </div>
-        <div className="flex flex-row justify-between w-full">
-          <div className="flex flex-row items-center justify-between w-full cursor-pointer">
-            <div className="flex flex-row items-center gap-2">
-              <MdMenuBook size={20} className="text-muted-foreground" />
-              <div className="flex flex-col items-start gap-0.5">
-                <h1 className="text-sm font-semibold text-foreground">
-                  {numberOfRecipes}
-                </h1>
-                <p className="text-xs text-muted-foreground">Recipes</p>
-              </div>
-            </div>
-            <div className="flex flex-row items-center gap-2">
-              <GrProjects size={20} className="text-muted-foreground" />
-              <div className="flex flex-col items-start gap-0.5">
-                <h1 className="text-sm font-semibold text-foreground">
-                  {numberOfProjects}
-                </h1>
-                <p className="text-xs text-muted-foreground">Projects</p>
-              </div>
-            </div>
-            <div className="flex flex-row items-center gap-2">
-              <MdOutlineCalendarMonth
-                size={20}
-                className="text-muted-foreground"
-              />
-              <div className="flex flex-col items-start gap-0.5">
-                <h1 className="text-sm font-semibold text-foreground">
-                  {lastActivity}
-                </h1>
-                <p className="text-xs text-muted-foreground">Active</p>
-              </div>
-            </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-0.5">
+            <span className="text-[#2B1B0E] font-semibold text-sm leading-snug truncate">
+              {companyName}
+            </span>
+            <span className="flex-shrink-0 mt-0.5 transition-transform duration-150 group-hover:translate-x-0.5">
+              <ChevronRight />
+            </span>
+          </div>
+
+          <p className="text-[11px] text-[#B89B6E] mb-2.5">Active {lastActivity}</p>
+
+          <div className="flex items-center gap-4 text-xs text-[#9C7B4F]">
+            <span>
+              <span className="text-[#2B1B0E] font-medium">{numberOfProjects}</span> proj
+            </span>
+            <span>
+              <span className="text-[#2B1B0E] font-medium">{numberOfRecipes}</span> recipes
+            </span>
           </div>
         </div>
-        <button
-          onClick={() => goToWorkSpace()}
-          className="w-full rounded-md p-2 text-sm font-medium border-2 border-primary text-primary transition-all duration-300 ease-in-out hover:bg-primary hover:text-primary-foreground active:scale-95 cursor-pointer"
-        >
-          Enter Workspace
-        </button>
       </div>
-    </>
+    </button>
   );
 }

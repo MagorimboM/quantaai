@@ -23,6 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <MdOutlineAccountCircle size={24} />
             </button>
           </div>
+
           <div className="flex flex-1 min-h-0">{children}</div>
         </main>
       </div>

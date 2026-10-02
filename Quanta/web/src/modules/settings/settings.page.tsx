@@ -6,6 +6,11 @@ import {
   updateFieldFiles,
   RestoreFieldsFiles,
 } from "@/modules/settings/services/services";
+import {
+  getCompanyInfo,
+  getCompanyTeamMembers,
+  getCompanyComplianceStandards,
+} from "@/modules/settings/api/api";
 
 type Address = {
   state: string;
@@ -59,9 +64,19 @@ export function SettingsPage() {
   >([]);
 
   useEffect(() => {
-    // get company information
-    // get company team members
-    // get company doc information
+    async function getCompanyDetails() {
+      const companyId: any = localStorage.getItem("companyId");
+      // get company information
+      const companyInformation = await getCompanyInfo(companyId);
+      const companyTeamMembers = await getCompanyTeamMembers(companyId);
+      const companyComplianceStandards =
+        await getCompanyComplianceStandards(companyId);
+
+      setCompanyStandardCompliance(companyComplianceStandards);
+      setCompanyInformation(companyInformation);
+      setCompanyTeamMembers(companyTeamMembers);
+    }
+    getCompanyDetails();
   }, []);
 
   // on cancel -> fetch data from network  and restore fields and files. check if there is a change in the information/data.
