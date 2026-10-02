@@ -13,7 +13,7 @@ import { LoginPage } from "@/modules/landing/auth/login/LoginPage";
 import { useAuth } from "@clerk/react";
 
 function App() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isSignedIn } = useAuth();
 
   if (isSignedIn) {
     return (
