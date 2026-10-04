@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { WorkspaceService } from '@/modules/workspace/workspace.service';
+import { ClerkUserId } from '@/auth/services/currentUser.guard';
 
 @Controller('workspaces')
 export class WorkspaceController {
@@ -10,7 +11,7 @@ export class WorkspaceController {
     // TODO :: fetch the userId from the headers of the request
     const userId = 'seed-user-001';
     return await this.workspaceService.getWorkspaces({ userId: userId });
-  }; 
+  }
 
   @Get('/personal')
   async getPersonalWorkspace() {
@@ -34,7 +35,18 @@ export class WorkspaceController {
       contactEmail: string;
       companyType: string;
     },
+
+    @ClerkUserId() clerkId: string,
   ) {
-    return await this.workspaceService.createNewWorkspace(request);
+    return await this.workspaceService.createNewWorkspace(request, clerkId);
+  }; 
+
+    @Get('/due-projects')
+  async getWorkspaceProjects(@ClerkUserId() clerkId: string) {
+    return await this.workspaceService.getWorkspaceProjects(clerkId);
   }
+
+
 }
+
+

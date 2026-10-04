@@ -29,15 +29,18 @@ import {
 } from "@/modules/workspaceSwitcher/api/api";
 
 
+
 export function WorkspaceSwitcherPage() {
   const { user } = useUser();
   const userName = user?.firstName ?? "there";
   const navigate = useNavigate();
   const workspaceId: any = localStorage.getItem("workspaceId");
 
-  if (workspaceId?.length > 0) {
-    navigate("/dashboard");
-  }
+  useEffect(() => {
+    if (workspaceId) {
+      navigate("/dashboard");
+    }
+  }, []);
 
   const [workspaces, setWorkspaces] = useState<CompanyWorkspace[]>([]);
   const [personalWorkspace, setPersonalWorkspace] =
@@ -71,7 +74,7 @@ export function WorkspaceSwitcherPage() {
     () =>
       workspaces.filter(
         (w) =>
-          !w.isArchived && w.name.toLowerCase().includes(search.toLowerCase()),
+          w.name.toLowerCase().includes(search.toLowerCase()),
       ),
     [workspaces, search],
   );
@@ -84,6 +87,9 @@ export function WorkspaceSwitcherPage() {
     !isLoading &&
     workspaces.length === 0 &&
     (!personalWorkspace || personalWorkspace.id === "");
+  function addNewWorkspace(company: any) {
+    setWorkspaces((prev) => [...prev, company]);
+  }
 
   return (
     <div
@@ -117,9 +123,10 @@ export function WorkspaceSwitcherPage() {
           className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[5fr_4fr_4fr] divide-x"
           style={{ borderColor: "#F3DEC0" }}
         >
-          {/* Panel 1: Companies */}
-          <div className="overflow-y-auto px-8 py-7 flex flex-col gap-5">
-            <div>
+          {/* Panel 1 */}
+          <div className="flex flex-col h-full min-h-0 px-8 py-7">
+            {/* Fixed: heading + search */}
+            <div className="flex-shrink-0">
               <h2
                 className="text-[10px] uppercase tracking-widest font-medium mb-4"
                 style={{ color: "#B89B6E" }}
@@ -140,7 +147,8 @@ export function WorkspaceSwitcherPage() {
                   style={{ border: "1px solid #F3DEC0", color: "#2B1B0E" }}
                 />
               </div>
-
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
               {isLoading ? (
                 <div className="space-y-2.5">
                   <SkeletonCompanyCard />
@@ -171,35 +179,34 @@ export function WorkspaceSwitcherPage() {
                     : "No company workspaces yet"}
                 </p>
               )}
+
+              {archivedCompanies.length > 0 && !isLoading ? (
+                <div className="pt-4 mt-4" style={{ borderTop: "1px solid #F3DEC0" }}>
+                  <ToggleSwitch
+                    checked={showArchived}
+                    onChange={() => setShowArchived((prev) => !prev)}
+                    label={`Show archived (${archivedCompanies.length})`}
+                  />
+                  {showArchived ? (
+                    <div className="mt-3 space-y-2.5">
+                      {archivedCompanies.map((w) => (
+                        <div key={w.id} className="opacity-40">
+                          <CompanyWorkSpaceCard
+                            id={w.id}
+                            companyId={w.companyId}
+                            companyName={w.name}
+                            numberOfProjects={w.numberOfProjects}
+                            numberOfRecipes={w.numberOfRecipes}
+                            lastActivity={w.lastActivity}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-
-            {archivedCompanies.length > 0 && !isLoading ? (
-              <div className="pt-4" style={{ borderTop: "1px solid #F3DEC0" }}>
-                <ToggleSwitch
-                  checked={showArchived}
-                  onChange={() => setShowArchived((prev) => !prev)}
-                  label={`Show archived (${archivedCompanies.length})`}
-                />
-                {showArchived ? (
-                  <div className="mt-3 space-y-2.5">
-                    {archivedCompanies.map((w) => (
-                      <div key={w.id} className="opacity-40">
-                        <CompanyWorkSpaceCard
-                          id={w.id}
-                          companyId={w.companyId}
-                          companyName={w.name}
-                          numberOfProjects={w.numberOfProjects}
-                          numberOfRecipes={w.numberOfRecipes}
-                          lastActivity={w.lastActivity}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="mt-auto pt-2">
+            <div className="flex-shrink-0 pt-4">
               <button
                 onClick={() => setViewCreateCompanyWorkspace(true)}
                 className="text-white text-sm font-semibold py-2.5 px-5 rounded-md transition-colors duration-150 flex items-center gap-2 cursor-pointer"
@@ -218,32 +225,34 @@ export function WorkspaceSwitcherPage() {
           </div>
 
           {/* Panel 2: Personal */}
-          <div className="overflow-y-auto px-8 py-7">
+          <div className="flex flex-col h-full min-h-0 px-8 py-7">
             <h2
-              className="text-[10px] uppercase tracking-widest font-medium mb-4"
+              className="flex-shrink-0 text-[10px] uppercase tracking-widest font-medium mb-4"
               style={{ color: "#B89B6E" }}
             >
               Personal
             </h2>
-            {isLoading ? (
-              <SkeletonPersonalCard />
-            ) : personalWorkspace && personalWorkspace.id ? (
-              <PersonalWorkSpaceCard
-                id={personalWorkspace.id}
-                numberOfProjects={personalWorkspace.numberOfProjects}
-                numberOfRecipes={personalWorkspace.numberOfRecipes}
-                lastActivity={personalWorkspace.lastActivity}
-              />
-            ) : (
-              <p className="text-sm" style={{ color: "#B89B6E" }}>
-                No personal workspace yet.
-              </p>
-            )}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {isLoading ? (
+                <SkeletonPersonalCard />
+              ) : personalWorkspace && personalWorkspace.id ? (
+                <PersonalWorkSpaceCard
+                  id={personalWorkspace.id}
+                  numberOfProjects={personalWorkspace.numberOfProjects}
+                  numberOfRecipes={personalWorkspace.numberOfRecipes}
+                  lastActivity={personalWorkspace.lastActivity}
+                />
+              ) : (
+                <p className="text-sm" style={{ color: "#B89B6E" }}>
+                  No personal workspace yet.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Panel 3: All projects */}
-          <div className="overflow-y-auto px-8 py-7 flex flex-col">
-            <div className="flex items-baseline justify-between mb-4">
+          <div className="flex flex-col h-full min-h-0 px-8 py-7">
+            <div className="flex-shrink-0 flex items-baseline justify-between mb-4">
               <h2
                 className="text-[10px] uppercase tracking-widest font-medium"
                 style={{ color: "#B89B6E" }}
@@ -255,27 +264,25 @@ export function WorkspaceSwitcherPage() {
               </span>
             </div>
 
-            {isLoading ? (
-              <>
-                <SkeletonProjectRow />
-                <SkeletonProjectRow />
-                <SkeletonProjectRow />
-                <SkeletonProjectRow />
-              </>
-            ) : allProjects.length > 0 ? (
-              <div className="flex-1">
-                {allProjects.map((p) => (
-                  <ProjectRow key={p.id} project={p} />
-                ))}
-              </div>
-            ) : (
-              <p
-                className="text-sm py-6 text-center"
-                style={{ color: "#B89B6E" }}
-              >
-                No active projects.
-              </p>
-            )}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {isLoading ? (
+                <>
+                  <SkeletonProjectRow />
+                  <SkeletonProjectRow />
+                  <SkeletonProjectRow />
+                  <SkeletonProjectRow />
+                </>
+              ) : allProjects.length > 0 ? (
+                allProjects.map((p) => <ProjectRow key={p.id} project={p} />)
+              ) : (
+                <p
+                  className="text-sm py-6 text-center"
+                  style={{ color: "#B89B6E" }}
+                >
+                  No active projects.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -283,6 +290,7 @@ export function WorkspaceSwitcherPage() {
       {viewCreateCompanyWorkspaceForm ? (
         <CreateCompanyWorkspaceForm
           onClose={() => setViewCreateCompanyWorkspace(false)}
+          addToList={addNewWorkspace}
         />
       ) : null}
     </div>

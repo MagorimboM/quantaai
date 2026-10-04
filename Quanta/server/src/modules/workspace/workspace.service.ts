@@ -10,9 +10,10 @@ export class WorkspaceService {
 
   async getPersonalWorkspace(request: { userId: string }) {
     return await this.workspaceRepository.getPersonalWorkspace(request);
-  }; 
+  }
 
-  async createNewWorkspace(request: {
+  async createNewWorkspace(
+    request: {
       name: string;
       address: string;
       city: string;
@@ -25,7 +26,13 @@ export class WorkspaceService {
       contactPhone: string;
       contactEmail: string;
       companyType: string;
-    }) {
-     return await this.workspaceRepository.createNewWorkspace(request)
+    },
+    clerkId: string,
+  ) {
+    return await this.workspaceRepository.createNewWorkspace(request, clerkId);
+  }
+
+  async getWorkspaceProjects(clerkId: string) {
+    return await this.workspaceRepository.getWorkspaceProjects(clerkId);
   }
 }

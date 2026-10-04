@@ -1,7 +1,4 @@
 import { useState } from "react";
-// import { deleteLineItem } from "@/modules/quantityTakeoff/api/services";
-//import { globalErrorState } from "@/common/storage/globalState";
-//import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,45 +12,44 @@ import {
 
 import { deleteProjectBillOfQuantities } from "@/modules/quantityTakeoff/api/services";
 
-export type LineItemId = {
-  id: string;
-};
-
 export function StartAfreshModalConfirmation({
+  companyId,
+  projectId,
   billOfQuantsUpdater,
   openCloseModal,
 }: {
+  companyId: string;
+  projectId: string;
   billOfQuantsUpdater: (something?: any) => void;
-  showModal: boolean;
   openCloseModal: () => void;
 }) {
-  // Own local state for the confirm <-> deleting toggle, same pattern as
-  // ConfirmDeletionModal. `showModal` only controls whether this component
-  // exists at all (the parent's job) -- it can't ALSO mean "currently
-  // deleting", those are two different questions.
+  // Whether this component exists at all is the parent's job, so there is no
+  // "showModal" prop -- only the confirm <-> deleting toggle lives here.
   const [showDeletingItems, setShowDeletingItems] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function clearAllTakeOffItemsOfProject() {
+    setErrorMessage(null);
     setShowDeletingItems(true);
 
-    const response = await deleteProjectBillOfQuantities({
-      companyId: "seed-company-001",
-      projectId: "seed-proj-001",
-    });
+    try {
+      const response = await deleteProjectBillOfQuantities({
+        companyId,
+        projectId,
+      });
 
-    if (response.deletedItems == 0) {
-      // Nothing was deleted -- go back to the confirm view instead of
-      // leaving the user staring at a spinner with no way out.
+      if (response.deletedItems == 0) {
+        setErrorMessage("Nothing was deleted. Try again.");
+        return;
+      }
+
+      billOfQuantsUpdater([]);
+      openCloseModal();
+    } catch {
+      setErrorMessage("Couldn't clear the takeoff. Try again.");
+    } finally {
       setShowDeletingItems(false);
-      return;
     }
-
-    // clear the stuff
-    billOfQuantsUpdater([]);
-
-    // close the modal
-    openCloseModal();
-    setShowDeletingItems(false);
   }
 
   return (
@@ -66,12 +62,15 @@ export function StartAfreshModalConfirmation({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Start Project Afresh</AlertDialogTitle>
+            <AlertDialogTitle>Start project afresh</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to restart the project? This means all take
-              off will be deleted <br /> and action cannot be reversed
+              Are you sure you want to restart the project? All takeoff will be
+              deleted and this action cannot be reversed.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {errorMessage ? (
+            <p className="text-sm text-destructive">{errorMessage}</p>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
               className="cursor-pointer"
@@ -80,8 +79,11 @@ export function StartAfreshModalConfirmation({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => clearAllTakeOffItemsOfProject()}
-              className=" cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                clearAllTakeOffItemsOfProject();
+              }}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Confirm
             </AlertDialogAction>

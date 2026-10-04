@@ -9,22 +9,11 @@ import {
 
 import { NavLink, useNavigate } from "react-router";
 import { useState } from "react";
-
 export function SideBarComp() {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [dropDownListModal, setDropDownListModal] = useState(false);
 
-  const dropDownList = [
-    {
-      nameOfCompany: "Acme Inc",
-      numberOfProjects: 12,
-    },
-    {
-      nameOfCompany: "Quanta Labs",
-      numberOfProjects: 7,
-    },
-  ];
 
   const sideBarList = [
     {
@@ -48,7 +37,6 @@ export function SideBarComp() {
   function toggleSidebar() {
     setIsCollapsed((prev) => !prev);
   }
-
   function gotToWorkSpaces() {
     localStorage.removeItem("workspaceId");
     localStorage.removeItem("companyId");
@@ -103,21 +91,8 @@ export function SideBarComp() {
             </div>
           )}
         </button>
-
         {dropDownListModal && !isCollapsed && (
           <div className="absolute mt-2 w-full rounded-md border border-border bg-popover p-2 shadow-md z-10">
-            {dropDownList.map((option, key) => (
-              <div
-                key={key}
-                className="cursor-pointer rounded-md p-2 transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                <div className="font-medium">{option.nameOfCompany}</div>
-                <div className="text-xs text-muted-foreground">
-                  {option.numberOfProjects} projects
-                </div>
-              </div>
-            ))}
-
             <div className="mt-2 border-t border-border pt-2">
               <button
                 onClick={() => {
@@ -126,10 +101,6 @@ export function SideBarComp() {
                 className="w-full rounded-md p-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer"
               >
                 View all workspaces
-              </button>
-
-              <button className="w-full rounded-md p-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer">
-                Create workspace
               </button>
             </div>
           </div>

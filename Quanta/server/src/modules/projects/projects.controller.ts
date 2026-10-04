@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { ProjectsService } from '@/modules/projects/projects.service';
+import { ClerkUserId } from '@/auth/services/currentUser.guard';
 
 @Controller(':companyId/projects')
 export class ProjectsController {
@@ -21,4 +22,5 @@ export class ProjectsController {
       limit: limit,
     });
   }
+
 }

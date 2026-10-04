@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router";
 import {
   getProjectBillOfQuantities,
@@ -6,35 +6,45 @@ import {
   updateProjectStatus,
 } from "@/modules/quantityTakeoff/api/services";
 import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
-import { LineItem } from "@/modules/quantityTakeoff/components/lineItem";
+import {
+  LineItem,
+  type LineItemPatch,
+} from "@/modules/quantityTakeoff/components/lineItem";
 import {
   MdOutlinePreview,
   MdOutlineSave,
   MdCheckCircleOutline,
   MdOutlineRestartAlt,
-  MdDeleteOutline,
   MdOutlineSearch,
 } from "react-icons/md";
-import { IoLibraryOutline } from "react-icons/io5";
-import { ConfirmDeletionModal } from "@/modules/quantityTakeoff/components/confirmDeletion";
+import {
+  ConfirmDeletionModal,
+  type LineItemId,
+} from "@/modules/quantityTakeoff/components/confirmDeletion";
 import { StartAfreshModalConfirmation } from "@/modules/quantityTakeoff/components/startAfreshModal";
 import { SavingBillOfQuantsModal } from "@/modules/quantityTakeoff/components/savingModal";
+import { PreviewQuantitiesModal } from "@/modules/quantityTakeoff/components/previewQuantities.modal";
 
-// TODO :: [cleanup] BillOfQuants: saveBillOfQuants and completeTakeOff still hardcode companyId 'seed-company-001'
+// TODO :: the header shows no project name -- the bill-of-quantities endpoint
+// doesn't return one. Add it to the response (or store it in localStorage when
+// navigating in) and show it under the title.
 
-export type LineItemId = {
-  id: string;
-};
+const toolbarButton =
+  "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-all hover:bg-secondary/70 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+
+const primaryButton =
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 
 export function BillOfQuantsPage() {
-  const [LineItems, setLineItems] = useState<GetBillOfQuantsResponse[]>([]);
-  const [deletedLineItems, setDeletedLineItems] = useState<LineItemId[]>([]);
-  const [showDeletedSelectedItems, setShowDeletedSelectedItems] =
-    useState<boolean>(false);
+  const [lineItems, setLineItems] = useState<GetBillOfQuantsResponse[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [itemsToDelete, setItemsToDelete] = useState<LineItemId[] | null>(null);
   const [showStartAfreshConfirmation, setShowStartAfreshConfirmation] =
     useState<boolean>(false);
   const [showSavingModal, setShowSavingModal] = useState<boolean>(false);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
 
   const workspaceId = localStorage.getItem("workspaceId");
   const companyId = localStorage.getItem("companyId");
@@ -48,106 +58,83 @@ export function BillOfQuantsPage() {
   useEffect(() => {
     if (hasNoScopeIds) return;
 
-    async function getProjectBillOfQuants() {
-      const response = await getProjectBillOfQuantities({
-        companyId: companyId || "",
-        projectId: projectId || "",
-        limit: 10,
-        page: 1,
-        query: "",
-      });
-
-      setLineItems(response);
+    async function loadLineItems() {
+      try {
+        // NOTE :: the backend ignores query/page/limit today, so every line
+        // item comes back. Search happens in the browser (see visibleItems).
+        const response = await getProjectBillOfQuantities({
+          companyId: companyId ?? "",
+          projectId: projectId ?? "",
+          query: "",
+          page: 1,
+          limit: 10,
+        });
+        setLineItems(response);
+      } catch {
+        // apiClient already records the failure in global error state
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    getProjectBillOfQuants();
+    loadLineItems();
   }, []);
 
-  function searchBillOfQuants(
-    event: React.ChangeEvent<HTMLInputElement>,
-    page: number,
-  ) {
-    const searchedTerm = event.target.value.trim();
+  // Searching in the browser (not by re-fetching) means unsaved edits are
+  // never wiped by a search.
+  const visibleItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return lineItems;
 
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    return lineItems.filter((item) =>
+      [
+        item.description,
+        item.notes ?? "",
+        item.recipe?.name ?? "",
+        item.recipe?.category.name ?? "",
+      ].some((text) => text.toLowerCase().includes(term)),
+    );
+  }, [lineItems, searchTerm]);
 
-    searchTimeoutRef.current = setTimeout(async () => {
-      const results = await getProjectBillOfQuantities({
-        companyId: companyId || "",
-        projectId: projectId || "",
-        query: searchedTerm,
-        page: page,
-        limit: 10,
-      });
-
-      setLineItems(results);
-    });
-  }
-
-  async function showStartAfreshModal() {
-    if (showStartAfreshConfirmation == true) {
-      setShowStartAfreshConfirmation(false);
-
-      return;
-    }
-
-    setShowStartAfreshConfirmation(true);
+  function updateLineItemFields(id: string, patch: LineItemPatch) {
+    setLineItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    );
+    setHasUnsavedChanges(true);
   }
 
   async function saveBillOfQuants() {
     setShowSavingModal(true);
-    await updateLineItem({
-      companyId: "seed-company-001",
-      body: LineItems.map((lineItem) => ({
-        id: lineItem.id,
-        userId: "",
-        companyId: companyId || "",
-        projectId: projectId || "",
-        recipeId: lineItem.recipe?.id || "",
-        description: lineItem.description,
-        measurement: lineItem.measurement,
-        unit: lineItem.unit,
-        notes: lineItem.notes,
-      })),
-      projectId: projectId || "",
-    });
-    setShowSavingModal(false);
-    return;
+    try {
+      await updateLineItem({
+        companyId: companyId ?? "",
+        projectId: projectId ?? "",
+        body: lineItems.map((lineItem) => ({
+          id: lineItem.id,
+          userId: null,
+          companyId: companyId ?? "",
+          projectId: projectId ?? "",
+          recipeId: lineItem.recipe?.id ?? null,
+          description: lineItem.description,
+          measurement: lineItem.measurement,
+          unit: lineItem.unit,
+          notes: lineItem.notes,
+        })),
+      });
+      setHasUnsavedChanges(false);
+    } catch {
+      // apiClient already records the failure; edits stay on screen, unsaved
+    } finally {
+      setShowSavingModal(false);
+    }
   }
 
   async function completeTakeOff() {
-    const response = await updateProjectStatus({
-      companyId: companyId || "",
+    await updateProjectStatus({
+      companyId: companyId ?? "",
       completed: true,
-      projectId: projectId || "",
+      projectId: projectId ?? "",
     });
-
-    if (response) {
-      return;
-    }
-  }
-
-  async function deleteSelectedItems() {
-    setShowDeletedSelectedItems(true);
-  }
-
-  function areAllLineItemsInDeletedList() {
-    if (LineItems.length === 0) return false;
-    return LineItems.every((lineItem) =>
-      deletedLineItems.some(
-        (deletedLineItem) => deletedLineItem.id === lineItem.id,
-      ),
-    );
-  }
-
-  function addAllTodDeleteList() {
-    if (areAllLineItemsInDeletedList()) {
-      setDeletedLineItems([]);
-      return;
-    }
-    setDeletedLineItems(LineItems.map((lineItem) => ({ id: lineItem.id })));
   }
 
   if (hasNoScopeIds) {
@@ -156,158 +143,120 @@ export function BillOfQuantsPage() {
 
   return (
     <div className="flex h-full w-full flex-col bg-background text-foreground">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b shrink-0">
-        <div className="flex items-center p-2 gap-6">
-          <button className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-foreground hover:text-background active:scale-95 cursor-pointer">
-            <IoLibraryOutline size={18} /> View Library
-          </button>
-          <div className="flex flex-col">
-            <h1 className="text-sm font-medium text-foreground">
-              Quantity TakeOff
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Harbor View Apartments
-            </p>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 shrink-0">
+        <div className="flex flex-col">
+          <h1 className="text-sm font-medium text-foreground">
+            Quantity takeoff
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {lineItems.length} line item{lineItems.length === 1 ? "" : "s"}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-3 p-2 justify-end items-center">
+
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          {hasUnsavedChanges ? (
+            <span className="text-xs text-muted-foreground">
+              Unsaved changes
+            </span>
+          ) : null}
           <button
-            disabled={LineItems.length == 0 ? true : false}
-            className={
-              LineItems.length > 0
-                ? "text-secondary-foreground bg-secondary hover:bg-secondary/70 active:scale-95 cursor-pointer inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-                : "text-neutral-400 bg-neutral-100 cursor-not-allowed inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-            }
+            disabled={lineItems.length === 0}
+            onClick={() => setShowPreview(true)}
+            className={toolbarButton}
           >
-            <MdOutlinePreview size={18} /> Preview Quantities
+            <MdOutlinePreview size={18} /> Preview quantities
           </button>
           <button
-            disabled={deletedLineItems.length > 0 ? false : true}
-            onClick={() => deleteSelectedItems()}
-            className={`${deletedLineItems.length > 0 ? "text-destructive cursor-pointer active:scale-95" : "text-gray-400 cursor-not-allowed"} inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border bg-secondary px-4 py-2 text-sm font-medium transition-all hover:bg-secondary/70 `}
-          >
-            <MdDeleteOutline size={18} /> Deleted Selected
-          </button>
-          <button
-            disabled={LineItems.length === 0}
+            disabled={lineItems.length === 0}
             onClick={() => setShowStartAfreshConfirmation(true)}
-            className={
-              LineItems.length > 0
-                ? "text-destructive bg-secondary hover:bg-secondary/70 active:scale-95 cursor-pointer inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-                : "text-neutral-400 bg-neutral-100 cursor-not-allowed inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-            }
+            className={`${toolbarButton} text-destructive`}
           >
-            <MdOutlineRestartAlt size={18} /> Start Afresh
+            <MdOutlineRestartAlt size={18} /> Start afresh
           </button>
           <button
+            disabled={lineItems.length === 0}
             onClick={() => saveBillOfQuants()}
-            disabled={LineItems.length === 0}
-            className={
-              LineItems.length > 0
-                ? "text-green-600 bg-secondary hover:bg-secondary/70 active:scale-95 cursor-pointer inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-                : "text-neutral-400 bg-neutral-100 cursor-not-allowed inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-4 py-2 text-sm font-medium transition-all"
-            }
+            className={toolbarButton}
           >
             <MdOutlineSave size={18} /> Save
           </button>
           <button
-            disabled={LineItems.length === 0}
+            disabled={lineItems.length === 0}
             onClick={() => completeTakeOff()}
-            className={
-              LineItems.length > 0
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 cursor-pointer inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all"
-                : "bg-neutral-100 text-neutral-400 cursor-not-allowed inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all"
-            }
+            className={primaryButton}
           >
-            <MdCheckCircleOutline size={18} /> Complete TakeOff
+            <MdCheckCircleOutline size={18} /> Complete takeoff
           </button>
         </div>
       </div>
 
       <div className="flex flex-row justify-start border-b p-2 shrink-0">
-        <div className="flex flex-row items-center gap-2 border border-input rounded-md px-2 py-1.5 bg-background">
+        <div className="flex flex-row items-center gap-2 rounded-md border border-input bg-background px-2 py-1.5">
           <MdOutlineSearch size={20} className="text-muted-foreground" />
           <input
-            onChange={(e) => searchBillOfQuants(e, 1)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="border-0 bg-transparent text-sm focus-visible:outline-none placeholder:text-muted-foreground"
             type="text"
-            placeholder="Search your line item... "
+            placeholder="Search line items…"
           />
         </div>
       </div>
 
-      <div
-        title="bill-of-quants"
-        className="flex flex-1 min-h-0 flex-col overflow-y-auto"
-      >
-        <table className="flex flex-col flex-1 rounded-lg border bg-card text-card-foreground">
-          <thead className="border-b p-2 bg-muted sticky top-0">
-            <tr className="grid grid-cols-[70px_90px_1fr_1fr_100px_80px_160px_140px_120px] items-center gap-2">
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                SELECT
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                <input
-                  checked={areAllLineItemsInDeletedList()}
-                  onChange={() => addAllTodDeleteList()}
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-input accent-foreground"
-                />
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                SCOPE
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                ITEM
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                QUANTITY
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                UNIT
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                APPLIED RECIPE
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                ACTION
-              </th>
-              <th className="text-left font-medium text-xs uppercase tracking-wide text-muted-foreground min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                STATUS
-              </th>
-            </tr>
-          </thead>
-
-          <tbody className="flex flex-col p-2 gap-2 scroll-py">
-            {LineItems.length > 0
-              ? LineItems.map((lineItem, key) => (
-                  <LineItem
-                    key={key}
-                    takeOffLineItem={lineItem}
-                    deletedListUpdater={setDeletedLineItems}
-                    deletedList={deletedLineItems}
-                  />
-                ))
-              : null}
-          </tbody>
-        </table>
+      <div className="flex-1 min-h-0 overflow-y-auto p-4">
+        {isLoading ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Loading line items…
+          </p>
+        ) : lineItems.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            No line items yet.
+          </p>
+        ) : visibleItems.length === 0 ? (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            No line items match "{searchTerm}".
+          </p>
+        ) : (
+          <div className="rounded-lg border bg-card text-card-foreground">
+            {visibleItems.map((item) => (
+              <LineItem
+                key={item.id}
+                takeOffLineItem={item}
+                onUpdate={updateLineItemFields}
+                onDelete={(id) => setItemsToDelete([{ id }])}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {showDeletedSelectedItems ? (
+      {itemsToDelete ? (
         <ConfirmDeletionModal
+          companyId={companyId ?? ""}
+          projectId={projectId ?? ""}
           billOfQuantsUpdater={setLineItems}
-          deletedLineItemsList={deletedLineItems}
-          openClose={setShowDeletedSelectedItems}
-          header="Delete Selected Items"
-          message="Are you sure you want to delete these items? This action cannot be reversed"
+          deletedLineItemsList={itemsToDelete}
+          openClose={(show) => {
+            if (!show) setItemsToDelete(null);
+          }}
+          header="Delete line item"
+          message="Are you sure you want to delete this line item? This action cannot be reversed."
         />
       ) : null}
 
       {showStartAfreshConfirmation ? (
         <StartAfreshModalConfirmation
-          openCloseModal={showStartAfreshModal}
+          companyId={companyId ?? ""}
+          projectId={projectId ?? ""}
           billOfQuantsUpdater={setLineItems}
-          showModal={showStartAfreshConfirmation}
+          openCloseModal={() => setShowStartAfreshConfirmation(false)}
+        />
+      ) : null}
+
+      {showPreview ? (
+        <PreviewQuantitiesModal
+          lineItems={lineItems}
+          onClose={() => setShowPreview(false)}
         />
       ) : null}
 

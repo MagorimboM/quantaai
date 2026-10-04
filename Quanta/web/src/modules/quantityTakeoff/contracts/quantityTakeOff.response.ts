@@ -1,41 +1,47 @@
+export type RecipeDetail = {
+  id: string;
+  name: string;
+  unit: string;
+  category: {
+    id: string;
+    name: string;
+  };
+  recipeMaterials: {
+    id: string;
+    quantity: number;
+    unit: string;
+    material: {
+      id: string;
+      name: string;
+    };
+  }[];
+  recipeLabour: {
+    id: string;
+    quantity: number;
+    unit: string;
+    labour: {
+      id: string;
+      name: string;
+    };
+  }[];
+  recipeOverheads: {
+    id: string;
+    quantity: number;
+    unit: string;
+    overhead: {
+      id: string;
+      name: string;
+    };
+  }[];
+};
+
 export type GetBillOfQuantsResponse = {
   id: string;
   description: string;
   measurement: number;
   unit: string;
   notes: string | null;
-  recipe: {
-    id: string;
-    name: string;
-    unit: string;
-    recipeMaterials: {
-      id: string;
-      quantity: number;
-      unit: string;
-      material: {
-        id: string;
-        name: string;
-      };
-    }[];
-    recipeLabour: {
-      id: string;
-      quantity: number;
-      unit: string;
-      labour: {
-        id: string;
-        name: string;
-      };
-    }[];
-    recipeOverheads: {
-      id: string;
-      quantity: number;
-      unit: string;
-      overhead: {
-        id: string;
-        name: string;
-      };
-    }[];
-  } | null;
+  recipe: RecipeDetail | null;
 };
 
 export type UpdateLineItemResponse = {
@@ -93,7 +99,7 @@ export type DeletedLineItemsResponse = {
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
-} []
+}[];
 
 export type DeleteProjectBillOfQuantitiesResponse = {
   success: boolean;

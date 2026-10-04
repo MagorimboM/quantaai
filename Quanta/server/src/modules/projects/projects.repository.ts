@@ -16,8 +16,15 @@ export class ProjectsRepository {
       ...(request.term
         ? {
             OR: [
-              { name: { contains: request.term, mode: 'insensitive' as const } },
-              { description: { contains: request.term, mode: 'insensitive' as const } },
+              {
+                name: { contains: request.term, mode: 'insensitive' as const },
+              },
+              {
+                description: {
+                  contains: request.term,
+                  mode: 'insensitive' as const,
+                },
+              },
             ],
           }
         : {}),

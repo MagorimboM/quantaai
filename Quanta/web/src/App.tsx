@@ -15,61 +15,61 @@ import { useAuth } from "@clerk/react";
 function App() {
   const { isSignedIn } = useAuth();
 
-  if (isSignedIn) {
+  if (!isSignedIn) {
     return (
       <Routes>
-        <Route path="*" element={<WorkspaceSwitcherPage />} />
-        <Route path="/" element={<WorkspaceSwitcherPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <AppShell>
-              <DashBoardPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/projects"
-          element={
-            <AppShell>
-              <ProjectsPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/recipes"
-          element={
-            <AppShell>
-              <RecipeLibraryPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <AppShell>
-              <SettingsPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/projects/bill-of-quants"
-          element={
-            <AppShell>
-              <BillOfQuantsPage />
-            </AppShell>
-          }
-        />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     );
   }
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="*" element={<LandingPage />} />
+      <Route path="*" element={<WorkspaceSwitcherPage />} />
+      <Route path="/" element={<WorkspaceSwitcherPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <AppShell>
+            <DashBoardPage />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <AppShell>
+            <ProjectsPage />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/recipes"
+        element={
+          <AppShell>
+            <RecipeLibraryPage />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <AppShell>
+            <SettingsPage />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/projects/bill-of-quants"
+        element={
+          <AppShell>
+            <BillOfQuantsPage />
+          </AppShell>
+        }
+      />
     </Routes>
   );
 }

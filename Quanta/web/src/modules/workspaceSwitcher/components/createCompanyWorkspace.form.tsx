@@ -6,10 +6,21 @@ import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/c
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
 
+type NewCompany = {
+  id: string;
+  companyId: string;
+  isArchived: boolean;
+  name: string;
+  numberOfProjects: number;
+  numberOfRecipes: number;
+};
+
 export function CreateCompanyWorkspaceForm({
   onClose,
+  addToList,
 }: {
   onClose: () => void;
+  addToList: (newCompany: any) => void;
 }) {
   const [form, setForm] = useState({
     name: "",
@@ -34,15 +45,14 @@ export function CreateCompanyWorkspaceForm({
   }
 
   async function submitForm() {
-    // TODO :: submit to the backend
-    // TODO :: on success trigger a page reload. or pass page state to this so that it gets updated with the form.
     setShowCreatingWorkspaceModal(true);
-    const response = postNewWorkspace(form);
+    const response = await postNewWorkspace(form);
     if (!response) {
       console.log("something is up");
       setShowCreatingWorkspaceModal(false);
       return;
     }
+    addToList(response)
     setShowCreatingWorkspaceModal(false);
     onClose();
   }

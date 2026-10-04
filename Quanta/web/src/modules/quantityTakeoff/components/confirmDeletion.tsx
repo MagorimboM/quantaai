@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { deleteLineItem } from "@/modules/quantityTakeoff/api/services";
-import { globalErrorState } from "@/common/storage/globalState";
-import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
+import type { GetBillOfQuantsResponse } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -18,12 +17,16 @@ export type LineItemId = {
 };
 
 export function ConfirmDeletionModal({
+  companyId,
+  projectId,
   deletedLineItemsList,
   billOfQuantsUpdater,
   message,
   header,
   openClose,
 }: {
+  companyId: string;
+  projectId: string;
   billOfQuantsUpdater: (something: any) => void;
   header: string;
   deletedLineItemsList: LineItemId[];
@@ -31,30 +34,32 @@ export function ConfirmDeletionModal({
   openClose: (show: boolean) => void;
 }) {
   const [showDeletingItems, setShowDeletingItems] = useState<boolean>(false);
-  const globalErrorMessage = globalErrorState(
-    (state: any) => state.globalErrorMessage,
-  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function deleteFiles() {
+    setErrorMessage(null);
     setShowDeletingItems(true);
 
     try {
       const response = await deleteLineItem({
-        companyId: "seed-company-001",
-        projectId: "seed-proj-001",
+        companyId,
+        projectId,
         lineItems: deletedLineItemsList,
       });
 
       if (response.length === 0) {
-        setShowDeletingItems(false);
+        setErrorMessage("Nothing was deleted. Try again.");
         return;
       }
+
       const deletedIds = new Set(response.map((item) => item.id));
       billOfQuantsUpdater((prev: GetBillOfQuantsResponse[]) =>
         prev.filter((lineItem) => !deletedIds.has(lineItem.id)),
       );
 
       openClose(false);
+    } catch {
+      setErrorMessage("Couldn't delete these items. Try again.");
     } finally {
       setShowDeletingItems(false);
     }
@@ -77,8 +82,8 @@ export function ConfirmDeletionModal({
             <AlertDialogTitle>{header}</AlertDialogTitle>
             <AlertDialogDescription>{message}</AlertDialogDescription>
           </AlertDialogHeader>
-          {globalErrorMessage ? (
-            <p className="text-sm text-destructive">{globalErrorMessage}</p>
+          {errorMessage ? (
+            <p className="text-sm text-destructive">{errorMessage}</p>
           ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
@@ -88,8 +93,11 @@ export function ConfirmDeletionModal({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => await deleteFiles()}
-              className=" cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                await deleteFiles();
+              }}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Confirm
             </AlertDialogAction>

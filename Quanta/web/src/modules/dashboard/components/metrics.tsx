@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
 import { getKPIInformation } from "@/modules/dashboard/api/api";
-import type {
-  KPIInformationResponse,
-} from "@/modules/dashboard/contracts/dashboard.response.contract";
+import type { KPIInformationResponse } from "@/modules/dashboard/contracts/dashboard.response.contract";
 import { GrProjects } from "react-icons/gr";
 import { MdMenuBook, MdOutlineTrendingUp } from "react-icons/md";
 import { HiOutlineDocumentText } from "react-icons/hi";
-
-// TODO :: replace company id with dynamic reference.
 
 export function Metrics() {
   const [dashboardMetrics, setDashboardMetrics] =
     useState<KPIInformationResponse>();
 
+  const companyId: any = localStorage.getItem("companyId");
+
   useEffect(() => {
     async function getDashboardKPI(): Promise<void> {
-      const kpi = await getKPIInformation({ companyId: "seed-company-001" });
+      const kpi = await getKPIInformation({ companyId: companyId });
       setDashboardMetrics(kpi);
     }
 

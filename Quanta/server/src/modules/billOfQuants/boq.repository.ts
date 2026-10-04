@@ -58,11 +58,6 @@ import { Body, Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import { text } from 'node:stream/consumers';
 
-
-
-
-
-
 @Injectable()
 export class BillOfQuantsRepository {
   /**
@@ -72,7 +67,11 @@ export class BillOfQuantsRepository {
 
   // TODO :: implement the search term in the find item
 
-  
+  // Replace the body of getProjectBillOfQuants in boq.repository.ts with this.
+  // Two changes: the recipe now includes its category (the page shows it next
+  // to the recipe name), and the order is stable so rows don't shuffle after a
+  // save. createdAt alone isn't enough -- rows inserted in one statement share
+  // a timestamp -- so id is the tie-breaker.
   async getProjectBillOfQuants(request: {
     companyId: string;
     projectId: string;
@@ -80,15 +79,13 @@ export class BillOfQuantsRepository {
     page?: number;
     limit?: number;
   }) {
-    // Returns array of nested BOQ objects + pagination metadata
-    // Take offLine item{company project bill of quants}, recipe table, recipeMaterial , recipeLabour, recipeOverheads,  recipeCategory
-    // get the line item of the project, get recipe components from the recipe conjunction table.  then return it. where company id= that and project id = that
-
     const lineItems = await prisma.takeoffItem.findMany({
       where: { companyId: request.companyId, projectId: request.projectId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       include: {
         recipe: {
           include: {
+            category: { select: { id: true, name: true } },
             recipeMaterials: {
               include: { material: true },
             },
@@ -105,7 +102,6 @@ export class BillOfQuantsRepository {
 
     return lineItems;
   }
-
   /**
    * PUT /:companyId/projects/:projectId/bill-of-quantities
    * Bulk save/update line items.
