@@ -6,14 +6,6 @@ import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/c
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
 
-type NewCompany = {
-  id: string;
-  companyId: string;
-  isArchived: boolean;
-  name: string;
-  numberOfProjects: number;
-  numberOfRecipes: number;
-};
 
 export function CreateCompanyWorkspaceForm({
   onClose,
