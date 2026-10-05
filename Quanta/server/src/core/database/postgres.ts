@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaClient } from "../../../generated/prisma/client"
 
 // TODO :: [infra] Create a new Prisma migration for the current schema: bunx prisma migrate dev --name <describe>
 // TODO :: [infra] docker-compose mounts migration files by exact filename, switch to bunx prisma migrate deploy on container start
