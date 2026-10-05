@@ -1,7 +1,7 @@
 import { Controller, Post, Req, Res, BadRequestException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { Public } from '@/auth/services/public.decorator.ts';
+import { Public } from '@/auth/services/public.decorator';
 
 // ---- Authentication, now via Clerk ----
 // Clerk owns sign-up, sign-in, passwords and sessions entirely on the frontend.
