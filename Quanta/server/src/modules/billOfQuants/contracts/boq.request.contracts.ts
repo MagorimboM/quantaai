@@ -1,49 +1,28 @@
-export type LineItems = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
+// Which project's takeoff a repository call is about. By the time a repository
+// method runs, the caller has been checked to own both (see AccessService).
+export type BillOfQuantsScope = {
+  companyId: string;
   projectId: string;
-  recipeId: string | null;
+};
+
+// The three fields a user can edit on a line item. The location is stored in
+// `description`. Everything else on the line (recipe, unit) is fixed once created.
+export type LineItemInput = {
+  id: string;
   description: string;
   measurement: number;
-  unit: string;
   notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
-export type GetProjectBillOfQuantsRequest = {
-  companyId: string;
-  projectId: string;
-  query?: string;
-  page?: number;
-  limit?: number;
+export type UpdateProjectLineItemsRequest = BillOfQuantsScope & {
+  lineItems: LineItemInput[];
 };
 
-export type UpdateProjectLineItemsRequest = {
-  companyId: string;
-  projectId: string;
-  lineItems: LineItems[];
-};
-
-export type UpdateProjectStatusRequest = {
-  companyId: string;
-  projectId: string;
+// completed = true marks the takeoff finished; false reopens it
+export type UpdateProjectStatusRequest = BillOfQuantsScope & {
   completed: boolean;
 };
 
-export type DeleteProjectLineItemsRequest = {
-  companyId: string;
-  projectId: string;
-  lineItems: { id: string }[];
-};
-
-export type DeleteProjectBillOfQuantsRequest = {
-  companyId: string;
-  projectId: string;
-};
-
-export type DeleteProjectRequest = {
-  companyId: string;
-  projectId: string;
+export type DeleteProjectLineItemsRequest = BillOfQuantsScope & {
+  lineItemIds: string[];
 };

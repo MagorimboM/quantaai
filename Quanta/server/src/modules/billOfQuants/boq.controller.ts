@@ -1,141 +1,109 @@
 import {
   Controller,
+  Get,
   Put,
   Patch,
-  Get,
-  Delete,
   Post,
+  Delete,
   Param,
-  Query,
   Body,
-  DefaultValuePipe,
-  ParseIntPipe,
 } from '@nestjs/common';
-import { BillOfQuantsService } from './boq.service';
+import { BillOfQuantsService } from '@/modules/billOfQuants/boq.service';
+import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import type { LineItemInput } from '@/modules/billOfQuants/contracts/boq.request.contracts';
+import type {
+  GetBillOfQuantsResponse,
+  UpdateLineItemsResponse,
+  UpdateProjectStatusResponse,
+  DeletedLineItemsResponse,
+  DeleteProjectBillOfQuantsResponse,
+} from '@/modules/billOfQuants/contracts/boq.response.contracts';
 
-type LineItems = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-@Controller(':companyId/projects/:projectId')
+// The takeoff (bill of quantities) of one project. Every route runs behind the
+// global ClerkAuthGuard, so @ClerkUserId() is the verified caller; the service
+// checks the company and project in the URL are really theirs.
+@Controller(':companyId/projects/:projectId/bill-of-quantities')
 export class BillOfQuantsController {
   constructor(private readonly billOfQuantsService: BillOfQuantsService) {}
 
-  /**
-   * GET /:companyId/projects/:projectId/bill-of-quantities?query={term}&page={1}&limit={10}
-   * Unified endpoint: handles regular paginated fetch AND search queries seamlessly.
-   */
-  @Get('bill-of-quantities')
+  // GET .../bill-of-quantities
+  // Every line of the takeoff, each with its recipe.
+  @Get()
   async getProjectBillOfQuants(
+    @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Query('query') query?: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
-  ) {
-    // Returns array of nested BOQ objects + pagination metadata
+  ): Promise<GetBillOfQuantsResponse[]> {
     return await this.billOfQuantsService.getProjectBillOfQuants({
-      companyId: companyId,
-      projectId: projectId,
-      query: query,
-      page: page,
-      limit: limit,
+      clerkId,
+      companyId,
+      projectId,
     });
   }
 
-  /**
-   * PUT /:companyId/projects/:projectId/bill-of-quantities
-   * Bulk save/update line items.
-   */
-  @Put('bill-of-quantities')
+  // PUT .../bill-of-quantities
+  // Saves the edited location, notes and measurement of the lines in the body.
+  @Put()
   async updateProjectLineItems(
+    @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() lineItems: LineItems[], // Pass your BOQ Item DTO here
-  ) {
-    // Returns array of updated nested objects + save confirmation
+    @Body() lineItems: LineItemInput[],
+  ): Promise<UpdateLineItemsResponse> {
     return await this.billOfQuantsService.updateProjectLineItems({
-      companyId: companyId,
-      projectId: projectId,
-      lineItems: lineItems,
+      clerkId,
+      companyId,
+      projectId,
+      lineItems,
     });
   }
 
-  /**
-   * PATCH /:companyId/projects/:projectId/bill-of-quantities/status
-   * Mark project takeoff as active or completed.
-   */
-  @Patch('bill-of-quantities/status')
+  // PATCH .../bill-of-quantities/status   body: { completed: boolean }
+  // Marks the takeoff complete, or reopens it.
+  @Patch('status')
   async updateProjectStatus(
+    @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
     @Body('completed') completed: boolean,
-  ) {
-    // Returns { confirmation: true }
+  ): Promise<UpdateProjectStatusResponse> {
     return await this.billOfQuantsService.updateProjectStatus({
-      companyId: companyId,
-      projectId: projectId,
-      completed: completed,
+      clerkId,
+      companyId,
+      projectId,
+      completed,
     });
   }
 
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes
-   * Delete specific selected line items (pass array of IDs in body).
-   */
-  @Post('bill-of-quantities/delete')
+  // POST .../bill-of-quantities/delete   body: { lineItemIds: string[] }
+  // Deletes the chosen lines. A POST because the ids travel in the body.
+  @Post('delete')
   async deleteProjectLineItems(
+    @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() lineItems: { id: string }[],
-  ) {
-    // Returns { success: true, count: number }
+    @Body('lineItemIds') lineItemIds: string[],
+  ): Promise<DeletedLineItemsResponse> {
     return await this.billOfQuantsService.deleteProjectLineItems({
-      companyId: companyId,
-      projectId: projectId,
-      lineItems: lineItems,
+      clerkId,
+      companyId,
+      projectId,
+      lineItemIds,
     });
   }
 
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities
-   * Clear all recipes and line items for this project.
-   */
-  @Delete('bill-of-quantities')
-  async deleteProjectBillOfQuants(
-    @Param('companyId') companyId: string,
-    @Param('projectId') projectId: string,
-  ) {
-    // Returns { success: true, clearedCount: number }
-    return await this.billOfQuantsService.deleteProjectBillOfQuants({
-      companyId: companyId,
-      projectId: projectId,
-    });
-  }
-
-  /**
-   * DELETE /:companyId/projects/:projectId
-   * Delete the entire project entity and all connected data.
-   */
+  // DELETE .../bill-of-quantities
+  // "Start afresh": removes every line. The project itself stays.
   @Delete()
-  async deleteProject(
+  async deleteProjectBillOfQuants(
+    @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-  ) {
-    // Returns { success: true, deletedProjectId: string }
-    return await this.billOfQuantsService.deleteProject({
-      companyId: companyId,
-      projectId: projectId,
+  ): Promise<DeleteProjectBillOfQuantsResponse> {
+    return await this.billOfQuantsService.deleteProjectBillOfQuants({
+      clerkId,
+      companyId,
+      projectId,
     });
   }
 }

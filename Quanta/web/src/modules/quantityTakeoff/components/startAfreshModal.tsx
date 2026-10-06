@@ -10,7 +10,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-import { deleteProjectBillOfQuantities } from "@/modules/quantityTakeoff/api/services";
+import { deleteProjectBillOfQuantities } from "@/modules/quantityTakeoff/api/api";
 
 export function StartAfreshModalConfirmation({
   companyId,

@@ -1,69 +1,68 @@
+import { useEffect, useState } from "react";
 import { MdOutlineShield } from "react-icons/md";
-import { HiOutlineTrash } from "react-icons/hi2";
+import { getStandardsDocuments } from "@/modules/settings/api/api";
+import type { StandardDocument } from "@/modules/settings/contracts/settings.response.contracts";
 
-type Documents = {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-};
+// TODO :: [feature] Nothing in the app uploads company-level documents yet (the
+// projects page only uploads project documents), so this list stays empty until
+// an upload exists. Once it does, add here: upload, open a document in a viewer,
+// and delete. Deleting needs a backend route that doesn't require a project.
 
-// TODO :: move types to contracts
-// TODO :: view selected document : grab the bytes, view them in iframe 
-
-
-export function CompanyStandardsComplaintsDocs({
-  companyStandardsComplaintsDocs,
-  editCompanyStandardCompliantDocs,
+/**
+ * The company's standards and compliance documents (company policies,
+ * standards, certifications). The AI assistant reads them when answering
+ * questions, in every project of the company. Read-only for now.
+ */
+export function CompanyStandardsComplianceDocs({
+  companyId,
 }: {
-  companyStandardsComplaintsDocs: Documents[] | null;
-  editCompanyStandardCompliantDocs: (input: any) => void;
+  companyId: string;
 }) {
+  const [documents, setDocuments] = useState<StandardDocument[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  useEffect(() => {
+    async function loadDocuments() {
+      try {
+        setDocuments(await getStandardsDocuments({ companyId }));
+      } catch {
+        // apiClient already reports the failure; the list stays empty
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  function deleteDocument(doc: Documents) {
-    editCompanyStandardCompliantDocs((prev: Documents[]) =>
-      prev.filter((document) => document.documentId != doc.documentId),
-    );
-  }
+    loadDocuments();
+  }, [companyId]);
 
   return (
-    <>
-      <div className=" flex flex-col gap-2 w-full border rounded-xl p-6">
-        <div className="flex flex-row gap-4">
-          <MdOutlineShield size={26} />
-          <h1 className="font-bold text-2xl">Standards and Compliance</h1>
-        </div>
+    <div className="flex w-full flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
+      <div className="flex flex-row items-center gap-3">
+        <MdOutlineShield size={26} />
+        <h1 className="text-2xl font-bold">Standards and Compliance</h1>
+      </div>
 
-        <ul>
-          {companyStandardsComplaintsDocs?.map((doc, key) => (
-            <li className=" flex flex-row gap-6" key={key}>
-              <div className="flex flex-row gap-3">
-                <p>{doc.documentName}</p> <p>{doc.documentType}</p>
-              </div>
-              <button onClick={() => deleteDocument(doc)}>
-                <HiOutlineTrash size={24} />
-              </button>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading documents…</p>
+      ) : documents.length > 0 ? (
+        <ul className="flex flex-col divide-y">
+          {documents.map((document) => (
+            <li
+              key={document.id}
+              className="flex flex-row items-center justify-between gap-3 py-2"
+            >
+              <p className="text-sm text-foreground">{document.name}</p>
+              <p className="text-xs text-muted-foreground">
+                Added {new Date(document.uploadedAt).toLocaleDateString()}
+              </p>
             </li>
           ))}
         </ul>
-      </div>
-    </>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No standards or compliance documents yet.
+        </p>
+      )}
+    </div>
   );
-}; 
-
-
-// read register, if data of tupe key board, ger the data, current focus  pass the keyboard to the current focus etc
-// cpu write tot he NIC card this data,
-// cpu reade from NIC registers
-// cpu read from registers if NIC : send data oveer the network. 
-
-
-// cpu writer to gpu card : render this data on cpu
-// cpu read from gpu register : response  { if response is like this do this other wise do that etc}
-// cpu rea
-
-
-
-
-
-
+}

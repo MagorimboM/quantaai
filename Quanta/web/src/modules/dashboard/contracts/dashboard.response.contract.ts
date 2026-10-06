@@ -1,42 +1,23 @@
+// Headline numbers for one company. See metrics.tsx for what each one means.
 export type KPIInformationResponse = {
   activeProjects: number;
-  numberOfUploadedDocuments: number;
   totalRecipes: number;
-  standardsLoaded: number;
+  numberOfUploadedDocuments: number;
   completionRate: number;
-  projectsStartedThisMonth: number;
 };
 
-export type DashboardProject = {
+// Only what a project card needs. Dates arrive as ISO strings over JSON,
+// not Date objects.
+export type RecentProject = {
   id: string;
-  userId: string | null;
   companyId: string | null;
-  projectNumber: string;
   name: string;
-  description: string | null;
   type: string;
   status: string;
-  stage: string | null;
-  clientName: string | null;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  siteContactName: string | null;
-  siteContactPhone: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  postcode: string | null;
-  drawingNumber: string | null;
-  revision: string | null;
-  startDate: Date | null;
-  endDate: Date | null;
-  completed: boolean;
-  completedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+  updatedAt: string;
 };
 
-export type RecentProjectsResponse = DashboardProject[];
+export type RecentProjectsResponse = RecentProject[];
 
 export type RecentActivityItem = {
   id: string;
@@ -44,7 +25,7 @@ export type RecentActivityItem = {
   entityType: string;
   action: string;
   reason: string | null;
-  changedAt: string; // dates arrive as strings over JSON, not Date objects
+  changedAt: string;
 };
 
 export type RecentActivityResponse = RecentActivityItem[];

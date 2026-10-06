@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 
+// Fixed top bar of the landing page. Transparent over the hero; once the
+// visitor scrolls past 20px it gets a frosted background so the links stay readable.
+// LOG IN is the quiet option; REGISTER is the one orange button.
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', fn)
-    return () => window.removeEventListener('scroll', fn)
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (

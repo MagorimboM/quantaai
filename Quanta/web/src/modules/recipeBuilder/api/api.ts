@@ -1,48 +1,62 @@
 import { apiClient } from "@/core/api/axios.api";
-type NewRecipe = {
-  categoryId: string;
-  recipeName: string;
-  recipeCode: string;
-  recipeDescription: string;
-  recipeUnitMeasure: string;
-  ingredients: {
-    materialId: string;
-    unitMeasureId: string;
-    quantity: string;
-  }[];
-};
+import type {
+  RecipeBuilderOptionsRequest,
+  SearchMaterialsRequest,
+  CreateRecipeRequest,
+} from "@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts";
+import type {
+  Category,
+  SiteCondition,
+  MaterialSearchResult,
+  CreateRecipeResponse,
+} from "@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts";
 
-export async function getMaterialsAndCategories(
-  query: string,
-  companyId: string,
-  categoryId: string,
-) {
-  // localhost:3000/api/seed-company-001/recipe/new-recipe/i/seed-cat-001/materials_and_categories
+// The backend identifies the user from the Clerk token that apiClient attaches
+// to every request, and checks the company belongs to them.
 
-  let term: string = "all";
-
-  if (query.length > 0) {
-    term = query;
-  }; 
-
+// The company's categories: the recipe types, and the groups materials sit in
+export async function getRecipeCategories(
+  request: RecipeBuilderOptionsRequest,
+): Promise<Category[]> {
   const response = await apiClient.get(
-    `/${companyId}/recipe/new-recipe/${term}/${categoryId}/materials_and_categories`,
+    `${request.companyId}/recipe/new-recipe/categories`,
   );
   return response.data;
 }
 
-export async function getRecipeCategories(companyId: string) {
-  // localhost:3000/api/seed-company-001/recipe/new-recipe/recipe_categories
+export async function getSiteConditions(
+  request: RecipeBuilderOptionsRequest,
+): Promise<SiteCondition[]> {
   const response = await apiClient.get(
-    `${companyId}/recipe/new-recipe/recipe_categories`,
+    `${request.companyId}/recipe/new-recipe/site-conditions`,
   );
   return response.data;
 }
 
-export async function createNewRecipe(companyId: string, request: NewRecipe) {
+export async function searchMaterials(
+  request: SearchMaterialsRequest,
+): Promise<MaterialSearchResult[]> {
+  const response = await apiClient.get(
+    `${request.companyId}/recipe/new-recipe/materials`,
+    {
+      // axios leaves out any filter that is undefined
+      params: {
+        term: request.term,
+        categoryId: request.categoryId,
+        siteConditionId: request.siteConditionId,
+      },
+    },
+  );
+  return response.data;
+}
+
+export async function createNewRecipe(
+  request: CreateRecipeRequest,
+): Promise<CreateRecipeResponse> {
+  const { companyId, ...recipe } = request;
   const response = await apiClient.post(
     `${companyId}/recipe/new-recipe`,
-    request,
+    recipe,
   );
   return response.data;
 }

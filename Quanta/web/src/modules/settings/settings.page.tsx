@@ -1,142 +1,48 @@
-import { useState, useEffect } from "react";
 import { CompanyProfile } from "@/modules/settings/components/companyProfile ";
 import { CompanyTeamMembers } from "@/modules/settings/components/companyTeamMembersList";
-import { CompanyStandardsComplaintsDocs } from "@/modules/settings/components/companyStandardsCompliantsDocs";
-import {
-  updateFieldFiles,
-  RestoreFieldsFiles,
-} from "@/modules/settings/services/services";
-import {
-  getCompanyInfo,
-  getCompanyTeamMembers,
-  getCompanyComplianceStandards,
-} from "@/modules/settings/api/api";
+import { CompanyStandardsComplianceDocs } from "@/modules/settings/components/companyStandardsCompliantsDocs";
+import { getActiveScope } from "@/common/storage/activeScope";
 
-type Address = {
-  state: string;
-  city: string;
-  postCode: string;
-  street: string;
-  houseNumber: number | null;
-};
-
-type CompanyInformation = {
-  companyId: string;
-  companyName: string;
-  companyAddress: Address;
-};
-
-type TeamMember = {
-  id: string;
-  name: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  position: string;
-};
-
-type Documents = {
-  documentId: string;
-  documentName: string;
-  documentType: string;
-};
-
+/**
+ * Settings for the active company: who the company is, who is on its team, and
+ * the standards and compliance documents it holds.
+ *
+ * Each section loads and saves on its own, so a change is saved the moment the
+ * user confirms it in that section, and a problem in one section never blocks
+ * the others.
+ *
+ * Settings belong to a company, so a personal workspace (no company) shows a
+ * message instead. TODO :: [backend] personal settings, then drop it.
+ */
 export function SettingsPage() {
-  const [companyProfile, setCompanyInformation] =
-    useState<CompanyInformation | null>({
-      companyId: "",
-      companyName: "Mark Enterprise",
-      companyAddress: {
-        state: "WA",
-        city: "Perth",
-        postCode: "6000",
-        street: "Hasler Rd",
-        houseNumber: null,
-      },
-    });
+  const { companyId } = getActiveScope();
 
-  const [companyTeamMembers, setCompanyTeamMembers] = useState<
-    TeamMember[] | null
-  >([]);
-
-  const [companyStandardCompliance, setCompanyStandardCompliance] = useState<
-    Documents[] | null
-  >([]);
-
-  useEffect(() => {
-    async function getCompanyDetails() {
-      const companyId: any = localStorage.getItem("companyId");
-      // get company information
-      const companyInformation = await getCompanyInfo(companyId);
-      const companyTeamMembers = await getCompanyTeamMembers(companyId);
-      const companyComplianceStandards =
-        await getCompanyComplianceStandards(companyId);
-
-      setCompanyStandardCompliance(companyComplianceStandards);
-      setCompanyInformation(companyInformation);
-      setCompanyTeamMembers(companyTeamMembers);
-    }
-    getCompanyDetails();
-  }, []);
-
-  // on cancel -> fetch data from network  and restore fields and files. check if there is a change in the information/data.
-  // on submit -> send a request to the network
-  // on navigating to the another page: check if the states have been changed..
+  if (!companyId) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-4">
+        <p className="text-sm text-muted-foreground">
+          Select a company workspace to see its settings.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className="flex flex-1 flex-col bg-background text-foreground">
-        <header className="w-full flex flex-col gap-4 border- px-4 py-3">
-          <div className="flex flex-col gap-2">
-            <h1 className="font-bold text-3xl">Settings</h1>
-            <p>Manage your company workspace configuration</p>
-          </div>
-        </header>
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background text-foreground">
+      <header className="flex w-full flex-col gap-4 px-4 py-3">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-bold text-3xl">Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your company workspace configuration
+          </p>
+        </div>
+      </header>
 
-        <main className="h-full w-full flex flex-col gap-6 p-4 scroll-auto ">
-          <CompanyProfile
-            companyInformation={companyProfile}
-            updateCompanyInformation={setCompanyInformation}
-          />
-          <CompanyTeamMembers
-            companyTeamMembers={companyTeamMembers}
-            updateTeamMember={setCompanyTeamMembers}
-          />
-          <CompanyStandardsComplaintsDocs
-            editCompanyStandardCompliantDocs={setCompanyStandardCompliance}
-            companyStandardsComplaintsDocs={companyStandardCompliance}
-          />
-          <div className="w-full flex flex-row gap-3 justify-items-end">
-            <button
-              onClick={() => {
-                RestoreFieldsFiles(
-                  setCompanyInformation,
-                  setCompanyTeamMembers,
-                  setCompanyStandardCompliance,
-                );
-              }}
-              className="cursor-pointer rounded-xl border p-3 hover:bg-zinc-400 bg-zinc-200"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                updateFieldFiles({
-                  companyInformationUpdate: companyProfile,
-                  companyInformationStateUpdater: setCompanyInformation,
-                  teamMemberUpdates: companyTeamMembers,
-                  teamMemberStateUpdater: setCompanyTeamMembers,
-                  standardAndComplianceUpdates: companyStandardCompliance,
-                  standardAndComplianceUpdater: setCompanyStandardCompliance,
-                });
-              }}
-              className="cursor-pointer hover:bg-zinc-600 bg-zinc-900 text-white p-3 rounded-xl"
-            >
-              Save Changes
-            </button>
-          </div>
-        </main>
-      </div>
-    </>
+      <main className="flex w-full flex-col gap-6 p-4">
+        <CompanyProfile companyId={companyId} />
+        <CompanyTeamMembers companyId={companyId} />
+        <CompanyStandardsComplianceDocs companyId={companyId} />
+      </main>
+    </div>
   );
 }

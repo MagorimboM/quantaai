@@ -1,70 +1,68 @@
 import { MdOutlineArrowRightAlt } from "react-icons/md";
 import { HiOutlineClock } from "react-icons/hi2";
 import { useNavigate } from "react-router";
+import { setActiveProject } from "@/common/storage/activeScope";
+import { timeAgo } from "@/common/utils/timeAgo";
 
+// Stored values look like "in_progress" or "single_storey"; shown with spaces,
+// and the `capitalize` class gives them a capital letter.
+function humanise(value: string): string {
+  return value.replace(/_/g, " ");
+}
+
+// One project, as shown on the dashboard and on the projects list. Clicking it
+// opens that project's takeoff. `numberOfLineItems` is optional because the
+// dashboard doesn't load it; when it is given, the card shows how big the takeoff is.
 export function ProjectCard({
-  name,
-  type,
-  status,
-  numberOfLineItems,
-  time,
-  companyId,
-  projectId,
+  project,
 }: {
-  name?: string;
-  type?: string;
-  status?: string;
-  projectId: string;
-  companyId: string | null;
-  numberOfLineItems: number;
-  time: Date;
+  project: {
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    updatedAt: string;
+    numberOfLineItems?: number;
+  };
 }) {
   const navigate = useNavigate();
 
-  function navigateToProjectBillOfQuants() {
-    localStorage.setItem("projectId", projectId);
-    if (companyId) {
-      localStorage.setItem("companyId", companyId);
-    }
+  function openProjectTakeoff() {
+    // The company is already the active one (both lists are scoped to it);
+    // only the project needs to be recorded before opening the takeoff.
+    setActiveProject(project.id);
     navigate("/projects/bill-of-quants");
   }
 
-  function timeAgo(): string {
-    const seconds = Math.floor((Date.now() - new Date(time).getTime()) / 1000);
-    if (seconds < 60) return "just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
-  }
-
   return (
-    <div
-      onClick={() => navigateToProjectBillOfQuants()}
-      className="flex flex-row justify-between rounded-lg border bg-muted/40 cursor-pointer transition-colors hover:bg-muted"
+    <button
+      onClick={openProjectTakeoff}
+      className="flex w-full flex-row justify-between rounded-lg border bg-muted/40 text-left cursor-pointer transition-colors hover:bg-muted"
     >
       <div className="flex flex-1 flex-col gap-1 p-4">
-        <h1 className="text-sm font-medium text-foreground">{name}</h1>
-        <p className="text-sm text-muted-foreground">{type}</p>
-        <div className="flex flex-row flex-1 justify-between">
+        <h1 className="text-sm font-medium text-foreground">{project.name}</h1>
+        <p className="text-sm text-muted-foreground capitalize">
+          {humanise(project.type)}
+        </p>
+        <div className="flex flex-row items-center justify-between gap-4">
           <p className="flex flex-row items-center gap-1.5 text-xs text-muted-foreground">
-            <HiOutlineClock size={14} /> {timeAgo()} ago
+            <HiOutlineClock size={14} /> Updated {timeAgo(project.updatedAt)}
           </p>
-          <p>{numberOfLineItems} items</p>
+          {project.numberOfLineItems !== undefined ? (
+            <p className="text-xs text-muted-foreground">
+              {project.numberOfLineItems} item
+              {project.numberOfLineItems === 1 ? "" : "s"}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="flex flex-col items-end justify-between p-4">
-        <span className="inline-flex items-center rounded-full border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-          {status}
+        <span className="inline-flex items-center rounded-full border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground capitalize">
+          {humanise(project.status)}
         </span>
 
-        <MdOutlineArrowRightAlt
-          className="text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-          size={20}
-        />
+        <MdOutlineArrowRightAlt className="text-muted-foreground" size={20} />
       </div>
-    </div>
+    </button>
   );
 }

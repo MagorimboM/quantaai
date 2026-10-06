@@ -1,37 +1,60 @@
-import { getFiles } from "@/modules/projects/api/api";
-import { useState, useEffect } from "react";
-import { ViewFileModalComp } from "@/modules/projects/components/viewFileModalComp";
+import { useEffect, useState } from "react";
 import { AiOutlineFile } from "react-icons/ai";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { getFiles } from "@/modules/projects/api/api";
+import { ViewFileModalComp } from "@/modules/projects/components/viewFileModalComp";
 import type {
-  FileModalProps,
-  Documents,
-} from "@/modules/projects/contracts/fileModal.contract";
+  DocumentType,
+  GetFilesResponse,
+} from "@/modules/projects/contracts/projects.response.contracts";
 
-// TODO :: Replace Dummy Data with real-time data
+// The three shelves of documents, in the order they are shown
+const DOCUMENT_GROUPS: { type: DocumentType; title: string }[] = [
+  { type: "companyDocument", title: "Company Documents" },
+  { type: "projectDocument", title: "Project Documents" },
+  { type: "userDocument", title: "Personal Documents" },
+];
 
-const DUMMY_DATA = {
-  projectId: "seed-proj-001",
-  documentId: "seed-doc-001",
-  companyId: "seed-company-001",
-};
+/**
+ * Lists every document the user can use for a project, grouped by shelf:
+ * company documents, this project's documents, and personal documents. These
+ * are the same documents the AI assistant reads. Each can be opened or deleted.
+ *
+ * TODO :: [backend] The list carries every file's full bytes in one response.
+ * It should send a link per document and load the file only when it is opened.
+ */
+export function FileModalComp({
+  open,
+  companyId,
+  projectId,
+  onClose,
+}: {
+  open: boolean;
+  companyId: string;
+  projectId: string;
+  onClose: () => void;
+}) {
+  const [files, setFiles] = useState<GetFilesResponse>([]);
 
-export function FileModalComp({ open, onClose }: FileModalProps) {
-  const [documents, setDocuments] = useState<Documents[]>([]);
-
+  // Load when opened, not when the page loads: the list is then fresh after an
+  // upload or delete, and nothing is downloaded until someone asks to see it.
   useEffect(() => {
-    async function fetchDocuments() {
-      const files = await getFiles({
-        projectId: DUMMY_DATA.projectId,
-        companyId: DUMMY_DATA.companyId,
-      });
-      setDocuments(files);
-    }
-    fetchDocuments();
-  }, []);
+    if (!open) return;
 
+    async function fetchDocuments() {
+      try {
+        setFiles(await getFiles({ companyId, projectId }));
+      } catch {
+        // apiClient already reports the failure; the list keeps what it had
+      }
+    }
+
+    fetchDocuments();
+  }, [open, companyId, projectId]);
+
+  // Stop the page behind from scrolling while the modal is open
   useEffect(() => {
     if (!open) return;
     const original = document.body.style.overflow;
@@ -41,10 +64,12 @@ export function FileModalComp({ open, onClose }: FileModalProps) {
     };
   }, [open]);
 
-  if (!open) return null;
+  // Called by a row after the backend has deleted its file
+  function removeFromList(documentId: string) {
+    setFiles((prev) => prev.filter((item) => item.document.id !== documentId));
+  }
 
-  // TODO :: double check component orchestrator 
-  // TODO :: rename data structure " got to fix that document.document nonsense"
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
@@ -57,70 +82,43 @@ export function FileModalComp({ open, onClose }: FileModalProps) {
         </div>
 
         <div className="overflow-y-auto px-6 py-4">
-          <div title="docs-container" className="flex flex-col gap-4">
-            {/* company documents */}
-            <div title="company-docs" className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Company Documents
-              </p>
-              {documents.map((document) => {
-                if (document.document.documentType === "companyDocument") {
-                  return (
-                    <ViewFileModalComp
-                      bytes={document.bytes}
-                      key={document.document.id}
-                      document={document.document}
-                    />
-                  );
-                }
-              })}
-            </div>
-
-            <Separator />
-
-            {/* project documents */}
-            <div title="project-docs" className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Project Documents
-              </p>
-              {documents.map((document) => {
-                if (document.document.documentType === "projectDocument") {
-                  return (
-                    <ViewFileModalComp
-                      key={document.document.id}
-                      bytes={document.bytes}
-                      document={document.document}
-                    />
-                  );
-                }
-              })}
-            </div>
-
-            <Separator />
-
-            {/* personal documents */}
-            <div title="personal-docs" className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Personal Documents
-              </p>
-              {documents.map((document) => {
-                if (document.document.documentType === "userDocument") {
-                  return (
-                    <ViewFileModalComp
-                      key={document.document.id}
-                      bytes={document.bytes}
-                      document={document.document}
-                    />
-                  );
-                }
-              })}
-            </div>
-          </div>
-
-          {documents.length === 0 && (
+          {files.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
               <AiOutlineFile size={32} />
               <p className="text-sm">No documents found</p>
+            </div>
+          ) : (
+            <div title="docs-container" className="flex flex-col gap-4">
+              {DOCUMENT_GROUPS.map((group, index) => {
+                const groupFiles = files.filter(
+                  (item) => item.document.documentType === group.type,
+                );
+
+                return (
+                  <div key={group.type} className="flex flex-col gap-4">
+                    {index > 0 ? <Separator /> : null}
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {group.title}
+                      </p>
+                      {groupFiles.length > 0 ? (
+                        groupFiles.map(({ document: file, bytes }) => (
+                          <ViewFileModalComp
+                            key={file.id}
+                            file={file}
+                            bytes={bytes}
+                            companyId={companyId}
+                            projectId={projectId}
+                            onDeleted={removeFromList}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground">None</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

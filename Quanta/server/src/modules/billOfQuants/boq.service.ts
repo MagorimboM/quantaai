@@ -1,143 +1,138 @@
-/* ============================================================================
- * 2. BILL OF QUANTITIES (BOQ) & TAKEOFF MANAGEMENT
- * ============================================================================
- *
- * GET /:companyId/project/:projectId/bill-of-quantities?query={term}&page={1}&limit={10}
- * - Description: Get project recipes and their calculated quantities (with search & pagination).
- * - Query Params: ?query=concrete&page=1&limit=10
- * - Body: None
- * - Returns: Array of nested BOQ recipe objects
- *
- * PUT /:companyId/projects/:projectId/bill-of-quantities
- * - Description: Bulk save/update project bill of quantities line items.
- * - Query Params: None
- * - Body: Array of BOQ objects
- * - Returns: Array of saved objects with confirmation status
- *
- * PATCH /:companyId/projects/:projectId/status
- * - Description: Update project status (mark as complete or active).
- * - Query Params: None
- * - Body: { "completed": true }
- * - Returns: Updated project object with "completed" status confirmation
- *
- * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes/:recipeId
- * - Description: Delete a single specific recipe item from the project's bill of quantities.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "deletedRecipeId": "..." }
- *
- * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes
- * - Description: Delete ALL recipes and associated bill of quantities items for that project.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "clearedCount": 15 }
- *
- * DELETE /:companyId/projects/:projectId
- * - Description: Delete entire project and all associated BOQ data.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "deletedId": "..." }
- */
-
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BillOfQuantsRepository } from '@/modules/billOfQuants/boq.repository';
+import { AccessService } from '@/auth/services/access.service';
+import type { LineItemInput } from '@/modules/billOfQuants/contracts/boq.request.contracts';
+import type {
+  GetBillOfQuantsResponse,
+  UpdateLineItemsResponse,
+  UpdateProjectStatusResponse,
+  DeletedLineItemsResponse,
+  DeleteProjectBillOfQuantsResponse,
+} from '@/modules/billOfQuants/contracts/boq.response.contracts';
 
-type LineItems = {
-  // -- line item detail --
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+// The measurement is the one number every quantity is calculated from, so it
+// has to be a real number that is not negative. Anything else would produce
+// nonsense totals (or a database error) further down.
+function assertValidLineItems(lineItems: LineItemInput[]) {
+  if (!Array.isArray(lineItems)) {
+    throw new BadRequestException('Expected a list of line items');
+  }
+  for (const item of lineItems) {
+    if (
+      typeof item?.id !== 'string' ||
+      !Number.isFinite(item.measurement) ||
+      item.measurement < 0
+    ) {
+      throw new BadRequestException(
+        `Invalid measurement for line item ${item?.id}`,
+      );
+    }
+  }
+}
 
+// Every method first checks the project really belongs to the caller. The
+// company and project ids come from the URL, so on their own they prove nothing.
 @Injectable()
 export class BillOfQuantsService {
   constructor(
     private readonly billOfQuantsRepository: BillOfQuantsRepository,
+    private readonly accessService: AccessService,
   ) {}
 
-  /**
-   * GET /:companyId/projects/:projectId/bill-of-quantities?query={term}&page={1}&limit={10}
-   * Unified endpoint: handles regular paginated fetch AND search queries seamlessly.
-   */
   async getProjectBillOfQuants(request: {
+    clerkId: string;
     companyId: string;
     projectId: string;
-    query?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    // Returns array of nested BOQ objects + pagination metadata
-    return await this.billOfQuantsRepository.getProjectBillOfQuants(request);
+  }): Promise<GetBillOfQuantsResponse[]> {
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.billOfQuantsRepository.getProjectBillOfQuants({
+      companyId: request.companyId,
+      projectId: request.projectId,
+    });
   }
 
-  /**
-   * PUT /:companyId/projects/:projectId/bill-of-quantities
-   * Bulk save/update line items.
-   */
-  async updateProjectLineItems(
-    request: {
-      companyId: string;
-      projectId: string;
-      lineItems: LineItems[];
-    }, // Pass your BOQ Item DTO here
-  ) {
-    // Returns array of updated nested objects + save confirmation
-    return await this.billOfQuantsRepository.updateProjectLineItems(request);
+  async updateProjectLineItems(request: {
+    clerkId: string;
+    companyId: string;
+    projectId: string;
+    lineItems: LineItemInput[];
+  }): Promise<UpdateLineItemsResponse> {
+    assertValidLineItems(request.lineItems);
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.billOfQuantsRepository.updateProjectLineItems({
+      companyId: request.companyId,
+      projectId: request.projectId,
+      lineItems: request.lineItems,
+    });
   }
 
-  /**
-   * PATCH /:companyId/projects/:projectId/bill-of-quantities/status
-   * Mark project takeoff as active or completed.
-   */
   async updateProjectStatus(request: {
+    clerkId: string;
     companyId: string;
     projectId: string;
     completed: boolean;
-  }) {
-    // Returns { confirmation: true }
-    return await this.billOfQuantsRepository.updateProjectStatus(request);
+  }): Promise<UpdateProjectStatusResponse> {
+    if (typeof request.completed !== 'boolean') {
+      throw new BadRequestException('"completed" must be true or false');
+    }
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.billOfQuantsRepository.updateProjectStatus({
+      companyId: request.companyId,
+      projectId: request.projectId,
+      completed: request.completed,
+    });
   }
 
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes
-   * Delete specific selected line items (pass array of IDs in body).
-   */
   async deleteProjectLineItems(request: {
+    clerkId: string;
     companyId: string;
     projectId: string;
-    lineItems: { id: string }[];
-  }) {
-    // Returns { success: true, count: number }
-    return await this.billOfQuantsRepository.deleteProjectLineItems(request);
+    lineItemIds: string[];
+  }): Promise<DeletedLineItemsResponse> {
+    if (
+      !Array.isArray(request.lineItemIds) ||
+      request.lineItemIds.length === 0 ||
+      !request.lineItemIds.every((id) => typeof id === 'string')
+    ) {
+      throw new BadRequestException('Expected a list of line item ids');
+    }
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.billOfQuantsRepository.deleteProjectLineItems({
+      companyId: request.companyId,
+      projectId: request.projectId,
+      lineItemIds: request.lineItemIds,
+    });
   }
 
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities
-   * Clear all recipes and line items for this project.
-   */
-  async deleteProjectBillOfQuants(request:{
+  async deleteProjectBillOfQuants(request: {
+    clerkId: string;
     companyId: string;
     projectId: string;
-  }) {
-    // Returns { success: true, clearedCount: number }
-    return await this.billOfQuantsRepository.deleteProjectBillOfQuants(request);
-  }
-
-  /**
-   * DELETE /:companyId/projects/:projectId
-   * Delete the entire project entity and all connected data.
-   */
-
-  async deleteProject(request: { companyId: string; projectId: string }) {
-    // Returns { success: true, deletedProjectId: string }
-    return await this.billOfQuantsRepository.deleteProject(request);
+  }): Promise<DeleteProjectBillOfQuantsResponse> {
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.billOfQuantsRepository.deleteProjectBillOfQuants({
+      companyId: request.companyId,
+      projectId: request.projectId,
+    });
   }
 }

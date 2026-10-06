@@ -1,80 +1,72 @@
 import { apiClient } from "@/core/api/axios.api";
 import type {
-  projectUploadsResponse,
-  DocumentDeletionResponse,
-  GetFilesResponse,
-} from "@/modules/projects/contracts/api.response";
-import type {
   GetFilesRequest,
-  DeleteFilesRequest,
-} from "@/modules/projects/contracts/api.requests";
+  DeleteFileRequest,
+  UploadFilesRequest,
+  GetListOfProjectsRequest,
+} from "@/modules/projects/contracts/projects.request.contracts";
+import type {
+  GetFilesResponse,
+  DeleteFileResponse,
+  UploadFilesResponse,
+  GetListOfProjectsResponse,
+} from "@/modules/projects/contracts/projects.response.contracts";
 
-export async function sendUploadedFilesToBackEnd(
-  companyId: string,
-  formData?: FormData,
-): Promise<projectUploadsResponse> {
-  const response = await apiClient.post<projectUploadsResponse>(
-    `${companyId}/files/upload`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+// The backend identifies the user from the Clerk token that apiClient attaches
+// to every request, so no call here sends a userId.
+
+// One page of the company's projects, most recently updated first
+export async function getListOfProjects(
+  request: GetListOfProjectsRequest,
+): Promise<GetListOfProjectsResponse> {
+  const response = await apiClient.get(`${request.companyId}/projects`, {
+    params: {
+      term: request.term || undefined,
+      page: request.page,
+      limit: request.limit,
     },
-  );
+  });
   return response.data;
 }
 
+// The company, project and personal documents for a project, each with its file
 export async function getFiles(
   request: GetFilesRequest,
-): Promise<GetFilesResponse[]> {
+): Promise<GetFilesResponse> {
   const response = await apiClient.get(
-    `/${request.companyId}/files/${request.projectId}`,
+    `${request.companyId}/files/${request.projectId}`,
   );
   return response.data;
 }
 
-export async function deleteFiles(
-  request: DeleteFilesRequest,
-): Promise<DocumentDeletionResponse> {
+// Uploads the picked files as one multipart request.
+// TODO :: [backend] The upload route should take the company from the URL and the
+// user from the token, and ignore these form fields. Then companyId and
+// projectId can go from the form (userId is already no longer sent).
+export async function uploadFiles(
+  request: UploadFilesRequest,
+): Promise<UploadFilesResponse> {
+  const formData = new FormData();
+  formData.append("companyId", request.companyId);
+  formData.append("projectId", request.projectId);
+  formData.append("documentType", request.documentType);
+  for (const file of request.files) {
+    formData.append("files", file);
+  }
+
+  const response = await apiClient.post<UploadFilesResponse>(
+    `${request.companyId}/files/upload`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return response.data;
+}
+
+export async function deleteFile(
+  request: DeleteFileRequest,
+): Promise<DeleteFileResponse> {
   const response = await apiClient.delete(
     `${request.companyId}/files/${request.projectId}/${request.documentId}`,
-  );
-  return response.data;
-}
-
-type ProjectSummary = {
-  companyId: string | null;
-  createdAt: Date;
-  description: string | null;
-  id: string;
-  name: string;
-  status: string;
-  takeoffItems: {
-    description: string;
-    id: string;
-    projectId: string;
-  }[];
-  type: string;
-  updatedAt: Date;
-};
-
-type PaginatedProjects = {
-  totalCount: number;
-  page: number;
-  limit: number;
-  projects: ProjectSummary[];
-};
-
-export async function getListOfProjects(request: {
-  companyId: string;
-  userId: string;
-  term?: string;
-  page: number;
-  limit: number;
-}): Promise<PaginatedProjects> {
-  const response = await apiClient.get(
-    `/${request.companyId}/projects?userId=${request.userId}&term=${encodeURIComponent(request.term ?? "")}&page=${request.page}&limit=${request.limit}`,
   );
   return response.data;
 }

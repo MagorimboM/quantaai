@@ -1,29 +1,17 @@
 import { ProjectCard } from "@/modules/projects/components/projectCard";
+import type { ProjectSummary } from "@/modules/projects/contracts/projects.response.contracts"
 
-type ProjectSummary = {
-  companyId: string | null;
-  createdAt: Date;
-  description: string | null;
-  id: string;
-  name: string;
-  status: string;
-  takeoffItems: {
-    description: string;
-    id: string;
-    projectId: string;
-  }[];
-  type: string;
-  updatedAt: Date;
-};
-
-// TODO :: create contracts of these pages
-
+// The projects of the current page, or a message saying why there are none.
+// `searchTerm` tells "you have no projects yet" apart from "nothing matches
+// your search".
 export function ListOfProjects({
   projects,
   isLoading,
+  searchTerm,
 }: {
   projects: ProjectSummary[];
   isLoading: boolean;
+  searchTerm: string;
 }) {
   return (
     <div className="flex w-full flex-1 min-h-0 flex-col">
@@ -36,19 +24,14 @@ export function ListOfProjects({
           <p className="text-sm text-muted-foreground">Loading projects...</p>
         ) : projects.length > 0 ? (
           projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              name={project.name}
-              type={project.type}
-              status={project.status}
-              numberOfLineItems={project.takeoffItems.length}
-              companyId={project.companyId}
-              time={project.updatedAt}
-              projectId={project.id}
-            />
+            <ProjectCard key={project.id} project={project} />
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">Nothing found</p>
+          <p className="text-sm text-muted-foreground">
+            {searchTerm
+              ? `No projects match "${searchTerm}".`
+              : "No projects yet."}
+          </p>
         )}
       </div>
     </div>

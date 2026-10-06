@@ -1,25 +1,28 @@
-export function HowItWorks() {
-  const steps = [
-    {
-      n: '1',
-      title: 'BUILD A RECIPE',
-      body: 'Define exactly what goes into one unit of work — materials, labour, overheads. Do it once for "110mm Brick Wall". Build your library over time.',
-      detail: '60 bricks + 0.015 m³ mortar + 1.2 hrs bricklayer per m²',
-    },
-    {
-      n: '2',
-      title: 'ENTER ONE MEASUREMENT',
-      body: "On site or from plans, measure the job. Enter that single number — 40.8 m² of wall face, say. That's it.",
-      detail: '40.8 m² of wall',
-    },
-    {
-      n: '3',
-      title: 'GET THE FULL BREAKDOWN',
-      body: 'Quanta multiplies every line of the recipe by your measurement. A complete quantity list, no spreadsheet, no calculator.',
-      detail: '2,448 bricks · 0.61 m³ mortar · 49 hrs labour',
-    },
-  ]
+// The product in three steps. The numbers in step 2 and 3 mirror the hero demo
+// (110mm brick wall, 40.8 m²: 60 × 40.8 = 2,448 bricks), so if the demo recipe
+// or measurement changes in Data.ts, update these two lines to match.
+const STEPS = [
+  {
+    n: '1',
+    title: 'BUILD A RECIPE',
+    body: 'Define exactly what goes into one unit of work — materials, labour, overheads. Do it once for "110mm Brick Wall". Build your library over time.',
+    detail: '60 bricks + 0.015 m³ mortar + 1.2 hrs bricklayer per m²',
+  },
+  {
+    n: '2',
+    title: 'ENTER ONE MEASUREMENT',
+    body: "On site or from plans, measure the job. Enter that single number — 40.8 m² of wall face, say. That's it.",
+    detail: '40.8 m² of wall',
+  },
+  {
+    n: '3',
+    title: 'GET THE FULL BREAKDOWN',
+    body: 'Quanta multiplies every line of the recipe by your measurement. A complete quantity list, no spreadsheet, no calculator.',
+    detail: '2,448 bricks · 0.61 m³ mortar · 49 hrs labour',
+  },
+]
 
+export function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24" style={{ background: '#FFEFDD' }}>
       <div className="max-w-6xl mx-auto px-6">
@@ -34,7 +37,7 @@ export function HowItWorks() {
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-px" style={{ background: '#F3DEC0' }}>
-          {steps.map(step => (
+          {STEPS.map(step => (
             <div key={step.n} className="p-8" style={{ background: '#FFEFDD' }}>
               <div
                 className="w-9 h-9 flex items-center justify-center font-display font-800 text-base mb-6 rounded"

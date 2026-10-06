@@ -1,52 +1,45 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
-// TODO:: Need the companyId, CategoryID from somewhere
+const SEARCH_DELAY_MS = 400;
 
+// Search box for the recipe list. The search runs shortly after the user stops
+// typing, so it isn't one request per keystroke. What they type is passed on as
+// typed (spaces included); only the ends are trimmed when it is sent.
 export function SearchBar({
   onSearch,
 }: {
   onSearch: (term: string) => void;
 }) {
   const [userInput, setUserInput] = useState<string>("");
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+  function handleChange(value: string) {
+    setUserInput(value);
 
-    debounceTimerRef.current = setTimeout(() => {
-      onSearch(userInput);
-    }, 400);
-
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [userInput]);
-
-  function saveUserInput(e: React.ChangeEvent<HTMLInputElement>) {
-    setUserInput(e.target.value.trim());
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onSearch(value.trim()), SEARCH_DELAY_MS);
   }
+
+  // Don't fire a search after the box has left the screen
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   return (
     <div className="relative">
       <FiSearch
         size={16}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
       />
       <input
         value={userInput}
-        onChange={saveUserInput}
+        onChange={(e) => handleChange(e.target.value)}
         type="text"
         placeholder="Search recipes..."
-        className="
-          w-full rounded-md border border-zinc-300 bg-white py-2 pl-9 pr-3
-          text-sm text-zinc-900 placeholder:text-zinc-400
-          focus:outline-none focus:ring-2 focus:ring-zinc-900
-        "
+        className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       />
     </div>
   );

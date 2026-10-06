@@ -1,50 +1,62 @@
 import { useState } from "react";
-import { projectUploadFiles } from "@/modules/projects/services/uploadFile.service";
-import { sendUploadedFilesToBackEnd } from "@/modules/projects/api/api";
-import type { UploadModalProps } from "@/modules/projects/contracts/uploadModal.contract";
+import { uploadFiles } from "@/modules/projects/api/api";
 
-// TODO :: replace dummy data with real-time data
-// TODO :: implement "Loading" ui
-
-export function UploadModalComp({ closeModal }: UploadModalProps) {
+/**
+ * Pick one or more files and upload them to the active project. They are saved
+ * as project documents: they belong to this project, and the AI assistant uses
+ * them when answering questions inside it.
+ */
+export function UploadModalComp({
+  companyId,
+  projectId,
+  closeModal,
+}: {
+  companyId: string;
+  projectId: string;
+  closeModal: () => void;
+}) {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
     setFiles(Array.from(e.target.files));
   }
 
-  async function uploadFiles() {
-    if (files.length === 0) return;
+  async function uploadSelectedFiles() {
+    if (files.length === 0 || isUploading) return;
     setError(null);
-
-    const formData = projectUploadFiles({
-      companyId: "seed-company-001",
-      userId: "seed-user-001",
-      projectId: "seed-proj-001",
-      documentType: "projectDocument",
-      files,
-    });
+    setIsUploading(true);
 
     try {
-      const response = await sendUploadedFilesToBackEnd("seed-company-001", formData);
-      if (response.success === true) {
+      const response = await uploadFiles({
+        companyId,
+        projectId,
+        documentType: "projectDocument",
+        files,
+      });
+
+      if (response.success) {
         closeModal();
+        return;
       }
-    } catch (err) {
-      console.error(err);
+      setError(response.message || "Upload failed. Please try again.");
+    } catch {
       setError("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
-      onClick={closeModal}
+      // Don't let a stray click close the modal mid-upload
+      onClick={isUploading ? undefined : closeModal}
     >
       <div
-        className="w-150 rounded-lg border bg-white p-6 shadow-lg"
+        className="w-150 rounded-lg border bg-card p-6 text-card-foreground shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-4 text-xl font-semibold">Upload Project Files</h2>
@@ -63,9 +75,9 @@ export function UploadModalComp({ closeModal }: UploadModalProps) {
               Selected Files ({files.length})
             </h3>
             <div className="max-h-48 overflow-y-auto rounded border">
-              {files.map((file, index) => (
+              {files.map((file) => (
                 <div
-                  key={index}
+                  key={`${file.name}-${file.size}`}
                   className="border-b p-2 text-sm last:border-b-0"
                 >
                   {file.name}
@@ -75,22 +87,25 @@ export function UploadModalComp({ closeModal }: UploadModalProps) {
           </div>
         ) : null}
 
-        {error ? <p className="mt-3 text-sm text-red-500">{error}</p> : null}
+        {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
 
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={closeModal}
-            className="rounded-md border px-4 py-2 hover:bg-zinc-100 cursor-pointer"
+            disabled={isUploading}
+            className="rounded-md border px-4 py-2 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
             Cancel
           </button>
 
           <button
-            onClick={uploadFiles}
-            disabled={files.length === 0}
-            className="rounded-md bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            onClick={uploadSelectedFiles}
+            disabled={files.length === 0 || isUploading}
+            className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           >
-            Upload {files.length > 0 ? `(${files.length})` : ""}
+            {isUploading
+              ? "Uploading..."
+              : `Upload${files.length > 0 ? ` (${files.length})` : ""}`}
           </button>
         </div>
       </div>

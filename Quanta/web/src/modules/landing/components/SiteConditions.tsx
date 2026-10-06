@@ -1,10 +1,15 @@
 import { useState } from "react";
-import { SITE_VARIANTS } from "@/modules/landing/components/Data";
+import { SITE_RECIPE, SITE_VARIANTS } from "@/modules/landing/auth/utils/data";
 import { typeTag, typeColor } from "@/modules/landing/components/Utils";
 import { ArrowRightIcon } from "@/modules/landing/components/Icons";
 
+// Explains the site-conditions feature: the same recipe behaves differently on
+// different ground, so users keep one variant per condition. The visitor picks a
+// condition on the left and sees that variant's lines on the right; lines that
+// exist only because of the ground are flagged SITE-SPECIFIC.
 export function SiteConditions() {
   const [active, setActive] = useState(0);
+  const variant = SITE_VARIANTS[active];
 
   return (
     <section id="site-conditions" className="py-24 max-w-6xl mx-auto px-6">
@@ -42,7 +47,7 @@ export function SiteConditions() {
               <button
                 key={v.label}
                 onClick={() => setActive(i)}
-                className="flex items-center gap-3 px-4 py-3 text-left rounded transition-all duration-150"
+                className="flex items-center gap-3 px-4 py-3 text-left rounded transition-all duration-150 cursor-pointer"
                 style={{
                   background: active === i ? "#FFFFFF" : "transparent",
                   border: `1px solid ${active === i ? "#2B1B0E" : "#F3DEC0"}`,
@@ -87,29 +92,29 @@ export function SiteConditions() {
                 className="font-display font-700 text-sm tracking-widest"
                 style={{ color: "#2B1B0E" }}
               >
-                CONCRETE SLAB · {SITE_VARIANTS[active].label.toUpperCase()}
+                {SITE_RECIPE.name.toUpperCase()} · {variant.label.toUpperCase()}
               </span>
               <span
                 className="font-mono text-xs px-2 py-0.5 rounded"
                 style={{ background: "#F3DEC0", color: "#9C7B4F" }}
               >
-                {SITE_VARIANTS[active].tag.toUpperCase()}
+                {variant.tag.toUpperCase()}
               </span>
             </div>
             <p className="font-mono text-xs" style={{ color: "#B89B6E" }}>
-              Concrete · per m² of slab
+              {SITE_RECIPE.category} · per {SITE_RECIPE.unit}
             </p>
           </div>
 
           <div className="px-6 py-4">
             <p className="font-mono text-xs mb-3" style={{ color: "#B89B6E" }}>
-              PER 1 m²
+              PER 1 {SITE_RECIPE.unit}
             </p>
-            {SITE_VARIANTS[active].items.map((item, i) => {
-              const isExtra = SITE_VARIANTS[active].extra?.includes(item.name);
+            {variant.items.map((item:any) => {
+              const isExtra = variant.extra?.includes(item.name);
               return (
                 <div
-                  key={i}
+                  key={item.name}
                   className="flex items-center justify-between py-2"
                   style={{ borderBottom: "1px solid #F3DEC0" }}
                 >
@@ -155,8 +160,7 @@ export function SiteConditions() {
             style={{ background: "#FFE9D2", borderTop: "1px solid #F3DEC0" }}
           >
             <p className="font-mono text-xs" style={{ color: "#B89B6E" }}>
-              {SITE_VARIANTS[active].items.length} line items · Concrete
-              category
+              {variant.items.length} line items · {SITE_RECIPE.category} category
             </p>
           </div>
         </div>

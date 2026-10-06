@@ -1,34 +1,22 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
-// DTO for sending a message to the AI chat
-// sessionId links the message to an existing conversation
-// companyId and projectId scope the AI context
+// Body of POST /:companyId/assistant/chat.
+//
+// Deliberately NOT accepted from the client:
+//  - userId: taken from the verified Clerk token, so nobody can chat as someone else
+//  - companyId: taken from the URL, so there is one source of truth
+//  - role: a question is always saved as "user"; the client can't write
+//    "assistant" messages into the history the model later reads
 export class SendMessageRequest {
+  // Capped because every question is sent to a paid model
   @IsString()
   @IsNotEmpty()
+  @MaxLength(4000)
   userMessage!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  userId!:string
-
+  // Set when the user is inside a project: the assistant then also reads that
+  // project's documents and keeps a separate conversation for it
   @IsString()
   @IsOptional()
-  projectId!: string;
-
-  @IsString()
-  @IsOptional()
-  companyId!: string;
-
-  @IsString()
-  @IsOptional()
-  role!: "user"|"assistant";
-}
-
-export class GetChatHistoryRequest {
-  @IsString()
-  userId!: string;
-  @IsString()
-  @IsOptional()
-  projectId!: string;
+  projectId?: string;
 }

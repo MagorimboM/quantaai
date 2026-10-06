@@ -8,11 +8,16 @@ import {PrivacySection} from "@/modules/landing/components/PrivacySection"
 import {ProblemSection} from "@/modules/landing/components/ProblemSection"
 import {SiteConditions} from "@/modules/landing/components/SiteConditions"
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
+// The public page a visitor sees before signing in. The sections follow the
+// sales story, top to bottom:
+//   promise (Hero) -> pain (Problem) -> how it works -> the feature that
+//   sets it apart (Site conditions) -> organisation (Categories) ->
+//   trust (Privacy) -> ask (CTA).
+// Both calls to action (Hero, CTA) and the nav lead to /register; returning
+// users use LOG IN in the nav or footer.
 export function LandingPage() {
   return (
-   <div style={{ background: '#FFF8F0', color: '#2B1B0E' }}>
+    <div style={{ background: '#FFF8F0', color: '#2B1B0E' }}>
       <Nav />
       <Hero />
       <ProblemSection />

@@ -1,116 +1,43 @@
-export type Recipe = {
-  id: string;
-  name: string;
-  unit: string;
-  recipeMaterials: {
-    id: string;
-    quantity: number;
-    unit: string;
-    material: {
-      id: string;
-      name: string;
-    };
-  }[];
-  recipeLabour: {
-    id: string;
-    quantity: number;
-    unit: string;
-    labour: {
-      id: string;
-      name: string;
-    };
-  }[];
-  recipeOverheads: {
-    id: string;
-    quantity: number;
-    unit: string;
-    overhead: {
-      id: string;
-      name: string;
-    };
-  }[];
-} | null 
+// None of these carry a userId: the backend identifies the user from the Clerk
+// token and checks the company and project belong to them.
 
-export type GetBillOfQuantsResponse = {
-  id: string;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  recipe: {
-    id: string;
-    name: string;
-    unit: string;
-    recipeMaterials: {
-      id: string;
-      quantity: number;
-      unit: string;
-      material: {
-        id: string;
-        name: string;
-      };
-    }[];
-    recipeLabour: {
-      id: string;
-      quantity: number;
-      unit: string;
-      labour: {
-        id: string;
-        name: string;
-      };
-    }[];
-    recipeOverheads: {
-      id: string;
-      quantity: number;
-      unit: string;
-      overhead: {
-        id: string;
-        name: string;
-      };
-    }[];
-  } | null;
-};
-
-export type LineItem = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-};
-
-export type UpdateLineItemRequest = {
+// The takeoff of one project
+export type GetProjectBillOfQuantsRequest = {
   companyId: string;
   projectId: string;
-  body: LineItem[];
 };
 
+// What gets saved for a line item. Only these three fields are editable on the
+// page: the location (stored in `description`), the notes, and the measurement
+// every quantity is calculated from. The recipe and unit are fixed.
+export type LineItemInput = {
+  id: string;
+  description: string;
+  measurement: number;
+  notes: string | null;
+};
+
+export type UpdateLineItemsRequest = {
+  companyId: string;
+  projectId: string;
+  lineItems: LineItemInput[];
+};
+
+// Marks the project's takeoff complete (true) or reopens it (false)
 export type UpdateProjectStatusRequest = {
   companyId: string;
   projectId: string;
   completed: boolean;
 };
 
-type LineItems = {
-  id: string;
-};
-
-export type DeleteProjectLineItemsRequest = {
+export type DeleteLineItemsRequest = {
   companyId: string;
   projectId: string;
-  lineItems: LineItems[];
+  lineItemIds: string[];
 };
 
-export type DeleteProjectBillOfQuantsRequest = {
-  companyId: string;
-  projectId: string;
-};
-
-export type DeleteProjectRequest = {
+// Removes every line item of the project ("start afresh")
+export type DeleteProjectBillOfQuantitiesRequest = {
   companyId: string;
   projectId: string;
 };

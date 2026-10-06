@@ -1,13 +1,19 @@
 import { CheckIcon } from '@/modules/landing/components/Icons'
 
-export function PrivacySection() {
-  const points = [
-    "Your templates are yours — built once, usable on any job, for any company or none at all.",
-    "On-site for an employer today, quoting your own job tonight — the same recipes work either way.",
-    'Upload site documents and specs — the AI reads them, nothing else does.',
-    "No public marketplace. No community templates that expose your methods.",
-  ]
+// Why a quantity surveyor can trust Quanta with their methods. Quantity
+// surveyors move between employers and side jobs, so the pitch is that recipes
+// belong to the person, not the company, and nobody else can see them.
+// TODO :: [backend] The page promises "strictly private". That is only true once
+// every backend route checks the caller owns the company it is asked about.
+// The dashboard and assistant routes do; the rest still need it.
+const POINTS = [
+  "Your templates are yours — built once, usable on any job, for any company or none at all.",
+  "On-site for an employer today, quoting your own job tonight — the same recipes work either way.",
+  'Upload site documents and specs — the AI reads them, nothing else does.',
+  "No public marketplace. No community templates that expose your methods.",
+]
 
+export function PrivacySection() {
   return (
     <section className="py-24 max-w-6xl mx-auto px-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -27,22 +33,22 @@ export function PrivacySection() {
             You turn up to a job — maybe it's for a company, maybe it's your own — and realise you need a template for this. That's the moment Quanta is built for. Your recipes belong to you, not your employer, and they're there whether you're on someone else's site or working for yourself after hours.
           </p>
           <div className="flex flex-col gap-3">
-            {points.map((pt, i) => (
-              <div key={i} className="flex items-start gap-3">
+            {POINTS.map(point => (
+              <div key={point} className="flex items-start gap-3">
                 <div
                   className="w-5 h-5 flex-shrink-0 flex items-center justify-center mt-0.5 rounded"
                   style={{ background: '#FFF3E5', border: '1px solid #F3DEC0', color: '#6B4F2E' }}
                 >
                   <CheckIcon />
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: '#9C7B4F' }}>{pt}</p>
+                <p className="text-sm leading-relaxed" style={{ color: '#9C7B4F' }}>{point}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* AI card */}
+          {/* AI assistant: answers from the user's own uploaded documents, with the source */}
           <div style={{ background: '#FFFFFF', border: '1px solid #F3DEC0', borderRadius: '6px', padding: '24px' }}>
             <div className="font-display font-700 text-sm tracking-widest mb-2" style={{ color: '#2B1B0E' }}>
               AI DOCUMENT ASSISTANT
@@ -60,7 +66,6 @@ export function PrivacySection() {
             </div>
           </div>
 
-          {/* Privacy card */}
           <div style={{ background: '#FFFFFF', border: '1px solid #F3DEC0', borderRadius: '6px', padding: '24px' }}>
             <div className="font-display font-700 text-sm tracking-widest mb-2" style={{ color: '#2B1B0E' }}>
               STRICTLY PRIVATE

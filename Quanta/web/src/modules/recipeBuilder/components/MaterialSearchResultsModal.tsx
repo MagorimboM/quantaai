@@ -1,54 +1,63 @@
-type MaterialResult = {
-  id: string;
-  name: string;
-  unit: string;
-};
+import { X } from "lucide-react";
+import type { MaterialSearchResult } from "@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts";
 
+// The materials the search found. Clicking one adds it to the recipe; the list
+// stays open so several can be added in a row, and ones already in the recipe
+// are marked "Added" so they can't be added twice.
 export function MaterialSearchResultsModal({
   show,
   results,
+  addedIds,
   onClose,
   onAdd,
 }: {
   show: boolean;
-  results: MaterialResult[];
+  results: MaterialSearchResult[];
+  addedIds: string[];
   onClose: () => void;
-  onAdd: (material: MaterialResult) => void;
+  onAdd: (material: MaterialSearchResult) => void;
 }) {
-  if (show === false) return null;
+  if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="flex max-h-[70vh] w-full max-w-md flex-col gap-3 overflow-hidden rounded-lg bg-white p-5 shadow-lg">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="flex max-h-[70vh] w-full max-w-md flex-col gap-3 overflow-hidden rounded-lg border bg-card p-5 text-card-foreground shadow-lg">
+        <div className="flex items-center justify-between border-b pb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Search results
           </h2>
           <button
             onClick={onClose}
-            className="text-zinc-300 hover:text-black transition-colors"
+            aria-label="Close search results"
+            className="text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+            <X size={14} />
           </button>
         </div>
 
         <div className="flex flex-col gap-2 overflow-y-auto">
           {results.length > 0 ? (
-            results.map((material, key) => (
-              <button
-                key={key}
-                onClick={() => onAdd(material)}
-                title="add-material"
-                className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-left transition-colors hover:border-zinc-400"
-              >
-                <span className="text-sm text-zinc-800">{material.name}</span>
-                <span className="text-[10px] font-mono text-zinc-400">{material.unit}</span>
-              </button>
-            ))
+            results.map((material) => {
+              const added = addedIds.includes(material.id);
+              return (
+                <button
+                  key={material.id}
+                  onClick={() => onAdd(material)}
+                  disabled={added}
+                  title="add-material"
+                  className="flex items-center justify-between rounded-md border px-3 py-2 text-left transition-colors hover:border-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  <span className="text-sm text-foreground">{material.name}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {added ? "Added" : material.unit}
+                  </span>
+                </button>
+              );
+            })
           ) : (
-            <p className="py-6 text-center text-xs text-zinc-400">No materials found.</p>
+            <p className="py-6 text-center text-xs text-muted-foreground">
+              No materials found.
+            </p>
           )}
         </div>
       </div>

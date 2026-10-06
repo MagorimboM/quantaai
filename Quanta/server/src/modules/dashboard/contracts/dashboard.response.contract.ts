@@ -1,42 +1,27 @@
+// Headline numbers for one company.
 export type KPIInformationResponse = {
+  // projects not yet marked complete (drafts included)
   activeProjects: number;
-  numberOfUploadedDocuments: number;
+  // recipes in the library, archived ones excluded
   totalRecipes: number;
-  standardsLoaded: number;
+  // specs, drawings and policies uploaded for the company
+  numberOfUploadedDocuments: number;
+  // completed projects per year since the company's first project
   completionRate: number;
-  projectsStartedThisMonth: number;
 };
 
-export type DashboardProject = {
+// Only what a project card shows. Client and site contact details are left
+// out on purpose: the dashboard doesn't need them.
+export type RecentProject = {
   id: string;
-  userId: string | null;
   companyId: string | null;
-  projectNumber: string;
   name: string;
-  description: string | null;
   type: string;
   status: string;
-  stage: string | null;
-  clientName: string | null;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  siteContactName: string | null;
-  siteContactPhone: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  postcode: string | null;
-  drawingNumber: string | null;
-  revision: string | null;
-  startDate: Date | null;
-  endDate: Date | null;
-  completed: boolean;
-  completedAt: Date | null;
-  createdAt: Date;
   updatedAt: Date;
 };
 
-export type RecentProjectsResponse = DashboardProject[];
+export type RecentProjectsResponse = RecentProject[];
 
 export type RecentActivityItem = {
   id: string;

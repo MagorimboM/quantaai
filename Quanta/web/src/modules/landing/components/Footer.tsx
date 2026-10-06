@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router'
 
+// Page footer. "Log in" is the second place (after the nav) a returning user can sign in.
 export function Footer() {
   const navigate = useNavigate()
 
@@ -10,6 +11,7 @@ export function Footer() {
         <p className="font-mono text-xs" style={{ color: '#B89B6E' }}>
           © {new Date().getFullYear()} Quanta. Quantity takeoff software.
         </p>
+        {/* TODO :: [content] Privacy, Terms and Contact pages don't exist yet; these links go nowhere */}
         <div className="flex items-center gap-6 font-mono text-xs" style={{ color: '#B89B6E' }}>
           <button onClick={() => navigate('/login')} className="hover:opacity-70 transition-opacity cursor-pointer">Log in</button>
           <a href="#" className="hover:opacity-70 transition-opacity">Privacy</a>

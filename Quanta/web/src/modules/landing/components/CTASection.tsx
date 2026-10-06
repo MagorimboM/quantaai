@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router'
- 
+
+// The closing ask at the bottom of the page. Same single action as the hero:
+// register.
 export function CTASection() {
   const navigate = useNavigate()
- 
+
   return (
     <section id="cta" className="py-32" style={{ background: '#FFFFFF' }}>
       <div className="max-w-2xl mx-auto px-6 text-center">
@@ -19,7 +21,7 @@ export function CTASection() {
         <p className="text-sm mb-10 max-w-md mx-auto leading-relaxed" style={{ color: '#9C7B4F' }}>
           Create your account and start building your own recipe library today.
         </p>
- 
+
         <button
           onClick={() => navigate('/register')}
           className="px-6 py-3 font-display font-700 text-sm tracking-widest rounded transition-colors duration-150 cursor-pointer"
@@ -29,7 +31,7 @@ export function CTASection() {
         >
           REGISTER
         </button>
- 
+
         <p className="mt-5 font-mono text-xs" style={{ color: '#B89B6E' }}>
           No spam. No sales calls. Just Quanta.
         </p>
@@ -37,4 +39,3 @@ export function CTASection() {
     </section>
   )
 }
- 

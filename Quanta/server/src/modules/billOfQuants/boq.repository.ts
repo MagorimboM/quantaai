@@ -1,332 +1,179 @@
-/* ============================================================================
- * 2. BILL OF QUANTITIES (BOQ) & TAKEOFF MANAGEMENT
- * ============================================================================
- *
- * GET /:companyId/project/:projectId/bill-of-quantities?query={term}&page={1}&limit={10}
- * - Description: Get project recipes and their calculated quantities (with search & pagination).
- * - Query Params: ?query=concrete&page=1&limit=10
- * - Body: None
- * - Returns: Array of nested BOQ recipe objects
- *
- * PUT /:companyId/projects/:projectId/bill-of-quantities
- * - Description: Bulk save/update project bill of quantities line items.
- * - Query Params: None
- * - Body: Array of BOQ objects
- * - Returns: Array of saved objects with confirmation status
- *
- * PATCH /:companyId/projects/:projectId/status
- * - Description: Update project status (mark as complete or active).
- * - Query Params: None
- * - Body: { "completed": true }
- * - Returns: Updated project object with "completed" status confirmation
- *
- * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes/:recipeId
- * - Description: Delete a single specific recipe item from the project's bill of quantities.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "deletedRecipeId": "..." }
- *
- * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes
- * - Description: Delete ALL recipes and associated bill of quantities items for that project.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "clearedCount": 15 }
- *
- * DELETE /:companyId/projects/:projectId
- * - Description: Delete entire project and all associated BOQ data.
- * - Query Params: None
- * - Body: None
- * - Returns: Confirmation object { "success": true, "deletedId": "..." }
- */
-
-type LineItems = {
-  // -- line item detail --
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-import { Body, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
-import { text } from 'node:stream/consumers';
+import type {
+  BillOfQuantsScope,
+  UpdateProjectLineItemsRequest,
+  UpdateProjectStatusRequest,
+  DeleteProjectLineItemsRequest,
+} from '@/modules/billOfQuants/contracts/boq.request.contracts';
+import type {
+  GetBillOfQuantsResponse,
+  UpdateLineItemsResponse,
+  UpdateProjectStatusResponse,
+  DeletedLineItemsResponse,
+  DeleteProjectBillOfQuantsResponse,
+} from '@/modules/billOfQuants/contracts/boq.response.contracts';
 
+// Every method here assumes the caller was already checked to own the project
+// (see AccessService), so queries only need to stay inside its company and project.
+//
+// A takeoff is stored as takeoff_items: one row per line, each pointing at the
+// recipe it applies and holding the measurement the quantities are worked out from.
 @Injectable()
 export class BillOfQuantsRepository {
-  /**
-   * GET /:companyId/projects/:projectId/bill-of-quantities?query={term}&page={1}&limit={10}
-   * Unified endpoint: handles regular paginated fetch AND search queries seamlessly.
-   */
-
-  // TODO :: implement the search term in the find item
-
-  // Replace the body of getProjectBillOfQuants in boq.repository.ts with this.
-  // Two changes: the recipe now includes its category (the page shows it next
-  // to the recipe name), and the order is stable so rows don't shuffle after a
-  // save. createdAt alone isn't enough -- rows inserted in one statement share
-  // a timestamp -- so id is the tie-breaker.
-  async getProjectBillOfQuants(request: {
-    companyId: string;
-    projectId: string;
-    query?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const lineItems = await prisma.takeoffItem.findMany({
+  // Every line of the project's takeoff, each with its recipe and the
+  // components needed to calculate quantities. Only the fields the screen uses
+  // are read. The order is stable so lines don't shuffle after a save:
+  // createdAt alone isn't enough (rows inserted in one statement share a
+  // timestamp), so id is the tie-breaker.
+  async getProjectBillOfQuants(
+    request: BillOfQuantsScope,
+  ): Promise<GetBillOfQuantsResponse[]> {
+    return await prisma.takeoffItem.findMany({
       where: { companyId: request.companyId, projectId: request.projectId },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      include: {
+      select: {
+        id: true,
+        description: true,
+        measurement: true,
+        unit: true,
+        notes: true,
         recipe: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            unit: true,
             category: { select: { id: true, name: true } },
             recipeMaterials: {
-              include: { material: true },
+              select: {
+                id: true,
+                quantity: true,
+                unit: true,
+                material: { select: { id: true, name: true } },
+              },
             },
             recipeLabour: {
-              include: { labour: true },
+              select: {
+                id: true,
+                quantity: true,
+                unit: true,
+                labour: { select: { id: true, name: true } },
+              },
             },
             recipeOverheads: {
-              include: { overhead: true },
+              select: {
+                id: true,
+                quantity: true,
+                unit: true,
+                overhead: { select: { id: true, name: true } },
+              },
             },
           },
         },
       },
     });
-
-    return lineItems;
   }
-  /**
-   * PUT /:companyId/projects/:projectId/bill-of-quantities
-   * Bulk save/update line items.
-   */
+
+  // Saves the edited location, notes and measurement of several lines at once.
+  // All or nothing: if any line isn't in this project, nothing is saved.
   async updateProjectLineItems(
-    request: {
-      companyId: string;
-      projectId: string;
-      lineItems: LineItems[];
-    }, // Pass your BOQ Item DTO here
-  ) {
-    const updatedTakeOffItems = await prisma.$transaction(async (tx) => {
-      const nonExistingItems: LineItems[] = [];
-      let updatedLineItems: LineItems[] = [];
+    request: UpdateProjectLineItemsRequest,
+  ): Promise<UpdateLineItemsResponse> {
+    const ids = request.lineItems.map((item) => item.id);
 
-      for (const eachLineItem of request.lineItems) {
-        // check if the line item exist, if id does not add it to the array of items that don't exist,
-        // then move to the next item
-
-        const existingLineItem = await tx.takeoffItem.findFirst({
-          where: {
-            id: eachLineItem.id,
-            companyId: eachLineItem?.companyId,
-            projectId: eachLineItem?.projectId,
-          },
-        });
-
-        if (existingLineItem == null || !existingLineItem) {
-          nonExistingItems.push(eachLineItem);
-        }
-      }
-
-      // check if the memory has anything that is missing in the item if so throw error. if not
-      function summarizeAllNonExistingIds() {
-        let itemIds: string = '';
-        for (const eachItem of nonExistingItems) {
-          itemIds += `-${eachItem.id}\n`;
-        }
-
-        return itemIds;
-      }
-      if (nonExistingItems.length > 0) {
+    return await prisma.$transaction(async (tx) => {
+      // One query finds which of the lines really belong to this project
+      const existing = await tx.takeoffItem.findMany({
+        where: {
+          id: { in: ids },
+          companyId: request.companyId,
+          projectId: request.projectId,
+        },
+        select: { id: true },
+      });
+      const existingIds = new Set(existing.map((item) => item.id));
+      const missing = ids.filter((id) => !existingIds.has(id));
+      if (missing.length > 0) {
         throw new NotFoundException(
-          "Either the line item or components of the line items don't Exist",
-          ` The following line items: ${summarizeAllNonExistingIds()}`,
+          `Line items not found in this project: ${missing.join(', ')}`,
         );
       }
 
-      // update the database
-      // for loop again.
-
-      for (const eachLineItem of request.lineItems) {
-        const takeOffItemUpdate = await tx.takeoffItem.update({
-          where: { id: eachLineItem.id },
+      for (const item of request.lineItems) {
+        await tx.takeoffItem.update({
+          where: { id: item.id },
           data: {
-            description: eachLineItem.description,
-            measurement: eachLineItem.measurement,
-            notes: eachLineItem.notes,
+            description: item.description,
+            measurement: item.measurement,
+            notes: item.notes,
           },
         });
-
-        updatedLineItems.push(takeOffItemUpdate);
       }
 
-      return updatedLineItems;
+      return { success: true, updatedItems: request.lineItems.length };
     });
-    // Returns array of updated nested objects + save confirmation
-    return updatedTakeOffItems;
   }
 
-  /**
-   * PATCH /:companyId/projects/:projectId/bill-of-quantities/status
-   * Mark project takeoff as active or completed.
-   */
-  async updateProjectStatus(request: {
-    companyId: string;
-    projectId: string;
-    completed: boolean;
-  }) {
-    const updatedProjectStatus = await prisma.$transaction(async (tx) => {
-      // check if the project id exists.
-      const projectExists = await tx.project.findFirst({
-        where: { id: request?.projectId, companyId: request?.companyId },
+  // Marks the project's takeoff finished or reopens it. The status shown on the
+  // projects list, the completed flag the dashboard counts, and the completion
+  // time are all kept in step, so they can't disagree.
+  async updateProjectStatus(
+    request: UpdateProjectStatusRequest,
+  ): Promise<UpdateProjectStatusResponse> {
+    return await prisma.project.update({
+      where: { id: request.projectId, companyId: request.companyId },
+      data: {
+        completed: request.completed,
+        completedAt: request.completed ? new Date() : null,
+        status: request.completed ? 'completed' : 'in_progress',
+      },
+      select: { id: true, completed: true },
+    });
+  }
+
+  // Deletes the chosen lines. All or nothing: if any isn't in this project,
+  // nothing is deleted. Returns the ids that were deleted.
+  async deleteProjectLineItems(
+    request: DeleteProjectLineItemsRequest,
+  ): Promise<DeletedLineItemsResponse> {
+    return await prisma.$transaction(async (tx) => {
+      const existing = await tx.takeoffItem.findMany({
+        where: {
+          id: { in: request.lineItemIds },
+          companyId: request.companyId,
+          projectId: request.projectId,
+        },
+        select: { id: true },
       });
-      if (!projectExists) {
-        throw new NotFoundException('Project does not exist, cannot update');
+      const existingIds = new Set(existing.map((item) => item.id));
+      const missing = request.lineItemIds.filter((id) => !existingIds.has(id));
+      if (missing.length > 0) {
+        throw new NotFoundException(
+          `Line items not found in this project: ${missing.join(', ')}`,
+        );
       }
 
-      const updatedProjectStatus = await tx.project.update({
-        where: { id: request.projectId, companyId: request.companyId },
-        data: {
-          completed: request.completed,
+      await tx.takeoffItem.deleteMany({
+        where: {
+          id: { in: [...existingIds] },
+          companyId: request.companyId,
+          projectId: request.projectId,
         },
       });
 
-      return updatedProjectStatus;
+      return [...existingIds].map((id) => ({ id }));
     });
-
-    return updatedProjectStatus;
   }
 
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities/recipes
-   * Delete specific selected line items (pass array of IDs in body).
-   */
-  async deleteProjectLineItems(request: {
-    companyId: string;
-    projectId: string;
-    lineItems: { id: string }[];
-  }) {
-    const deletedLineItems = await prisma.$transaction(async (tx) => {
-      // check if the line items exists,
-
-      let unknownLineItems: { unknownLineItemId: string }[] = [];
-      function summarizeAllNonExistingIds() {
-        let summaryOfUnknownLineItems: string = '';
-
-        for (const eachUnknownLineItem of unknownLineItems) {
-          summaryOfUnknownLineItems += `- ${eachUnknownLineItem.unknownLineItemId} \n`;
-        }
-        return summaryOfUnknownLineItems;
-      }
-
-      for (const eachLineItem of request.lineItems) {
-        const lineItemExists = await tx.takeoffItem.findFirst({
-          where: {
-            id: eachLineItem.id,
-            projectId: request.projectId,
-            companyId: request.companyId,
-          },
-        });
-
-        if (lineItemExists == null || !lineItemExists) {
-          unknownLineItems.push({ unknownLineItemId: eachLineItem.id });
-        }
-      }
-
-      if (unknownLineItems.length > 0) {
-        throw new NotFoundException(
-          `The following line items don't exist: ${summarizeAllNonExistingIds()}`,
-        );
-      }
-
-      let deletedLineItems: {
-        id: string;
-        userId: string | null;
-        companyId: string | null;
-        projectId: string;
-        recipeId: string | null;
-        description: string;
-        measurement: number;
-        unit: string;
-        notes: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-      }[] = [];
-
-      for (const eachLineItem of request.lineItems) {
-        const deletedItem = await tx.takeoffItem.delete({
-          where: { id: eachLineItem.id },
-        });
-
-        deletedLineItems.push(deletedItem);
-      }
-
-      return deletedLineItems;
-    });
-    return deletedLineItems;
-  }
-
-  /**
-   * DELETE /:companyId/projects/:projectId/bill-of-quantities
-   * Clear all recipes and line items for this project.
-   */
-  async deleteProjectBillOfQuants(request: {
-    companyId: string;
-    projectId: string;
-  }) {
-    // check if there are any takeOffItems for that projectid,
-
-    const deletedProjectLineItems: { success: boolean; deletedItems: number } =
-      await prisma.$transaction(async (tx) => {
-        // check if the project even exists
-
-        const projectExists = await tx.project.findFirst({
-          where: { id: request.projectId, companyId: request.companyId },
-        });
-
-        if (projectExists == null) {
-          throw new NotFoundException('Project does not exist');
-        }
-        // delete line items of that project:
-        const deletedProjectLineItems = await tx.takeoffItem.deleteMany({
-          where: { projectId: request.projectId, companyId: request.companyId },
-        });
-
-        return { success: true, deletedItems: deletedProjectLineItems.count };
-      });
-    return deletedProjectLineItems;
-  }
-
-  /**
-   * DELETE /:companyId/projects/:projectId
-   * Delete the entire project entity and all connected data.
-   */
-
-  async deleteProject(request: { companyId: string; projectId: string }) {
-    const deletedProject = await prisma.$transaction(async (tx) => {
-      // check if project exists
-
-      const projectExists = await tx.project.findFirst({
-        where: { id: request.projectId, companyId: request.companyId },
-      });
-
-      if (projectExists == null || !projectExists) {
-        throw new NotFoundException(`Project does not exist`);
-      }
-
-      const deletedProject = await tx.project.delete({
-        where: { id: request.projectId, companyId: request.companyId },
-      });
-
-      return deletedProject;
+  // "Start afresh": removes every line of the project's takeoff. The project
+  // itself stays.
+  async deleteProjectBillOfQuants(
+    request: BillOfQuantsScope,
+  ): Promise<DeleteProjectBillOfQuantsResponse> {
+    const deleted = await prisma.takeoffItem.deleteMany({
+      where: { projectId: request.projectId, companyId: request.companyId },
     });
 
-    return deletedProject;
+    return { success: true, deletedItems: deleted.count };
   }
 }

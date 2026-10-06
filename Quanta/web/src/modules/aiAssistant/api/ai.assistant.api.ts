@@ -1,22 +1,35 @@
 import { apiClient } from "@/core/api/axios.api";
-import type {Message } from "@/modules/aiAssistant/contracts/aiAssistant.request.contract"
+import type {
+  GetChatHistoryRequest,
+  SendUserMessageRequest,
+} from "@/modules/aiAssistant/contracts/aiAssistant.request.contract";
+import type { Message } from "@/modules/aiAssistant/contracts/aiAssistant.response.contract";
 
-async function getChatHistory(): Promise<Message[]> {
+// Neither call sends a userId: the backend identifies the user from the Clerk
+// token that apiClient attaches to every request.
+
+// The latest messages of one conversation, oldest first.
+async function getChatHistory(
+  request: GetChatHistoryRequest,
+): Promise<Message[]> {
   const response = await apiClient.get(
-    "seed-company-001/assistant/chatHistory/seed-proj-001/seed-user-001",
+    `${request.companyId}/assistant/chatHistory`,
+    // axios leaves projectId out of the URL when it is null (company-level chat)
+    { params: { projectId: request.projectId } },
   );
 
-  return Array.isArray(response.data) ? response.data : [];
+  return response.data;
 }
 
-async function sendUserMessage(userMessage: string): Promise<Message> {
-  const response = await apiClient.post("seed-company-001/assistant/chat", {
-    userMessage,
-    userId: "seed-user-001",
-    projectId: "seed-proj-001",
-    companyId: "seed-company-001",
-    role: "user",
+// Sends one question and returns the assistant's reply.
+async function sendUserMessage(
+  request: SendUserMessageRequest,
+): Promise<Message> {
+  const response = await apiClient.post(`${request.companyId}/assistant/chat`, {
+    userMessage: request.userMessage,
+    projectId: request.projectId,
   });
+
   return response.data;
 }
 

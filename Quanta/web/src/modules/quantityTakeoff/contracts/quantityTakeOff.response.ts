@@ -1,3 +1,5 @@
+// A recipe with everything needed to show its components and calculate their
+// totals: each component's quantity is the amount needed per 1 unit of the recipe.
 export type RecipeDetail = {
   id: string;
   name: string;
@@ -35,6 +37,8 @@ export type RecipeDetail = {
   }[];
 };
 
+// One line of the takeoff: a recipe applied to a measurement.
+// `description` holds the location ("North, south and west wall").
 export type GetBillOfQuantsResponse = {
   id: string;
   description: string;
@@ -44,93 +48,20 @@ export type GetBillOfQuantsResponse = {
   recipe: RecipeDetail | null;
 };
 
-export type UpdateLineItemResponse = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+export type UpdateLineItemsResponse = {
+  success: boolean;
+  updatedItems: number;
 };
 
 export type UpdateProjectStatusResponse = {
   id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectNumber: string;
-  name: string;
-  description: string | null;
-  type: string;
-  status: string;
-  stage: string | null;
-  clientName: string | null;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  siteContactName: string | null;
-  siteContactPhone: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  postcode: string | null;
-  drawingNumber: string | null;
-  revision: string | null;
-  startDate: Date | null;
-  endDate: Date | null;
   completed: boolean;
-  completedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
-export type DeletedLineItemsResponse = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectId: string;
-  recipeId: string | null;
-  description: string;
-  measurement: number;
-  unit: string;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}[];
+// The ids of the line items that were deleted
+export type DeletedLineItemsResponse = { id: string }[];
 
 export type DeleteProjectBillOfQuantitiesResponse = {
   success: boolean;
   deletedItems: number;
-};
-
-export type DeleteProjectResponse = {
-  id: string;
-  userId: string | null;
-  companyId: string | null;
-  projectNumber: string;
-  name: string;
-  description: string | null;
-  type: string;
-  status: string;
-  stage: string | null;
-  clientName: string | null;
-  clientEmail: string | null;
-  clientPhone: string | null;
-  siteContactName: string | null;
-  siteContactPhone: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  postcode: string | null;
-  drawingNumber: string | null;
-  revision: string | null;
-  startDate: Date | null;
-  endDate: Date | null;
-  completed: boolean;
-  completedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
 };

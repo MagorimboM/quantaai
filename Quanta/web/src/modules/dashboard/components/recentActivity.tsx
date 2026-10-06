@@ -2,31 +2,30 @@ import { useEffect, useState } from "react";
 import { HiOutlineClock } from "react-icons/hi2";
 import { getRecentActivity } from "@/modules/dashboard/api/api";
 import type { RecentActivityResponse } from "@/modules/dashboard/contracts/dashboard.response.contract";
+import { timeAgo } from "@/common/utils/timeAgo";
 
-// TODO :: replace company id with dynamic reference.
+// TODO :: [backend] Nothing writes to the audit_logs table yet, so this panel
+// is always empty. Each change to a takeoff, recipe or document needs to add a
+// row. Settle on how `action` and `entityType` are worded when that is built,
+// because they are shown here as written.
 
-function timeAgo(dateString: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-export function RecentActivity() {
+// The latest recorded changes for the company, newest first: who did what to
+// which kind of record, and how long ago. This is the company's audit trail.
+export function RecentActivity({ companyId }: { companyId: string }) {
   const [activity, setActivity] = useState<RecentActivityResponse>([]);
 
   useEffect(() => {
     async function loadActivity() {
-      const response = await getRecentActivity({ companyId: "seed-company-001" });
-      setActivity(response);
+      try {
+        const response = await getRecentActivity({ companyId });
+        setActivity(response);
+      } catch {
+        // apiClient already reports the failure; the list stays empty
+      }
     }
 
     loadActivity();
-  }, []);
+  }, [companyId]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">

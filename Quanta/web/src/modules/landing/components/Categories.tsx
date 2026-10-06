@@ -1,5 +1,8 @@
 import { CATEGORIES } from "@/modules/landing/components/Data";
 
+// Shows that recipes are organised by trade, so a growing library stays
+// findable. The counts come from CATEGORIES in Data.ts, which are illustrative
+// (see the TODO there).
 export function Categories() {
   return (
     <section
@@ -40,11 +43,11 @@ export function Categories() {
           className="grid grid-cols-2 md:grid-cols-3 gap-px"
           style={{ background: "#F3DEC0" }}
         >
-          {CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
+          {CATEGORIES.map((category) => {
+            const Icon = category.icon;
             return (
               <div
-                key={cat.name}
+                key={category.name}
                 className="p-8 cursor-pointer transition-colors duration-150"
                 style={{ background: "#FFEFDD" }}
                 onMouseEnter={(e) =>
@@ -61,10 +64,10 @@ export function Categories() {
                   className="font-display font-700 text-base tracking-wide mb-1"
                   style={{ color: "#2B1B0E" }}
                 >
-                  {cat.name.toUpperCase()}
+                  {category.name.toUpperCase()}
                 </div>
                 <div className="font-mono text-xs" style={{ color: "#B89B6E" }}>
-                  {cat.count} recipes
+                  {category.count} recipes
                 </div>
               </div>
             );
