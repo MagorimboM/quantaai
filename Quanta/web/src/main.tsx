@@ -15,10 +15,7 @@ if (!clerkPublishableKey) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ClerkProvider
-      publishableKey={clerkPublishableKey}
-      clerkJSUrl="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-    >
+    <ClerkProvider publishableKey={clerkPublishableKey}>
       <BrowserRouter>
         <App />
       </BrowserRouter>

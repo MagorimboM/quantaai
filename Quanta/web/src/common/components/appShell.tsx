@@ -1,32 +1,22 @@
-import React from "react";
+import type { ReactNode } from "react";
+import { UserButton } from "@clerk/react";
 import { SideBarComp } from "@/common/components/sideBar";
-import { GlobalErrorComp } from "@/common/components/globalError";
-import { MdOutlineNotifications, MdOutlineAccountCircle } from "react-icons/md";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+// The frame around every page inside a workspace: the sidebar on the left, a
+// top bar with the account menu (profile and sign out, provided by Clerk), and
+// the page itself. API errors are shown by the global error banner that wraps
+// the whole signed-in app (see App), not here.
+export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <GlobalErrorComp>
-      <div className="flex h-screen w-screen overflow-hidden">
-        <SideBarComp />
-        <main className="flex h-full w-full flex-1 flex-col">
-          <div className="flex border-b justify-end gap-2 p-2.5 shrink-0">
-            <button
-              title="notifications"
-              className="rounded-md p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-            >
-              <MdOutlineNotifications size={24} />
-            </button>
-            <button
-              title="account"
-              className="rounded-md p-2 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 cursor-pointer"
-            >
-              <MdOutlineAccountCircle size={24} />
-            </button>
-          </div>
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      <SideBarComp />
+      <main className="flex h-full w-full flex-1 flex-col">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-b p-2.5">
+          <UserButton />
+        </div>
 
-          <div className="flex flex-1 min-h-0">{children}</div>
-        </main>
-      </div>
-    </GlobalErrorComp>
+        <div className="flex min-h-0 flex-1">{children}</div>
+      </main>
+    </div>
   );
 }
