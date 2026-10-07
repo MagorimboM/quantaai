@@ -23,7 +23,6 @@ export class AssistantController {
       userMessage: request.userMessage,
     });
   }
-
   // The caller's latest messages for this company (and project, if given), oldest first.
   // projectId is optional, so it is a query parameter: ?projectId=...
   @Get('chatHistory')

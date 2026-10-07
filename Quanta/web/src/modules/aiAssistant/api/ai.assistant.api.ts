@@ -17,7 +17,6 @@ async function getChatHistory(
     // axios leaves projectId out of the URL when it is null (company-level chat)
     { params: { projectId: request.projectId } },
   );
-
   return response.data;
 }
 
