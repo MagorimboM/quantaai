@@ -128,8 +128,8 @@ export class RecipeLibraryRepository {
 
   // One page of recipes: live or archived, one category or all, optionally
   // matching a search term in the name or description (ignoring case).
-  // The order is alphabetical with id as the tie-breaker, so paging is stable:
-  // without a fixed order, a recipe could appear on two pages or none.
+  // The order is alphabetical with id as the tie-breaker, so paging is stable
+  // and each recipe appears on exactly one page.
   async getRecipes(request: GetRecipesRequest): Promise<GetRecipesResponse> {
     const where = {
       companyId: request.companyId,

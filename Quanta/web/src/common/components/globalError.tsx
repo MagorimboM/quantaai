@@ -7,8 +7,8 @@ import { globalErrorState } from "@/common/storage/globalState";
 // Wraps the signed-in app and shows a blocking message when a request to the
 // backend fails. The failure is recorded in global state by the API client
 // (apiClient); this component only displays it and lets the person dismiss it.
-// It adds no element of its own around the page, so it can't disturb the
-// layout or nest a second <main> inside the page's own.
+// It adds no element of its own around the page, so the page keeps its own
+// layout and its own <main>.
 export function GlobalErrorComp({ children }: { children: ReactNode }) {
   const clearGlobalError = globalErrorState((state) => state.clearGlobalError);
   const globalErrorMessage = globalErrorState(

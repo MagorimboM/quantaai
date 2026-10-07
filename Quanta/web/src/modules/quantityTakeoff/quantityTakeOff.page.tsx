@@ -41,9 +41,8 @@ const primaryButton =
  * that measurement works out to. The user types the measurement, adds a
  * location and notes, and the totals update as they type.
  *
- * Edits live in the browser until Save, so a search or a reload never silently
- * discards them. Complete takeoff saves anything unsaved, then marks the
- * project complete.
+ * Edits live in the browser until Save, so searching never loses them.
+ * Complete takeoff saves anything unsaved, then marks the project complete.
  */
 export function BillOfQuantsPage() {
   const { companyId, projectId } = getActiveScope();

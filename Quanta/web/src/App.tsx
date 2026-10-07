@@ -11,6 +11,7 @@ import { ProjectsPage } from "@/modules/projects/projectPage";
 import { RecipeLibraryPage } from "@/modules/recipeLibrary/recipeLibrary.page";
 import { BillOfQuantsPage } from "@/modules/quantityTakeoff/quantityTakeOff.page";
 import { SettingsPage } from "@/modules/settings/settings.page";
+import { ensureScopeBelongsTo } from "@/common/storage/activeScope";
 
 // The frame (sidebar and top bar) shared by every page inside a workspace. As a
 // layout route it stays mounted while the user moves between pages, so the
@@ -37,10 +38,10 @@ function WorkspaceLayout() {
  * sidebar. API errors show in the global error banner on every signed-in page.
  */
 function App() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
 
-  // Until Clerk has checked the session, "signed in" is not known yet. Without
-  // this wait, a signed-in person would see the landing page flash on every refresh.
+  // Clerk needs a moment to confirm the session, so nothing renders until it has:
+  // a signed-in person is never shown the signed-out routes, not even briefly.
   if (!isLoaded) {
     // TODO :: replace with a real loading screen once one exists
     return null;
@@ -56,6 +57,11 @@ function App() {
       </Routes>
     );
   }
+
+  // Done while rendering, before any page reads the scope, so no request is ever
+  // sent with another person's saved company. It only touches localStorage and
+  // does nothing once the owner matches, so repeating it is harmless.
+  if (userId) ensureScopeBelongsTo(userId);
 
   return (
     <GlobalErrorComp>

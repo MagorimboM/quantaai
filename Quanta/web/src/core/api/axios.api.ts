@@ -3,7 +3,7 @@ import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
-  baseURL: "quantaai-production.up.railway.app",
+  baseURL: 'http://localhost:3000/api',
   timeout: 20000,
 });
 

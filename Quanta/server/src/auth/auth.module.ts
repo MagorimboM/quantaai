@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { AuthRepository } from './auth.repository';
+import { AuthController } from '@/auth/auth.controller';
+import { AuthService } from '@/auth/auth.service';
+import { AuthRepository } from '@/auth/auth.repository';
 import { AccessService } from '@/auth/services/access.service';
+import {Module} from "@nestjs/common"
 
 // AccessService is exported so any feature module can import AuthModule and
 // check "is this company really the caller's?" without repeating the lookup.

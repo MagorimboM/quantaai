@@ -37,3 +37,15 @@ export function clearActiveScope(): void {
   localStorage.removeItem("companyId");
   localStorage.removeItem("projectId");
 }
+
+// The workspace saved in this browser belongs to whoever chose it. If a
+// different person (or the same person on a different Clerk app) is now signed
+// in, the saved company and project mean nothing to them: every request would
+// be refused. This forgets the old scope as soon as the signed-in user changes,
+// and remembers who the scope belongs to from then on.
+export function ensureScopeBelongsTo(userId: string): void {
+  if (localStorage.getItem("scopeOwner") === userId) return;
+
+  clearActiveScope();
+  localStorage.setItem("scopeOwner", userId);
+}

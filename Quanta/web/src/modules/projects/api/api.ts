@@ -42,7 +42,7 @@ export async function getFiles(
 // Uploads the picked files as one multipart request.
 // TODO :: [backend] The upload route should take the company from the URL and the
 // user from the token, and ignore these form fields. Then companyId and
-// projectId can go from the form (userId is already no longer sent).
+// projectId can go from the form (the user is never sent from the browser).
 export async function uploadFiles(
   request: UploadFilesRequest,
 ): Promise<UploadFilesResponse> {

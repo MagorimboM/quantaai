@@ -1,119 +1,159 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
-import { NotAcceptableException } from '@nestjs/common';
+import type { NewCompanyRecord } from '@/modules/workspace/contracts/workspace.request.contracts';
+import type {
+  CompanyWorkspace,
+  PersonalWorkspace,
+  DueProject,
+} from '@/modules/workspace/contracts/workspace.response.contracts';
 
+// The most projects the "due" list returns
+const DUE_PROJECT_LIMIT = 50;
+
+// A new company starts with the trade categories the product promises, so its
+// recipes have somewhere to go from day one. They are ordinary categories: the
+// owner can add more.
+const DEFAULT_CATEGORIES = [
+  { name: 'Masonry', description: 'Bricks, blocks and mortar' },
+  { name: 'Concrete', description: 'Concrete and reinforcement' },
+  { name: 'Roofing', description: 'Roofing materials and labour' },
+  { name: 'Framing', description: 'Timber and steel framing' },
+  { name: 'Earthworks', description: 'Excavation, fill and compaction' },
+  { name: 'Finishes', description: 'Plaster, paint, tiling and fit-off' },
+];
+
+// A workspace sits above a company: a company can have workspaces, and a
+// workspace with no company is the person's own. Everything is filtered by the
+// owning user, so a person only ever sees their own.
 @Injectable()
 export class WorkspaceRepository {
-  async getWorkspaces(request: { userId: string }) {
-    const response = await prisma.$transaction(async (tx) => {
-      const response = await tx.$queryRaw`
-    SELECT
-      w.id,
-      w.name,
-      w."companyId",
-      w."isArchived",
-      (SELECT COUNT(*)::int FROM projects p WHERE p."companyId" = w."companyId") AS "numberOfProjects",
-      (SELECT COUNT(*)::int FROM recipes r WHERE r."companyId" = w."companyId") AS "numberOfRecipes"
-    FROM workspaces w
-    WHERE w."userId" = ${request.userId}
-  `;
-      return response;
-    });
-
-    return response;
+  // The person's company workspaces, alphabetical. The name shown is the
+  // company's, and the counts are the company's projects and live recipes.
+  async getCompanyWorkspaces(userId: string): Promise<CompanyWorkspace[]> {
+    return await prisma.$queryRaw<CompanyWorkspace[]>`
+      SELECT
+        w.id,
+        c.name,
+        w."companyId",
+        (w."isArchived" OR c."isArchived") AS "isArchived",
+        (SELECT COUNT(*)::int
+           FROM projects p
+          WHERE p."companyId" = c.id AND p."userId" = ${userId}) AS "numberOfProjects",
+        (SELECT COUNT(*)::int
+           FROM recipes r
+          WHERE r."companyId" = c.id AND r."userId" = ${userId}
+            AND r."isArchived" = false) AS "numberOfRecipes"
+      FROM workspaces w
+      JOIN companies c ON c.id = w."companyId"
+      WHERE w."userId" = ${userId}
+        AND c."userId" = ${userId}
+      ORDER BY c.name ASC`;
   }
 
-  async getPersonalWorkspace(request: { userId: string }) {
-    const response: any[] = await prisma.$queryRaw`SELECT
-
-    w.id AS id,
-    w.name AS name,
-    (SELECT COUNT(*)::int FROM projects p WHERE p."userId" = ${request.userId} AND p."companyId" IS NULL) AS "numberOfProjects",
-    (SELECT COUNT(*)::int FROM recipes r WHERE r."userId" = ${request.userId} AND r."companyId" IS NULL) AS "numberOfRecipes"
-    FROM workspaces w
-    LEFT JOIN companies c ON c.id = w."companyId"
-    WHERE w."userId" = ${request.userId}
-    AND c.id IS NULL
-    LIMIT 1
-      `;
-    return response[0];
-  }
-
-  async createNewWorkspace(
-    request: {
-      name: string;
-      address: string;
-      city: string;
-      state: string;
-      postcode: string;
-      country: 'Australia';
-      phone: string;
-      email: string;
-      contactName: string;
-      contactPhone: string;
-      contactEmail: string;
-      companyType: string;
-    },
-    clerkId:string,
-  ) {
-    const userId : any =
-      await prisma.$queryRaw`SELECT u.id FROM users u where  u."clerkId" = ${clerkId} limit 1`;
-
-    const existingCompany: any[] = await prisma.$queryRaw`
-      SELECT c.name, c.id 
-      FROM companies c 
-      WHERE c."userId" = ${userId[0].id} 
-      AND c.name = ${request.name} 
+  // The person's own workspace (the one with no company), or null if they
+  // don't have one. Its counts are the person's projects and recipes that
+  // belong to no company.
+  async getPersonalWorkspace(userId: string): Promise<PersonalWorkspace | null> {
+    const rows = await prisma.$queryRaw<PersonalWorkspace[]>`
+      SELECT
+        w.id,
+        w.name,
+        (SELECT COUNT(*)::int
+           FROM projects p
+          WHERE p."userId" = ${userId} AND p."companyId" IS NULL) AS "numberOfProjects",
+        (SELECT COUNT(*)::int
+           FROM recipes r
+          WHERE r."userId" = ${userId} AND r."companyId" IS NULL
+            AND r."isArchived" = false) AS "numberOfRecipes"
+      FROM workspaces w
+      WHERE w."userId" = ${userId}
+        AND w."companyId" IS NULL
       LIMIT 1`;
-
-    if (existingCompany.length > 0) {
-      throw new NotAcceptableException('company already exists');
-    }
-
-    const response: any = await prisma.$transaction(async (tx) => {
-      const newCompany: any = await tx.$queryRaw`
-      INSERT INTO companies 
-      (id, "userId", name, address, city, state, postcode, country, phone, email, "contactName", "contactPhone", "contactEmail", "companyType", "updatedAt")
-      VALUES (gen_random_uuid(), ${userId[0].id}, ${request.name}, ${request.address}, ${request.city}, ${request.state}, ${request.postcode}, ${request.country}, ${request.phone}, ${request.email}, ${request.contactName}, ${request.contactPhone}, ${request.contactEmail}, ${request.companyType}, NOW()) RETURNING id`;
-      const newWorkspace: any = await tx.$queryRaw`
-      INSERT INTO workspaces 
-      (id, "userId", "companyId", name, "updatedAt")
-      VALUES (gen_random_uuid(), ${userId[0].id}, ${newCompany[0].id}, ${request.name}, NOW())
-      RETURNING id`;
-      const response = await tx.$queryRaw`
-      SELECT w.id, w."companyId", w."isArchived", c.name, 
-      (SELECT COUNT(*)::int FROM projects p where p."companyId" = c.id AND p."userId" = ${userId[0].id}) AS "numberOfProjects", 
-      (SELECT COUNT(*)::int FROM recipes r WHERE r."companyId" = c.id AND r."userId" = ${userId[0].id}) AS "numberOfRecipes"
-      FROM 
-      workspaces w
-      LEFT JOIN companies c 
-      ON  c.id = w."companyId"
-      WHERE w."userId" = ${userId[0].id}
-      AND w.id = ${newWorkspace[0].id}`;
-
-      return response;
-    });
-
-    return response[0];
+    return rows[0] ?? null;
   }
 
-  async getWorkspaceProjects(clerkId: string) {
-    const response = await prisma.$queryRaw`
-      SELECT 
-      p.id AS "id",
-      p."companyId" AS "companyId",
-      p.name AS "name",
-      c.name AS "companyName",
-      p."endDate" AS "dueDate",
-      p."updatedAt" AS "updatedAt"
-      FROM companies c 
-      JOIN projects p ON c.id = p."companyId" 
-      JOIN users u ON u.id = p."userId"
-      WHERE u."clerkId" = ${clerkId}
-      AND p."endDate" >= NOW()
+  // The person's unfinished projects that have a due date, across all their
+  // companies, soonest first. Overdue ones come first on purpose: a late
+  // project is the one that needs attention most.
+  async getDueProjects(userId: string): Promise<DueProject[]> {
+    return await prisma.$queryRaw<DueProject[]>`
+      SELECT
+        p.id,
+        p."companyId",
+        p.name,
+        c.name AS "companyName",
+        p."endDate" AS "dueDate",
+        p."updatedAt"
+      FROM projects p
+      JOIN companies c ON c.id = p."companyId"
+      WHERE p."userId" = ${userId}
+        AND c."userId" = ${userId}
+        AND c."isArchived" = false
+        AND p.completed = false
+        AND p."endDate" IS NOT NULL
       ORDER BY p."endDate" ASC
-      `;
+      LIMIT ${DUE_PROJECT_LIMIT}`;
+  }
 
-    return response;
+  // True if the person already has a company with this name (ignoring case)
+  async companyNameTaken(userId: string, name: string): Promise<boolean> {
+    const count = await prisma.company.count({
+      where: { userId, name: { equals: name, mode: 'insensitive' } },
+    });
+    return count > 0;
+  }
+
+  // Creates the company, its default categories and its workspace together, or
+  // none of them if anything fails. Returns the workspace as the switcher lists
+  // it; a brand-new company has no projects or recipes yet.
+  async createCompanyWorkspace(
+    record: NewCompanyRecord,
+  ): Promise<CompanyWorkspace> {
+    return await prisma.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: {
+          userId: record.userId,
+          name: record.name,
+          address: record.address,
+          city: record.city,
+          state: record.state,
+          postcode: record.postcode,
+          country: record.country,
+          phone: record.phone,
+          email: record.email,
+          contactName: record.contactName,
+          contactPhone: record.contactPhone,
+          contactEmail: record.contactEmail,
+          companyType: record.companyType,
+          categories: {
+            create: DEFAULT_CATEGORIES.map((category) => ({
+              userId: record.userId,
+              name: category.name,
+              description: category.description,
+              isDefault: true,
+            })),
+          },
+        },
+        select: { id: true, name: true },
+      });
+
+      const workspace = await tx.workspace.create({
+        data: {
+          userId: record.userId,
+          companyId: company.id,
+          name: company.name,
+        },
+        select: { id: true },
+      });
+
+      return {
+        id: workspace.id,
+        name: company.name,
+        companyId: company.id,
+        isArchived: false,
+        numberOfProjects: 0,
+        numberOfRecipes: 0,
+      };
+    });
   }
 }

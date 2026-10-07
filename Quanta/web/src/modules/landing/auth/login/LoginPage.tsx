@@ -3,7 +3,7 @@ import { useSignIn } from "@clerk/react";
 import { useNavigate } from "react-router";
 import { AuthLayout } from "@/modules/landing/auth/components/authLayout";
 import { AuthField } from "@/modules/landing/auth/components/authField";
-import { LoadingModal } from "@/modules/quantityTakeoff/components/loadingModal";
+import { LoadingModal } from "@/common/components/loadingModal";
 import type { LoginRequest } from "@/modules/landing/auth/contracts/landing.request.contracts";
 import { clearActiveScope } from "@/common/storage/activeScope";
 
@@ -43,13 +43,11 @@ function LoginIntro() {
 
 /**
  * Sign-in. Clerk checks the email and password; this page never sees or stores
- * them beyond the form. Once Clerk accepts them it starts a session, and the
- * person goes to the workspace switcher (the signed-in "/") to pick the
- * company or personal workspace they want to work in.
- *
- * Why there is no "success" screen: the moment the session starts, App swaps
- * the whole signed-out route tree for the signed-in one, which unmounts this
- * page. Anything shown here after that would disappear straight away.
+ * them beyond the form. Once Clerk accepts them it starts a session. App then
+ * swaps the signed-out routes for the signed-in ones, which unmounts this page,
+ * so there is no confirmation screen: the person goes straight to the workspace
+ * switcher (the signed-in "/") to pick the company or personal workspace they
+ * want to work in.
  */
 export function LoginPage() {
   const navigate = useNavigate();

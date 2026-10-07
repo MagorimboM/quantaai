@@ -47,9 +47,8 @@ export class RecipeBuilderRepository {
   // offered when the recipe is tagged with that same ground. With no site
   // condition chosen, only general materials come back.
   //
-  // Only id, name and unit are selected, each once: selecting the category's id
-  // and name as well would give two columns with the same names, and one would
-  // silently overwrite the other.
+  // Only id, name and unit are read, each under its own name: that is all the
+  // material picker needs.
   async searchMaterials(request: {
     companyId: string;
     userId: string;

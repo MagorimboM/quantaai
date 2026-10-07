@@ -55,4 +55,16 @@ export class AuthRepository {
     });
     return project !== null;
   }
+
+  // Points an existing user at a new Clerk id, found by email. Returns null when
+  // nobody has that email. Only called with an email Clerk has verified.
+  async relinkUserByEmail(clerkId: string, email: string) {
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (!existing) return null;
+
+    return prisma.user.update({
+      where: { id: existing.id },
+      data: { clerkId },
+    });
+  }
 }

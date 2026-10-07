@@ -1,11 +1,9 @@
 import { useNavigate } from "react-router";
 import { ChevronRight } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
 
-// NOTE :: [behavior change] the original PersonalWorkSpaceCard had no click
-// handler at all -- it rendered as if clickable (cursor-pointer) but did
-// nothing. This now actually navigates, matching CompanyWorkSpaceCard's
-// pattern. Personal workspaces don't have a separate companyId, so only
-// workspaceId is set.
+// Opens the personal workspace. A personal workspace belongs to no company, so
+// only workspaceId is saved and any saved company is cleared. Same pattern as
+// CompanyWorkSpaceCard.
 
 export function PersonalWorkSpaceCard({
   id,

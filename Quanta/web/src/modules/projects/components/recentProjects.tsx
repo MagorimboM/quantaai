@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { HiOutlineDocumentText } from "react-icons/hi";
-import { ProjectCard } from "@/modules/projects/components/projectCard"
+import { ProjectCard } from "@/modules/projects/components/projectCard";
 import { getRecentProjects } from "@/modules/dashboard/api/api";
 import type { RecentProjectsResponse } from "@/modules/dashboard/contracts/dashboard.response.contract";
 
-// TODO :: [feature] "+ New Project" button. There is no create-project form or
-// endpoint yet, so the button was removed rather than left doing nothing.
+// TODO :: [feature] "+ New Project" button: needs a create-project form and a
+// create-project endpoint.
 
 // The company's ten most recently updated projects that are not yet complete,
 // so the user can jump straight back into what they were working on.

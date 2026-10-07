@@ -54,21 +54,32 @@ export function WorkspaceSwitcherPage() {
     useState(false);
 
   useEffect(() => {
-    async function fetchAll() {
-      setIsLoading(true);
+  async function fetchAll() {
+    setIsLoading(true);
+    try {
       const [companyWorkspaces, userWorkspace, projects] = await Promise.all([
         getWorkspaces(),
         getUserWorkspace(),
         getAllProjects(),
       ]);
-      setWorkspaces(companyWorkspaces);
+
+      // The lists must be real arrays. Anything else means the server answered
+      // with something unexpected, so show an empty list instead of crashing.
+      if (!Array.isArray(companyWorkspaces)) {
+        console.error("Expected a list of workspaces, got:", companyWorkspaces);
+      }
+      setWorkspaces(Array.isArray(companyWorkspaces) ? companyWorkspaces : []);
       setPersonalWorkspace(userWorkspace);
-      setAllProjects(projects);
+      setAllProjects(Array.isArray(projects) ? projects : []);
+    } catch {
+      // apiClient already reports the failure
+    } finally {
       setIsLoading(false);
     }
+  }
 
-    fetchAll();
-  }, []);
+  fetchAll();
+}, []);
 
   const activeCompanies = useMemo(
     () =>

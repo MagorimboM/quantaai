@@ -1,13 +1,11 @@
-import {
-  MdOutlineSettings,
-  MdOutlineHelpOutline,
-  MdLogout,
-} from "react-icons/md";
+import { MdOutlineSettings, MdOutlineHelpOutline, MdLogout } from "react-icons/md";
 import { HiOutlineCube } from "react-icons/hi2";
 import { useNavigate } from "react-router";
 import { useUser, useClerk } from "@clerk/react";
 
-// TODO :: not sure if i need settings but check to see what the quantity surveyor does with the settings. 
+// Settings opens the settings page and Log out signs the person out. Help &
+// Support has no destination in the app yet, so it is a TODO rather than a
+// link to a placeholder page.
 
 export function WorkspaceSwitcherSidebar() {
   const navigate = useNavigate();
@@ -30,10 +28,7 @@ export function WorkspaceSwitcherSidebar() {
     >
       <div className="flex flex-row items-center gap-2">
         <HiOutlineCube size={22} style={{ color: "#FF6B35" }} />
-        <h1
-          className="font-display font-800 text-lg tracking-widest"
-          style={{ color: "#2B1B0E" }}
-        >
+        <h1 className="font-display font-800 text-lg tracking-widest" style={{ color: "#2B1B0E" }}>
           QUANTA
         </h1>
       </div>
@@ -44,9 +39,7 @@ export function WorkspaceSwitcherSidebar() {
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-mono transition-colors cursor-pointer"
           style={{ color: "#2B1B0E" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF4EA")}
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
           <MdOutlineSettings size={18} style={{ color: "#9C7B4F" }} />
           Settings
@@ -56,9 +49,7 @@ export function WorkspaceSwitcherSidebar() {
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-mono transition-colors cursor-pointer"
           style={{ color: "#2B1B0E" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF4EA")}
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
           <MdOutlineHelpOutline size={18} style={{ color: "#9C7B4F" }} />
           Help &amp; Support
@@ -74,16 +65,10 @@ export function WorkspaceSwitcherSidebar() {
             {initial}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span
-              className="truncate text-sm font-medium font-mono"
-              style={{ color: "#2B1B0E" }}
-            >
+            <span className="truncate text-sm font-medium font-mono" style={{ color: "#2B1B0E" }}>
               {displayName}
             </span>
-            <span
-              className="truncate text-xs font-mono"
-              style={{ color: "#B89B6E" }}
-            >
+            <span className="truncate text-xs font-mono" style={{ color: "#B89B6E" }}>
               {email}
             </span>
           </div>

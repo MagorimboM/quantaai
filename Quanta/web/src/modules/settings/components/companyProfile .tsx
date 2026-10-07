@@ -41,10 +41,6 @@ function toFields(details: CompanyProfileDetails): CompanyProfileFields {
  * The company's details: name, type, address and contacts. They are edited in a
  * form and saved with the Save button; Cancel puts back what was last saved.
  * The same details are collected when a company workspace is first created.
- *
- * TODO :: [backend] The workspace switcher shows the name a workspace was
- * created with. Renaming the company here doesn't rename that, so it can show
- * the old name until the switcher reads the company's name instead.
  */
 export function CompanyProfile({ companyId }: { companyId: string }) {
   // What is stored, and what is in the form right now

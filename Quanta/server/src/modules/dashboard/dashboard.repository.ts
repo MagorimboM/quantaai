@@ -5,7 +5,7 @@ import type {
   RecentProjectsResponse,
   RecentActivityResponse,
   KPIInformationResponse,
-} from '@/modules/dashboard/contracts/dashboard.response.contract'
+} from '@/modules/dashboard/contracts/dashboard.response.contract';
 
 // Every method here assumes the caller was already checked to own the company.
 @Injectable()
@@ -15,7 +15,7 @@ export class DashboardRepository {
   ): Promise<KPIInformationResponse> {
     const { companyId } = request;
 
-    // Independent reads, so they run together rather than one after another
+    // These reads don't depend on each other, so they run together
     const [
       activeProjects,
       completedProjects,
@@ -73,7 +73,7 @@ export class DashboardRepository {
   }
 
   // The ten latest audit log entries, each with the name of the person who made
-  // the change. Names are looked up in one query rather than one per entry.
+  // the change. The names for all entries are looked up in one query.
   async getRecentActivity(
     request: DashboardRequest,
   ): Promise<RecentActivityResponse> {
