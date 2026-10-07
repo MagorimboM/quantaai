@@ -1,33 +1,15 @@
-// The body of PATCH /:companyId/recipe-library/recipes/:recipeId. The company
-// and recipe come from the URL and the user from the Clerk token.
-//
-// `ingredients` is the list of lines to KEEP, each with its new quantity per
-// 1 unit of the recipe. Any existing line left out is removed. Materials can't
-// be added here, and a recipe's unit never changes, because that would change
-// what every quantity means.
-export type UpdateRecipeRequest = {
-  name: string;
-  description?: string;
-  categoryId: string;
-  ingredients: { id: string; quantity: number }[];
-};
+// None of these carry a userId: the backend identifies the user from the Clerk
+// token and checks the company belongs to them.
 
-// The body of PATCH .../recipes/:recipeId/archive
-export type ArchiveRecipeBody = {
-  archived: boolean;
-};
-
-// What the repository needs. By the time it runs, the caller has been checked to
-// own the company (see AccessService) and the paging has been kept in range.
 export type UserRecipeCategoriesRequest = {
   companyId: string;
-  userId: string;
 };
 
+// One page of recipes. `categoryId` is a real category's id, or "all". `term`
+// matches the recipe's name or description. `archived` picks which list: the
+// live recipes (false) or the archived ones (true).
 export type GetRecipesRequest = {
   companyId: string;
-  userId: string;
-  // a category's id, or "all"
   categoryId: string;
   term?: string;
   archived: boolean;
@@ -35,12 +17,26 @@ export type GetRecipesRequest = {
   limit: number;
 };
 
-export type UpdateRecipeRecord = {
+// An edited recipe. `ingredients` is the list of lines to KEEP, each with its
+// quantity per 1 unit of the recipe; any existing line left out is removed.
+// A recipe keeps its unit and its materials: only their quantities change here.
+export type UpdateRecipeRequest = {
   companyId: string;
-  userId: string;
   recipeId: string;
   name: string;
-  description: string | null;
+  description: string;
   categoryId: string;
   ingredients: { id: string; quantity: number }[];
+};
+
+// archived = true hides the recipe from the library; false restores it
+export type ArchiveRecipeRequest = {
+  companyId: string;
+  recipeId: string;
+  archived: boolean;
+};
+
+export type DeleteRecipeRequest = {
+  companyId: string;
+  recipeId: string;
 };
