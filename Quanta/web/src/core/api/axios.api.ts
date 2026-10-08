@@ -3,9 +3,11 @@ import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
-  baseURL: "quantaai-production.up.railway.app/api", // Ensure /api is included
+  baseURL: "https://quantaai-production.up.railway.app/api",
   withCredentials: true,
+  timeout: 20000,
 });
+
 
 /* const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
