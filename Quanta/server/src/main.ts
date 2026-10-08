@@ -5,25 +5,42 @@ import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
-  app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
-  app.setGlobalPrefix('api');
 
   const allowedOrigins = [
     'https://qauntaai.au',
     'https://www.qauntaai.au',
     'https://quantaai.vercel.app',
-    'http://localhost:5173', // Vite default dev port
+    'http://localhost:5173',
     'http://localhost:3000',
   ];
 
+  // Manual OPTIONS preflight interceptor for Vercel edge/serverless handling
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const origin = req.headers.origin as string;
+    
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, clerk-db-jwt');
+      return res.status(204).end();
+    }
+
+    next();
+  });
+
+  app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
+  app.setGlobalPrefix('api');
+
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, Postman, server-to-server)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(null, true); // Fallback: pass through, or set to `callback(new Error('CORS Error'))` to block
+        callback(new Error('Not allowed by CORS'));
       }
     },
     credentials: true,
@@ -33,10 +50,12 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
