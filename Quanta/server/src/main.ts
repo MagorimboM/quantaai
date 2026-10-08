@@ -14,57 +14,100 @@ async function bootstrap() {
     'http://localhost:3000',
   ];
 
-  app.setGlobalPrefix('api');
+  const allowedHeaders = [
+    'Accept',
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'clerk-db-jwt',
+  ];
 
-  // Clerk webhook needs the raw request body.
+  const allowedMethods = [
+    'GET',
+    'HEAD',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+  ];
+
+  /*
+   * IMPORTANT:
+   * Handle CORS preflight BEFORE Nest routes, guards,
+   * authentication middleware, and controllers.
+   */
+  app.use(
+    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const origin = req.headers.origin;
+
+      // Only apply CORS headers to approved browser origins.
+      if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader(
+          'Access-Control-Allow-Methods',
+          allowedMethods.join(', '),
+        );
+        res.setHeader(
+          'Access-Control-Allow-Headers',
+          allowedHeaders.join(', '),
+        );
+        res.setHeader('Access-Control-Max-Age', '86400');
+        res.setHeader('Vary', 'Origin');
+      }
+
+      /*
+       * CRITICAL:
+       * Return a successful response for every OPTIONS request.
+       *
+       * This happens BEFORE authentication guards/controllers.
+       */
+      if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+      }
+
+      next();
+    },
+  );
+
+  /*
+   * Clerk webhook needs the raw request body.
+   */
   app.use(
     '/api/auth/webhook',
     express.raw({ type: 'application/json' }),
   );
 
-  // CORS
+  /*
+   * All API routes use /api.
+   */
+  app.setGlobalPrefix('api');
+
+  /*
+   * Keep Nest CORS enabled for normal requests as well.
+   * The middleware above handles OPTIONS explicitly.
+   */
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no Origin header
-      // (server-to-server, Postman, health checks, etc.)
-      if (!origin) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(
-        new Error(`CORS blocked origin: ${origin}`),
-        false,
-      );
+      return callback(new Error(`CORS blocked origin: ${origin}`), false);
     },
 
     credentials: true,
 
-    methods: [
-      'GET',
-      'HEAD',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ],
+    methods: allowedMethods,
 
-    allowedHeaders: [
-      'Accept',
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'clerk-db-jwt',
-    ],
+    allowedHeaders,
+
+    preflightContinue: false,
 
     optionsSuccessStatus: 204,
   });
 
-  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
