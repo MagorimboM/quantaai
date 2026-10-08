@@ -37,10 +37,6 @@
     {
       "source": "/api/(.*)",
       "destination": "/dist/main.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/dist/main.js"
     }
   ]
 }
