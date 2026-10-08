@@ -14,10 +14,21 @@ async function bootstrap() {
     'http://localhost:3000',
   ];
 
-  // Manual OPTIONS preflight interceptor for Vercel edge/serverless handling
+  const allowedHeaders = [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'clerk-db-jwt',
+    'sec-ch-ua',
+    'sec-ch-ua-mobile',
+    'sec-ch-ua-platform',
+  ];
+
+  // Manual OPTIONS preflight interceptor for Vercel edge/serverless routing
   app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     const origin = req.headers.origin as string;
-    
+
     if (origin && allowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -25,7 +36,7 @@ async function bootstrap() {
 
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, clerk-db-jwt');
+      res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
       return res.status(204).end();
     }
 
@@ -45,7 +56,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'clerk-db-jwt'],
+    allowedHeaders: allowedHeaders,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
