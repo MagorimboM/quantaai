@@ -3,7 +3,7 @@ import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
-  baseURL: "https://quantaai-server.vercel.app/api", // Ensure /api is included
+  baseURL: "quantaai-production.up.railway.app/api", // Ensure /api is included
   withCredentials: true,
 });
 
