@@ -2,31 +2,45 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/main.ts",
+      "src": "dist/main.js",
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "methods": [
-        "OPTIONS"
-      ],
-      "headers": {
-        "Access-Control-Allow-Origin": "https://qauntaai.au",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Methods": "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Accept,Content-Type,Authorization,X-Requested-With,clerk-db-jwt"
-      },
-      "status": 204
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://qauntaai.au"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Accept, Content-Type, Authorization, X-Requested-With, clerk-db-jwt"
+        },
+        {
+          "key": "Access-Control-Max-Age",
+          "value": "86400"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/dist/main.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "src/main.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "src/main.ts"
+      "source": "/(.*)",
+      "destination": "/dist/main.js"
     }
   ]
 }
