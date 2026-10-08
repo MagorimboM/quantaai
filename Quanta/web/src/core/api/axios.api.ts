@@ -3,9 +3,14 @@ import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
+  baseURL: "https://quantaai-server.vercel.app/api", // Ensure /api is included
+  withCredentials: true,
+});
+
+/* const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 20000,
-});
+}); */
 
 apiClient.interceptors.request.use(async (config) => {
   const token = await getToken();
@@ -25,7 +30,7 @@ apiClient.interceptors.response.use(
     });
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export { apiClient };
