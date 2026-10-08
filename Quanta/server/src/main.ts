@@ -14,53 +14,57 @@ async function bootstrap() {
     'http://localhost:3000',
   ];
 
-  const allowedHeaders = [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'clerk-db-jwt',
-    'sec-ch-ua',
-    'sec-ch-ua-mobile',
-    'sec-ch-ua-platform',
-  ];
-
-  // Manual OPTIONS preflight interceptor for Vercel edge/serverless routing
-  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const origin = req.headers.origin as string;
-
-    if (origin && allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-    }
-
-    if (req.method === 'OPTIONS') {
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', allowedHeaders.join(', '));
-      return res.status(204).end();
-    }
-
-    next();
-  });
-
-  app.use('/api/auth/webhook', express.raw({ type: 'application/json' }));
   app.setGlobalPrefix('api');
 
+  // Clerk webhook needs the raw request body.
+  app.use(
+    '/api/auth/webhook',
+    express.raw({ type: 'application/json' }),
+  );
+
+  // CORS
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
+      // Allow requests with no Origin header
+      // (server-to-server, Postman, health checks, etc.)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS blocked origin: ${origin}`),
+        false,
+      );
     },
+
     credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: allowedHeaders,
-    preflightContinue: false,
+
+    methods: [
+      'GET',
+      'HEAD',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
+
+    allowedHeaders: [
+      'Accept',
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'clerk-db-jwt',
+    ],
+
     optionsSuccessStatus: 204,
   });
 
+  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -70,4 +74,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
