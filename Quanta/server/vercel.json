@@ -25,10 +25,6 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Accept, Content-Type, Authorization, X-Requested-With, clerk-db-jwt"
-        },
-        {
-          "key": "Access-Control-Max-Age",
-          "value": "86400"
         }
       ]
     }

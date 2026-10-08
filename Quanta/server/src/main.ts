@@ -35,30 +35,33 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   /*
-   * Handle CORS preflight before authentication,
-   * guards, controllers, etc.
+   * Handle OPTIONS / CORS preflight FIRST.
+   * Return HTTP 200 OK explicitly.
    */
   app.use(
     (req: express.Request, res: express.Response, next: express.NextFunction) => {
       const origin = req.headers.origin;
 
       if (origin && allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header(
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader(
           'Access-Control-Allow-Methods',
           allowedMethods.join(', '),
         );
-        res.header(
+        res.setHeader(
           'Access-Control-Allow-Headers',
           allowedHeaders.join(', '),
         );
-        res.header('Access-Control-Max-Age', '86400');
-        res.header('Vary', 'Origin');
+        res.setHeader('Access-Control-Max-Age', '86400');
+        res.setHeader('Vary', 'Origin');
       }
 
+      // IMPORTANT: Explicit HTTP 200 for preflight
       if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
+        return res.status(200).json({
+          success: true,
+        });
       }
 
       next();
@@ -66,11 +69,13 @@ async function bootstrap() {
   );
 
   /*
-   * Clerk webhook requires the raw request body.
+   * Clerk webhook needs raw body.
    */
   app.use(
     '/api/auth/webhook',
-    express.raw({ type: 'application/json' }),
+    express.raw({
+      type: 'application/json',
+    }),
   );
 
   /*
@@ -79,19 +84,24 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        callback(null, true);
+      } else {
+        callback(
+          new Error(`CORS blocked origin: ${origin}`),
+          false,
+        );
       }
-
-      return callback(
-        new Error(`CORS blocked origin: ${origin}`),
-        false,
-      );
     },
 
     credentials: true,
+
     methods: allowedMethods,
+
     allowedHeaders,
-    optionsSuccessStatus: 204,
+
+    optionsSuccessStatus: 200,
+
+    preflightContinue: false,
   });
 
   app.useGlobalPipes(
@@ -101,7 +111,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT || 3000);
 }
 
 bootstrap();
