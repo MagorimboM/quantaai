@@ -17,6 +17,9 @@ const ALLOWED_HEADERS = [
   'Authorization',
   'X-Requested-With',
   'clerk-db-jwt',
+  'x-clerk-auth-status',
+  'x-clerk-auth-reason',
+  'x-clerk-clerk-db-jwt',
 ];
 
 const ALLOWED_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
@@ -32,11 +35,14 @@ async function bootstrap() {
   // Native NestJS CORS (Handles origin verification and preflight OPTIONS cleanly)
   app.enableCors({
     origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. server-to-server, curl, Postman) or matched origins
       if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS blocked origin: ${origin}`));
+        return callback(null, true);
       }
+
+      console.warn(`[CORS Blocked Origin]: ${origin}`);
+      // Returning false prevents NestJS from throwing an uncaught 500 exception
+      return callback(null, false);
     },
     credentials: true,
     methods: ALLOWED_METHODS,
