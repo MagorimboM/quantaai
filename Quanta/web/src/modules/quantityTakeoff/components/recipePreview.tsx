@@ -1,4 +1,3 @@
-import { MdOutlineInfo } from "react-icons/md";
 import type { RecipeOption } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 import {
   calculateTotal,
@@ -72,16 +71,6 @@ export function RecipePreview({
           Quantities below are per 1 {recipe.unit}.
         </p>
       </div>
-
-      {recipe.notes ? (
-        <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-xs leading-relaxed text-foreground/80">
-          <MdOutlineInfo size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
-          <span>
-            <strong className="font-semibold">Recipe note:</strong>{" "}
-            {recipe.notes}
-          </span>
-        </div>
-      ) : null}
 
       <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">

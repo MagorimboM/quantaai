@@ -13,10 +13,17 @@ import { ClerkUserId } from '@/auth/services/currentUser.guard';
 import type {
   LineItemInput,
   AddLineItemInput,
+  CreateCatalogueItemInput,
+  CreateCategoryInput,
+  CreateRecipeInput,
 } from '@/modules/quantityTakeOffs/contracts/qto.request.contracts';
 import type {
   GetBillOfQuantsResponse,
   GetRecipeOptionsResponse,
+  GetRecipeCatalogueResponse,
+  CreateCatalogueItemResponse,
+  CreateCategoryResponse,
+  CreateRecipeResponse,
   UpdateLineItemsResponse,
   UpdateProjectStatusResponse,
   DeletedLineItemsResponse,
@@ -57,6 +64,73 @@ export class QuantityTakeOffsController {
       clerkId,
       companyId,
       projectId,
+    });
+  }
+
+  // GET .../bill-of-quantities/recipe-catalogue
+  // The categories, materials, labour and overheads a recipe can be built from.
+  @Get('recipe-catalogue')
+  async getRecipeCatalogue(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Param('projectId') projectId: string,
+  ): Promise<GetRecipeCatalogueResponse> {
+    return await this.quantityTakeOffsService.getRecipeCatalogue({
+      clerkId,
+      companyId,
+      projectId,
+    });
+  }
+
+  // POST .../bill-of-quantities/catalogue-items
+  //   body: { kind, name, unit, categoryId, labourType }
+  // Adds a material, labour or overhead that was missing from the catalogue.
+  @Post('catalogue-items')
+  async createCatalogueItem(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Param('projectId') projectId: string,
+    @Body() body: CreateCatalogueItemInput,
+  ): Promise<CreateCatalogueItemResponse> {
+    return await this.quantityTakeOffsService.createCatalogueItem({
+      clerkId,
+      companyId,
+      projectId,
+      item: body,
+    });
+  }
+
+  // POST .../bill-of-quantities/categories   body: { name }
+  @Post('categories')
+  async createCategory(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Param('projectId') projectId: string,
+    @Body() body: CreateCategoryInput,
+  ): Promise<CreateCategoryResponse> {
+    return await this.quantityTakeOffsService.createCategory({
+      clerkId,
+      companyId,
+      projectId,
+      category: body,
+    });
+  }
+
+  // POST .../bill-of-quantities/recipes
+  //   body: { name, categoryId, unit, description, materials, labour, overheads }
+  // Creates a recipe with its components and returns it as the picker lists it.
+  @Post('recipes')
+  async createRecipe(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Param('projectId') projectId: string,
+    @Body() body: CreateRecipeInput,
+  ): Promise<CreateRecipeResponse> {
+    return await this.quantityTakeOffsService.createRecipe({
+      clerkId,
+      companyId,
+      projectId,
+      recipe: body,
     });
   }
 

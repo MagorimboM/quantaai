@@ -7,6 +7,10 @@ import type {
   DeleteProjectBillOfQuantitiesRequest,
   GetRecipeOptionsRequest,
   AddLineItemRequest,
+  GetRecipeCatalogueRequest,
+  CreateCatalogueItemRequest,
+  CreateCategoryRequest,
+  CreateRecipeRequest,
 } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
 import type {
   GetBillOfQuantsResponse,
@@ -15,6 +19,10 @@ import type {
   DeletedLineItemsResponse,
   DeleteProjectBillOfQuantitiesResponse,
   GetRecipeOptionsResponse,
+  GetRecipeCatalogueResponse,
+  CreateCatalogueItemResponse,
+  CreateCategoryResponse,
+  CreateRecipeResponse,
 } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 
 // The backend identifies the user from the Clerk token that apiClient attaches
@@ -79,7 +87,7 @@ export async function getRecipeOptions(
   );
   return response.data;
 }
- 
+
 // Adds one line to the project's takeoff and returns it in the same shape the
 // takeoff lists, so the page can append it without reloading.
 export async function addLineItem(
@@ -92,6 +100,62 @@ export async function addLineItem(
       measurement: request.measurement,
       description: request.description,
       notes: request.notes,
+    },
+  );
+  return response.data;
+}
+
+export async function getRecipeCatalogue(
+  request: GetRecipeCatalogueRequest,
+): Promise<GetRecipeCatalogueResponse> {
+  const response = await apiClient.get(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities/recipe-catalogue`,
+  );
+  return response.data;
+}
+
+// Adds a material, labour or overhead that was missing from the catalogue.
+export async function createCatalogueItem(
+  request: CreateCatalogueItemRequest,
+): Promise<CreateCatalogueItemResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities/catalogue-items`,
+    {
+      kind: request.kind,
+      name: request.name,
+      unit: request.unit,
+      categoryId: request.categoryId,
+      labourType: request.labourType,
+    },
+  );
+  return response.data;
+}
+
+export async function createCategory(
+  request: CreateCategoryRequest,
+): Promise<CreateCategoryResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities/categories`,
+    { name: request.name },
+  );
+  return response.data;
+}
+
+// Creates a recipe with its components and returns it in the shape the
+// "Add line item" picker lists recipes.
+export async function createRecipe(
+  request: CreateRecipeRequest,
+): Promise<CreateRecipeResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities/recipes`,
+    {
+      name: request.name,
+      categoryId: request.categoryId,
+      unit: request.unit,
+      description: request.description,
+      materials: request.materials,
+      labour: request.labour,
+      overheads: request.overheads,
     },
   );
   return response.data;

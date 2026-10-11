@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MdClose, MdOutlineDescription, MdOutlineSearch } from "react-icons/md";
+import { MdAdd, MdClose, MdOutlineDescription, MdOutlineSearch } from "react-icons/md";
 import { addLineItem, getRecipeOptions } from "@/modules/quantityTakeoff/api/api";
 import type {
   GetBillOfQuantsResponse,
@@ -8,6 +8,7 @@ import type {
 import { RecipeResultCard } from "@/modules/quantityTakeoff/components/rescipeResults.card";
 import { RecipePreview } from "@/modules/quantityTakeoff/components/recipePreview";
 import { AddToTakeoffForm } from "@/modules/quantityTakeoff/components/addToTakeOffForm";
+import { CreateRecipeModal } from "@/modules/quantityTakeoff/components/createRecipe.modal";
 import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
@@ -45,6 +46,8 @@ export function AddLineItemModal({
   const [measurement, setMeasurement] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+
+  const [showCreateRecipe, setShowCreateRecipe] = useState<boolean>(false);
 
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -95,6 +98,17 @@ export function AddLineItemModal({
       ? parsedMeasurement
       : null;
 
+  // A recipe made in the "Create recipe" form joins the list and is selected,
+  // with the search and filter cleared so it is certain to be on screen
+  function recipeCreated(recipe: RecipeOption) {
+    setRecipes((prev) =>
+      [...prev, recipe].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    setQuery("");
+    setCategoryId("all");
+    selectRecipe(recipe.id);
+  }
+
   function selectRecipe(id: string) {
     setSelectedId(id);
     setErrorMessage(null);
@@ -133,7 +147,7 @@ export function AddLineItemModal({
     if (recipes.length === 0) {
       return (
         <p className="py-10 text-center text-sm text-muted-foreground">
-          You have no recipes yet. Create one in the recipe builder first.
+          You have no recipes yet. Press Create recipe to make your first one.
         </p>
       );
     }
@@ -155,6 +169,7 @@ export function AddLineItemModal({
   }
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
       // A stray click must not close the modal while the line is being added
@@ -173,14 +188,24 @@ export function AddLineItemModal({
               Pick a recipe, check what it contains, then enter the measurement.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="cursor-pointer rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <MdClose size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCreateRecipe(true)}
+              className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+            >
+              <MdAdd size={14} className="text-primary" />
+              Create recipe
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="cursor-pointer rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <MdClose size={18} />
+            </button>
+          </div>
         </div>
 
         <div className="flex min-h-0 flex-1">
@@ -270,5 +295,17 @@ export function AddLineItemModal({
 
       <LoadingModal show={isAdding} message="Adding line item" />
     </div>
+
+    {/* A sibling of the overlay above, not a child: a click inside it must not
+        bubble up and close this modal behind it */}
+    {showCreateRecipe ? (
+      <CreateRecipeModal
+        companyId={companyId}
+        projectId={projectId}
+        onCreated={recipeCreated}
+        onClose={() => setShowCreateRecipe(false)}
+      />
+    ) : null}
+    </>
   );
 }

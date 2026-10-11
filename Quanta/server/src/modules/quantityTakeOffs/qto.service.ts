@@ -4,10 +4,18 @@ import { AccessService } from '@/auth/services/access.service';
 import type {
   LineItemInput,
   AddLineItemInput,
+  CreateCatalogueItemInput,
+  CreateCategoryInput,
+  CreateRecipeInput,
+  RecipeComponentInput,
 } from '@/modules/quantityTakeOffs/contracts/qto.request.contracts';
 import type {
   GetBillOfQuantsResponse,
   GetRecipeOptionsResponse,
+  GetRecipeCatalogueResponse,
+  CreateCatalogueItemResponse,
+  CreateCategoryResponse,
+  CreateRecipeResponse,
   UpdateLineItemsResponse,
   UpdateProjectStatusResponse,
   DeletedLineItemsResponse,
@@ -52,6 +60,77 @@ function assertValidNewLineItem(lineItem: AddLineItemInput) {
   }
 }
 
+function isNonEmptyText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+// A catalogue item needs a name, the unit it is counted in and a category.
+// Labour also has a type; the other kinds don't.
+function assertValidCatalogueItem(item: CreateCatalogueItemInput) {
+  if (!['material', 'labour', 'overhead'].includes(item?.kind)) {
+    throw new BadRequestException('The kind must be material, labour or overhead');
+  }
+  if (!isNonEmptyText(item.name)) {
+    throw new BadRequestException('A name is required');
+  }
+  if (!isNonEmptyText(item.unit)) {
+    throw new BadRequestException('A unit is required');
+  }
+  if (!isNonEmptyText(item.categoryId)) {
+    throw new BadRequestException('A category is required');
+  }
+  if (item.kind === 'labour' && !isNonEmptyText(item.labourType)) {
+    throw new BadRequestException('A labour type is required');
+  }
+}
+
+// Each component needs a real quantity above zero, and the same item can't be
+// listed twice in one section (it would be two rows for one thing).
+function assertValidComponents(components: RecipeComponentInput[], label: string) {
+  if (!Array.isArray(components)) {
+    throw new BadRequestException(`Expected a list of ${label}`);
+  }
+  const seen = new Set<string>();
+  for (const component of components) {
+    if (!isNonEmptyText(component?.itemId)) {
+      throw new BadRequestException(`A ${label} entry has no item`);
+    }
+    if (!Number.isFinite(component.quantity) || component.quantity <= 0) {
+      throw new BadRequestException(`Every ${label} quantity must be above zero`);
+    }
+    if (seen.has(component.itemId)) {
+      throw new BadRequestException(`A ${label} item is listed twice`);
+    }
+    seen.add(component.itemId);
+  }
+}
+
+// A recipe is only useful with a name, a category, the unit it is priced per
+// and at least one thing it is made of.
+function assertValidNewRecipe(recipe: CreateRecipeInput) {
+  if (!isNonEmptyText(recipe?.name)) {
+    throw new BadRequestException('A name is required');
+  }
+  if (!isNonEmptyText(recipe.categoryId)) {
+    throw new BadRequestException('A category is required');
+  }
+  if (!isNonEmptyText(recipe.unit)) {
+    throw new BadRequestException('A unit is required');
+  }
+  if (recipe.description !== null && typeof recipe.description !== 'string') {
+    throw new BadRequestException('The description must be text or empty');
+  }
+  assertValidComponents(recipe.materials, 'material');
+  assertValidComponents(recipe.labour, 'labour');
+  assertValidComponents(recipe.overheads, 'overhead');
+  if (
+    recipe.materials.length + recipe.labour.length + recipe.overheads.length ===
+    0
+  ) {
+    throw new BadRequestException('A recipe needs at least one component');
+  }
+}
+
 // Every method first checks the project really belongs to the caller. The
 // company and project ids come from the URL, so on their own they prove nothing.
 @Injectable()
@@ -89,6 +168,94 @@ export class QuantityTakeOffsService {
     );
     return await this.quantityTakeOffsRepository.getRecipeOptions({
       companyId: request.companyId,
+    });
+  }
+
+  async getRecipeCatalogue(request: {
+    clerkId: string;
+    companyId: string;
+    projectId: string;
+  }): Promise<GetRecipeCatalogueResponse> {
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    return await this.quantityTakeOffsRepository.getRecipeCatalogue({
+      companyId: request.companyId,
+    });
+  }
+
+  async createCatalogueItem(request: {
+    clerkId: string;
+    companyId: string;
+    projectId: string;
+    item: CreateCatalogueItemInput;
+  }): Promise<CreateCatalogueItemResponse> {
+    assertValidCatalogueItem(request.item);
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    const userId = await this.accessService.getUserId(request.clerkId);
+    return await this.quantityTakeOffsRepository.createCatalogueItem({
+      userId,
+      companyId: request.companyId,
+      kind: request.item.kind,
+      name: request.item.name.trim(),
+      unit: request.item.unit.trim(),
+      categoryId: request.item.categoryId,
+      labourType:
+        request.item.kind === 'labour' ? request.item.labourType!.trim() : null,
+    });
+  }
+
+  async createCategory(request: {
+    clerkId: string;
+    companyId: string;
+    projectId: string;
+    category: CreateCategoryInput;
+  }): Promise<CreateCategoryResponse> {
+    if (!isNonEmptyText(request.category?.name)) {
+      throw new BadRequestException('A name is required');
+    }
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    const userId = await this.accessService.getUserId(request.clerkId);
+    return await this.quantityTakeOffsRepository.createCategory({
+      userId,
+      companyId: request.companyId,
+      name: request.category.name.trim(),
+    });
+  }
+
+  async createRecipe(request: {
+    clerkId: string;
+    companyId: string;
+    projectId: string;
+    recipe: CreateRecipeInput;
+  }): Promise<CreateRecipeResponse> {
+    assertValidNewRecipe(request.recipe);
+    await this.accessService.requireProjectAccess(
+      request.clerkId,
+      request.companyId,
+      request.projectId,
+    );
+    const userId = await this.accessService.getUserId(request.clerkId);
+    return await this.quantityTakeOffsRepository.createRecipe({
+      userId,
+      companyId: request.companyId,
+      name: request.recipe.name.trim(),
+      categoryId: request.recipe.categoryId,
+      unit: request.recipe.unit.trim(),
+      description: request.recipe.description?.trim() || null,
+      materials: request.recipe.materials,
+      labour: request.recipe.labour,
+      overheads: request.recipe.overheads,
     });
   }
 

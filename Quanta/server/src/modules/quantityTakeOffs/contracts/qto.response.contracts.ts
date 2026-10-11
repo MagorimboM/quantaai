@@ -37,7 +37,7 @@ export type GetBillOfQuantsResponse = {
 };
 
 // A recipe as the "Add line item" picker shows it: a RecipeDetail plus the
-// recipe's own description and note, so the user can read it before adding it.
+// recipe's own description, so the user can read it before adding it.
 export type RecipeOption = RecipeDetail & {
   description: string | null;
 };
@@ -61,3 +61,30 @@ export type DeleteProjectBillOfQuantsResponse = {
   success: boolean;
   deletedItems: number;
 };
+
+// ---- Create recipe ----
+
+export type CatalogueCategory = { id: string; name: string };
+
+// A material, labour or overhead as the recipe form lists it
+export type CatalogueItem = {
+  id: string;
+  name: string;
+  unit: string;
+  categoryId: string;
+};
+
+export type GetRecipeCatalogueResponse = {
+  categories: CatalogueCategory[];
+  materials: CatalogueItem[];
+  labour: CatalogueItem[];
+  overheads: CatalogueItem[];
+};
+
+export type CreateCatalogueItemResponse = CatalogueItem;
+
+export type CreateCategoryResponse = CatalogueCategory;
+
+// The new recipe, shaped like the picker lists recipes so it can be added to
+// the list and selected straight away
+export type CreateRecipeResponse = RecipeOption;

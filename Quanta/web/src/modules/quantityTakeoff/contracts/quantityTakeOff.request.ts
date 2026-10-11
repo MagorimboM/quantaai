@@ -57,4 +57,48 @@ export type AddLineItemRequest = {
   description: string;
   notes: string | null;
 };
+
+export type CatalogueKind = "material" | "labour" | "overhead";
+ 
+export type GetRecipeCatalogueRequest = {
+  companyId: string;
+  projectId: string;
+};
+ 
+export type CreateCatalogueItemRequest = {
+  companyId: string;
+  projectId: string;
+  kind: CatalogueKind;
+  name: string;
+  unit: string;
+  categoryId: string;
+  // Only labour has a type; null for materials and overheads
+  labourType: string | null;
+};
+ 
+export type CreateCategoryRequest = {
+  companyId: string;
+  projectId: string;
+  name: string;
+};
+ 
+// One thing a recipe is made of and how much of it 1 unit of the recipe needs
+export type RecipeComponentRequest = {
+  itemId: string;
+  quantity: number;
+};
+ 
+export type CreateRecipeRequest = {
+  companyId: string;
+  projectId: string;
+  name: string;
+  categoryId: string;
+  // What the recipe is priced per, for example m² for a wall
+  unit: string;
+  description: string | null;
+  materials: RecipeComponentRequest[];
+  labour: RecipeComponentRequest[];
+  overheads: RecipeComponentRequest[];
+};
+ 
  

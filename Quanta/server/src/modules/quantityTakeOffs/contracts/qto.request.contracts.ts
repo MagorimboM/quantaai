@@ -47,3 +47,64 @@ export type AddLineItemRequest = BillOfQuantsScope &
   AddLineItemInput & {
     userId: string;
   };
+
+
+// ---- Create recipe ----
+
+// The three kinds of component a recipe is made of. A new catalogue item is
+// created as exactly one of them.
+export type CatalogueKind = 'material' | 'labour' | 'overhead';
+
+// The materials, labour and overheads a company can build recipes from
+export type GetRecipeCatalogueRequest = {
+  companyId: string;
+};
+
+// What the browser sends to add a material, labour or overhead to the
+// catalogue. `labourType` only applies to labour and is null for the others.
+export type CreateCatalogueItemInput = {
+  kind: CatalogueKind;
+  name: string;
+  unit: string;
+  categoryId: string;
+  labourType: string | null;
+};
+
+// The same, once the caller is known. `userId` comes from the Clerk token and
+// is never sent by the browser.
+export type CreateCatalogueItemRequest = CreateCatalogueItemInput & {
+  userId: string;
+  companyId: string;
+};
+
+export type CreateCategoryInput = {
+  name: string;
+};
+
+export type CreateCategoryRequest = CreateCategoryInput & {
+  userId: string;
+  companyId: string;
+};
+
+// One component of a recipe: the catalogue item and how much of it 1 unit of
+// the recipe needs. The component's unit is not sent: it is the item's own unit.
+export type RecipeComponentInput = {
+  itemId: string;
+  quantity: number;
+};
+
+export type CreateRecipeInput = {
+  name: string;
+  categoryId: string;
+  // What the recipe is priced per, for example m² for a wall
+  unit: string;
+  description: string | null;
+  materials: RecipeComponentInput[];
+  labour: RecipeComponentInput[];
+  overheads: RecipeComponentInput[];
+};
+
+export type CreateRecipeRequest = CreateRecipeInput & {
+  userId: string;
+  companyId: string;
+};

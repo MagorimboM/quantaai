@@ -72,12 +72,12 @@ export type DeleteProjectBillOfQuantitiesResponse = {
 // contains, so the preview can multiply them by the measurement as it is typed.
 // TODO :: [backend] `notes` is the recipe's own note (for example a height
 // limit). Point it at the real column name.
+
 export type RecipeOption = {
   id: string;
   name: string;
   unit: string;
   description: string | null;
-  notes: string | null;
   category: { id: string; name: string };
   recipeMaterials: {
     id: string;
@@ -98,5 +98,29 @@ export type RecipeOption = {
     overhead: { id: string; name: string };
   }[];
 };
-
+ 
+export type CatalogueCategory = { id: string; name: string };
+ 
+// A material, labour or overhead as the recipe form lists it
+export type CatalogueItem = {
+  id: string;
+  name: string;
+  unit: string;
+  categoryId: string;
+};
+ 
+export type GetRecipeCatalogueResponse = {
+  categories: CatalogueCategory[];
+  materials: CatalogueItem[];
+  labour: CatalogueItem[];
+  overheads: CatalogueItem[];
+};
+ 
+export type CreateCatalogueItemResponse = CatalogueItem;
+ 
+export type CreateCategoryResponse = CatalogueCategory;
+ 
+// The new recipe, shaped like the picker lists recipes
+export type CreateRecipeResponse = RecipeOption;
+ 
 export type GetRecipeOptionsResponse = RecipeOption[];
