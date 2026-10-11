@@ -3,9 +3,10 @@ import { getToken } from "@clerk/react";
 import { globalErrorState } from "@/common/storage/globalState";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL:  'http://localhost:3000/api', 
   timeout: 20000,
 });
+
 
 apiClient.interceptors.request.use(async (config) => {
   const token = await getToken();

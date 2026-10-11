@@ -26,3 +26,24 @@ export type UpdateProjectStatusRequest = BillOfQuantsScope & {
 export type DeleteProjectLineItemsRequest = BillOfQuantsScope & {
   lineItemIds: string[];
 };
+
+// The recipes a company can put on a takeoff
+export type GetRecipeOptionsRequest = {
+  companyId: string;
+};
+
+// What the browser sends to add a line: the recipe, the one measurement it is
+// multiplied by, and where it is (stored in `description`).
+export type AddLineItemInput = {
+  recipeId: string;
+  measurement: number;
+  description: string;
+  notes: string | null;
+};
+
+// The same, once the caller is known. `userId` comes from the Clerk token and
+// is never sent by the browser.
+export type AddLineItemRequest = BillOfQuantsScope &
+  AddLineItemInput & {
+    userId: string;
+  };

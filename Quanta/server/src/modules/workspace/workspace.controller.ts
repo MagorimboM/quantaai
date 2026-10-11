@@ -45,6 +45,8 @@ export class WorkspaceController {
     @ClerkUserId() clerkId: string,
     @Body() body: CreateWorkspaceRequest,
   ): Promise<CompanyWorkspace> {
+    // TODO:: sanitize the body, remove any spaces inbetween words, start and end.
+
     return await this.workspaceService.createNewWorkspace(clerkId, body);
   }
 }

@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import { MdOutlineUploadFile } from "react-icons/md";
-import { FiFolder } from "react-icons/fi";
-import { AiAssistant } from "@/modules/aiAssistant/AiAssistant";
-import { UploadModalComp } from "@/modules/projects/components/uploadModalComp";
 import { SearchBarComp } from "@/modules/projects/components/searchBarComp";
-import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 import { ListOfProjects } from "@/modules/projects/components/listOfProjects";
 import { getListOfProjects } from "@/modules/projects/api/api";
 import type { ProjectSummary } from "@/modules/projects/contracts/projects.response.contracts";
@@ -19,17 +14,13 @@ const PAGE_SIZE = 10;
  * The page is about one company, so a personal workspace (no company) shows a
  * message instead. TODO :: [backend] personal projects (no company), then drop it.
  *
- * Documents: the "View" and "Upload" buttons act on a project's documents, so
- * they only appear when a project is active (the last one the user opened).
- * TODO :: [design] On a list there is no obvious "current project", so these
- * act on whichever was opened last. Consider moving them (and the assistant)
- * onto the takeoff page, where the project is unambiguous.
+ * Documents and the AI assistant are not here: they act on one project, and a
+ * list has no single "current project". They live on the takeoff page, where
+ * the project is unambiguous.
  */
 export function ProjectsPage() {
-  const { companyId, projectId } = getActiveScope();
+  const { companyId } = getActiveScope();
 
-  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-  const [showDocuments, setShowDocuments] = useState<boolean>(false);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -50,6 +41,7 @@ export function ProjectsPage() {
       });
       setProjects(response.projects);
       setTotalCount(response.totalCount);
+      console.log(response)
     } catch {
       // apiClient already reports the failure; the list keeps what it had
     } finally {
@@ -74,6 +66,10 @@ export function ProjectsPage() {
     loadProjects(searchTerm, page);
   }
 
+  function editProjectSummary(project: ProjectSummary) {
+    setProjects((prev) => [...prev, project]);
+  }
+
   if (!companyId) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
@@ -92,27 +88,6 @@ export function ProjectsPage() {
           <SearchBarComp onSearch={handleSearch} />
         </div>
 
-        {projectId ? (
-          <div className="flex items-center gap-2">
-            <button
-              title="view-project-documents"
-              onClick={() => setShowDocuments(true)}
-              className="inline-flex items-center gap-2 rounded-md border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/70 cursor-pointer"
-            >
-              <FiFolder size={18} />
-              View Project Documents
-            </button>
-
-            <button
-              title="project-file-upload-modal"
-              onClick={() => setShowUploadModal(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer"
-            >
-              <MdOutlineUploadFile size={18} />
-              Upload Project Files
-            </button>
-          </div>
-        ) : null}
       </header>
 
       {/* Main Content */}
@@ -121,6 +96,7 @@ export function ProjectsPage() {
           projects={projects}
           isLoading={isLoading}
           searchTerm={searchTerm}
+          editProjectList={editProjectSummary}
         />
 
         {totalCount > 0 ? (
@@ -148,25 +124,8 @@ export function ProjectsPage() {
           </div>
         ) : null}
 
-        <AiAssistant />
       </main>
 
-      {/* The page decides when each modal is open and how it closes */}
-      {showUploadModal && projectId ? (
-        <UploadModalComp
-          companyId={companyId}
-          projectId={projectId}
-          closeModal={() => setShowUploadModal(false)}
-        />
-      ) : null}
-      {projectId ? (
-        <FileModalComp
-          open={showDocuments}
-          companyId={companyId}
-          projectId={projectId}
-          onClose={() => setShowDocuments(false)}
-        />
-      ) : null}
     </div>
   );
 }

@@ -28,13 +28,13 @@ import {
   getAllProjects,
 } from "@/modules/workspaceSwitcher/api/api";
 
-
-
 export function WorkspaceSwitcherPage() {
   const { user } = useUser();
   const userName = user?.firstName ?? "there";
   const navigate = useNavigate();
   const workspaceId: any = localStorage.getItem("workspaceId");
+
+  console.log(import.meta.env.VITE_API_URL);
 
   useEffect(() => {
     if (workspaceId) {
@@ -54,38 +54,42 @@ export function WorkspaceSwitcherPage() {
     useState(false);
 
   useEffect(() => {
-  async function fetchAll() {
-    setIsLoading(true);
-    try {
-      const [companyWorkspaces, userWorkspace, projects] = await Promise.all([
-        getWorkspaces(),
-        getUserWorkspace(),
-        getAllProjects(),
-      ]);
+    async function fetchAll() {
+      setIsLoading(true);
+      try {
+        const [companyWorkspaces, userWorkspace, projects] = await Promise.all([
+          getWorkspaces(),
+          getUserWorkspace(),
+          getAllProjects(),
+        ]);
 
-      // The lists must be real arrays. Anything else means the server answered
-      // with something unexpected, so show an empty list instead of crashing.
-      if (!Array.isArray(companyWorkspaces)) {
-        console.error("Expected a list of workspaces, got:", companyWorkspaces);
+        // The lists must be real arrays. Anything else means the server answered
+        // with something unexpected, so show an empty list instead of crashing.
+        if (!Array.isArray(companyWorkspaces)) {
+          console.error(
+            "Expected a list of workspaces, got:",
+            companyWorkspaces,
+          );
+        }
+        setWorkspaces(
+          Array.isArray(companyWorkspaces) ? companyWorkspaces : [],
+        );
+        setPersonalWorkspace(userWorkspace);
+        setAllProjects(Array.isArray(projects) ? projects : []);
+      } catch {
+        // apiClient already reports the failure
+      } finally {
+        setIsLoading(false);
       }
-      setWorkspaces(Array.isArray(companyWorkspaces) ? companyWorkspaces : []);
-      setPersonalWorkspace(userWorkspace);
-      setAllProjects(Array.isArray(projects) ? projects : []);
-    } catch {
-      // apiClient already reports the failure
-    } finally {
-      setIsLoading(false);
     }
-  }
 
-  fetchAll();
-}, []);
+    fetchAll();
+  }, []);
 
   const activeCompanies = useMemo(
     () =>
-      workspaces.filter(
-        (w) =>
-          w.name.toLowerCase().includes(search.toLowerCase()),
+      workspaces.filter((w) =>
+        w.name.toLowerCase().includes(search.toLowerCase()),
       ),
     [workspaces, search],
   );
@@ -192,7 +196,10 @@ export function WorkspaceSwitcherPage() {
               )}
 
               {archivedCompanies.length > 0 && !isLoading ? (
-                <div className="pt-4 mt-4" style={{ borderTop: "1px solid #F3DEC0" }}>
+                <div
+                  className="pt-4 mt-4"
+                  style={{ borderTop: "1px solid #F3DEC0" }}
+                >
                   <ToggleSwitch
                     checked={showArchived}
                     onChange={() => setShowArchived((prev) => !prev)}

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ProjectsRepository } from '@/modules/projects/projects.repository';
 import { AccessService } from '@/auth/services/access.service';
 import type { GetListOfProjectsResponse } from '@/modules/projects/contracts/projects.response.contracts';
+import type { CreateNewProjectRequest } from '@/modules/projects/contracts/projects.request.contracts';
 
 // The most projects one request may return, however large a limit is asked for
 const MAX_PAGE_SIZE = 50;
@@ -40,5 +41,18 @@ export class ProjectsService {
       page,
       limit,
     });
+  }
+
+  async createNewProject(
+    clerkId: string,
+    companyId: string,
+    request: CreateNewProjectRequest,
+  ) {
+    console.log(request);
+    return await this.projectRepository.createNewProject(
+      clerkId,
+      companyId,
+      request,
+    );
   }
 }

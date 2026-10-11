@@ -7,3 +7,21 @@ export type GetListOfProjectsRequest = {
   page: number;
   limit: number;
 };
+
+export type CreateNewProjectRequest = {
+  projectNumber: string;
+  projectName: string;
+  projectDescription: string;
+  projectContactName: string;
+  projectPhoneNumber: string;
+  projectAddress: string;
+  projectCity: string;
+  projectPostCode: number | null;
+  projectState:string; 
+  projectCountry:string; 
+  projectType: string;
+  projectContact: number | null;
+  clientName: string;
+  clientEmail: string;
+  clientPhoneNumber: string;
+};

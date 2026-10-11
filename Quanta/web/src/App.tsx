@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from "react-router";
 import { useAuth } from "@clerk/react";
-import { AppShell } from "@/common/components/appShell";
+import { WorksSpaceShell } from "@/common/components/WorksSpaceShell";
 import { GlobalErrorComp } from "@/common/components/globalError";
 import { LandingPage } from "@/modules/landing/landing.page";
 import { RegisterPage } from "@/modules/landing/auth/register/RegisterPage";
@@ -18,9 +18,9 @@ import { ensureScopeBelongsTo } from "@/common/storage/activeScope";
 // sidebar keeps its state, such as being collapsed.
 function WorkspaceLayout() {
   return (
-    <AppShell>
+    <WorksSpaceShell>
       <Outlet />
-    </AppShell>
+    </WorksSpaceShell>
   );
 }
 

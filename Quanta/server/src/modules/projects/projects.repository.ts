@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
-import type { GetListOfProjectsRequest } from '@/modules/projects/contracts/projects.request.contracts';
+import type {
+  GetListOfProjectsRequest,
+  CreateNewProjectRequest,
+} from '@/modules/projects/contracts/projects.request.contracts';
 import type { GetListOfProjectsResponse } from '@/modules/projects/contracts/projects.response.contracts';
 
 // OWNERSHIP MODEL: userId owns all data; companyId is a tag on it. Projects are
@@ -20,7 +23,9 @@ export class ProjectsRepository {
       ...(request.term
         ? {
             OR: [
-              { name: { contains: request.term, mode: 'insensitive' as const } },
+              {
+                name: { contains: request.term, mode: 'insensitive' as const },
+              },
               {
                 description: {
                   contains: request.term,
@@ -61,5 +66,70 @@ export class ProjectsRepository {
         numberOfLineItems: _count.takeoffItems,
       })),
     };
+  }
+
+  async createNewProject(
+    clerkId: string,
+    companyId: string,
+    request: CreateNewProjectRequest,
+  ) {
+    // get the userId
+
+    const response = await prisma.$transaction(async (tx) => {
+      const getUserIdResponse = await tx.user.findFirst({
+        where: {
+          clerkId: clerkId,
+        },
+      });
+
+      if (getUserIdResponse == null) {
+        throw new NotFoundException(
+          'user does not exist, cannot create new project',
+        );
+      }
+
+      const response = await tx.project.create({
+        data: {
+          name: request.projectName,
+          description: request.projectDescription,
+          clientEmail: request.clientEmail,
+          address: request.projectAddress,
+          city: request.projectCity,
+          postcode: request.projectPostCode?.toString(),
+          companyId: companyId,
+          projectNumber: request.projectNumber,
+          siteContactName: request.projectContactName,
+          siteContactPhone: request.projectPhoneNumber,
+          type: request.projectType,
+          userId: getUserIdResponse.id,
+        },
+      });
+
+      //  {
+      //   id: string;
+      //   companyId: string | null;
+      //   name: string;
+      //   type: string;
+      //   status: string;
+      //   updatedAt: string;
+      //   numberOfLineItems: number;
+      // };
+
+      const result: any = await prisma.$queryRaw`SELECT
+    count(*) AS numberOfLineItems 
+    FROM takeoff_items ti
+    WHERE  ti."projectId" = ${response.id}`;
+
+      return {
+        id: response.id,
+        companyId: response.companyId,
+        name: response.name,
+        type: response.type,
+        status: response.status,
+        updatedAt: response.updatedAt,
+        numberOfLineItems: result[0].numberOfLineItems,
+      };
+    });
+    return response;
   }
 }

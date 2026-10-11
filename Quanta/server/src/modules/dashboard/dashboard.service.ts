@@ -16,6 +16,11 @@ export class DashboardService {
     private readonly accessService: AccessService,
   ) {}
 
+    async getCompanyInformation (companyId:string){
+return this.dashboardRepository.getCompanyInformation(companyId)
+    
+  }
+
   async getKPIInformation(request: {
     clerkId: string;
     companyId: string;

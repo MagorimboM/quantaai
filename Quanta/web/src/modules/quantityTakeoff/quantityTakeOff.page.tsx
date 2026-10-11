@@ -14,6 +14,7 @@ import {
 } from "@/modules/quantityTakeoff/components/lineItem";
 import { ConfirmDeletionModal } from "@/modules/quantityTakeoff/components/confirmDeletion";
 import { PreviewQuantitiesModal } from "@/modules/quantityTakeoff/components/previewQuantities.modal";
+import { AddLineItemModal } from "@/modules/quantityTakeoff/components/addLineItem.modal";
 import { LoadingModal } from "@/common/components/loadingModal";
 import { getActiveScope } from "@/common/storage/activeScope";
 import {
@@ -22,13 +23,24 @@ import {
   MdCheckCircleOutline,
   MdOutlineRestartAlt,
   MdOutlineSearch,
+  MdOutlineUploadFile,
+  MdAdd,
 } from "react-icons/md";
+import { FiFolder } from "react-icons/fi";
+import { AiAssistant } from "@/modules/aiAssistant/AiAssistant";
+import { UploadModalComp } from "@/modules/projects/components/uploadModalComp";
+import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 
 // TODO :: [backend] The header shows no project name because the takeoff
 // endpoint doesn't return one. Add it to the response and show it under the title.
 
 const toolbarButton =
   "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-all hover:bg-secondary/70 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+
+// Secondary actions are icon-only (a 36px square) so the toolbar stays on one
+// line. Their meaning is carried by a hover tooltip (`title`) and `aria-label`.
+const iconButton =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-md border bg-secondary text-secondary-foreground transition-all hover:bg-secondary/70 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
 
 const primaryButton =
   "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
@@ -43,6 +55,9 @@ const primaryButton =
  *
  * Edits live in the browser until Save, so searching never loses them.
  * Complete takeoff saves anything unsaved, then marks the project complete.
+ *
+ * The project's documents (view and upload) and the AI assistant also live
+ * here: they act on one project, and this page is always about exactly one.
  */
 export function BillOfQuantsPage() {
   const { companyId, projectId } = getActiveScope();
@@ -71,6 +86,9 @@ function TakeoffEditor({
   const [idsToDelete, setIdsToDelete] = useState<string[] | null>(null);
   const [showStartAfresh, setShowStartAfresh] = useState<boolean>(false);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [showAddLineItem, setShowAddLineItem] = useState<boolean>(false);
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  const [showDocuments, setShowDocuments] = useState<boolean>(false);
   // text of the "please wait" overlay while saving or completing (null = hidden)
   const [busyMessage, setBusyMessage] = useState<string | null>(null);
 
@@ -165,6 +183,12 @@ function TakeoffEditor({
     setLineItems((prev) => prev.filter((item) => !deletedIds.has(item.id)));
   }
 
+  // The modal has already saved the new line on the server, so it is shown as
+  // it is and doesn't count as an unsaved change.
+  function appendLineItem(lineItem: GetBillOfQuantsResponse) {
+    setLineItems((prev) => [...prev, lineItem]);
+  }
+
   async function clearTakeoff() {
     const response = await deleteProjectBillOfQuantities({
       companyId,
@@ -195,26 +219,64 @@ function TakeoffEditor({
             </span>
           ) : null}
           <button
-            disabled={lineItems.length === 0}
-            onClick={() => setShowPreview(true)}
+            title="Add a recipe to this takeoff"
+            onClick={() => setShowAddLineItem(true)}
             className={toolbarButton}
           >
-            <MdOutlinePreview size={18} /> Preview quantities
+            <MdAdd size={18} /> Add line item
           </button>
-          <button
-            disabled={lineItems.length === 0}
-            onClick={() => setShowStartAfresh(true)}
-            className={`${toolbarButton} text-destructive`}
-          >
-            <MdOutlineRestartAlt size={18} /> Start afresh
-          </button>
-          <button
-            disabled={lineItems.length === 0}
-            onClick={() => saveBillOfQuants()}
-            className={toolbarButton}
-          >
-            <MdOutlineSave size={18} /> Save
-          </button>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              title="View project documents"
+              aria-label="View project documents"
+              onClick={() => setShowDocuments(true)}
+              className={iconButton}
+            >
+              <FiFolder size={18} />
+            </button>
+            <button
+              title="Upload project files"
+              aria-label="Upload project files"
+              onClick={() => setShowUploadModal(true)}
+              className={iconButton}
+            >
+              <MdOutlineUploadFile size={18} />
+            </button>
+            <button
+              title="Preview quantities"
+              aria-label="Preview quantities"
+              disabled={lineItems.length === 0}
+              onClick={() => setShowPreview(true)}
+              className={iconButton}
+            >
+              <MdOutlinePreview size={18} />
+            </button>
+          </div>
+
+          <span className="h-6 w-px bg-border" aria-hidden="true" />
+
+          <div className="flex items-center gap-1.5">
+            <button
+              title="Start afresh"
+              aria-label="Start afresh"
+              disabled={lineItems.length === 0}
+              onClick={() => setShowStartAfresh(true)}
+              className={`${iconButton} text-destructive`}
+            >
+              <MdOutlineRestartAlt size={18} />
+            </button>
+            <button
+              title="Save"
+              aria-label="Save"
+              disabled={lineItems.length === 0}
+              onClick={() => saveBillOfQuants()}
+              className={iconButton}
+            >
+              <MdOutlineSave size={18} />
+            </button>
+          </div>
+
           <button
             disabled={lineItems.length === 0}
             onClick={() => completeTakeOff()}
@@ -283,12 +345,38 @@ function TakeoffEditor({
         />
       ) : null}
 
+      {showAddLineItem ? (
+        <AddLineItemModal
+          companyId={companyId}
+          projectId={projectId}
+          onAdded={appendLineItem}
+          onClose={() => setShowAddLineItem(false)}
+        />
+      ) : null}
+
       {showPreview ? (
         <PreviewQuantitiesModal
           lineItems={lineItems}
           onClose={() => setShowPreview(false)}
         />
       ) : null}
+
+      {showUploadModal ? (
+        <UploadModalComp
+          companyId={companyId}
+          projectId={projectId}
+          closeModal={() => setShowUploadModal(false)}
+        />
+      ) : null}
+
+      <FileModalComp
+        open={showDocuments}
+        companyId={companyId}
+        projectId={projectId}
+        onClose={() => setShowDocuments(false)}
+      />
+
+      <AiAssistant />
 
       <LoadingModal
         show={busyMessage !== null}

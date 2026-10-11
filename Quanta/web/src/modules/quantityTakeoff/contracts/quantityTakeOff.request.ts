@@ -41,3 +41,20 @@ export type DeleteProjectBillOfQuantitiesRequest = {
   companyId: string;
   projectId: string;
 };
+
+export type GetRecipeOptionsRequest = {
+  companyId: string;
+  projectId: string;
+};
+ 
+// One new takeoff line: a recipe, the one measurement it is multiplied by, and
+// where it is. `description` holds the location (see lineItem.tsx).
+export type AddLineItemRequest = {
+  companyId: string;
+  projectId: string;
+  recipeId: string;
+  measurement: number;
+  description: string;
+  notes: string | null;
+};
+ 

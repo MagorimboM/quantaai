@@ -65,3 +65,38 @@ export type DeleteProjectBillOfQuantitiesResponse = {
   success: boolean;
   deletedItems: number;
 };
+
+// ---- add to the end of quantityTakeOff.response.ts ----
+
+// A recipe as the picker shows it: per-1-unit quantities for everything it
+// contains, so the preview can multiply them by the measurement as it is typed.
+// TODO :: [backend] `notes` is the recipe's own note (for example a height
+// limit). Point it at the real column name.
+export type RecipeOption = {
+  id: string;
+  name: string;
+  unit: string;
+  description: string | null;
+  notes: string | null;
+  category: { id: string; name: string };
+  recipeMaterials: {
+    id: string;
+    quantity: number;
+    unit: string;
+    material: { id: string; name: string };
+  }[];
+  recipeLabour: {
+    id: string;
+    quantity: number;
+    unit: string;
+    labour: { id: string; name: string };
+  }[];
+  recipeOverheads: {
+    id: string;
+    quantity: number;
+    unit: string;
+    overhead: { id: string; name: string };
+  }[];
+};
+
+export type GetRecipeOptionsResponse = RecipeOption[];

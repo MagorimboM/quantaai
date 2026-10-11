@@ -5,10 +5,14 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  Body,
+  Post,
 } from '@nestjs/common';
 import { ProjectsService } from '@/modules/projects/projects.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
 import type { GetListOfProjectsResponse } from '@/modules/projects/contracts/projects.response.contracts';
+import type { CreateNewProjectRequest } from '@/modules/projects/contracts/projects.request.contracts';
+
 
 // Every route runs behind the global ClerkAuthGuard, so @ClerkUserId() is the
 // verified caller. The user is never read from the URL: the service works out
@@ -34,5 +38,11 @@ export class ProjectsController {
       page: page ?? 1,
       limit: limit ?? 10,
     });
+  }
+
+  @Post('/new-project')
+  async createNewProject(@Body() request: CreateNewProjectRequest, @Param('companyId') companyId:string, @ClerkUserId() clerkId: string,) {
+
+    return await this.projectService.createNewProject(clerkId, companyId, request);
   }
 }

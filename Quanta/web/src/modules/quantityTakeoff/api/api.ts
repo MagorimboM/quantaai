@@ -5,6 +5,8 @@ import type {
   UpdateProjectStatusRequest,
   DeleteLineItemsRequest,
   DeleteProjectBillOfQuantitiesRequest,
+  GetRecipeOptionsRequest,
+  AddLineItemRequest,
 } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
 import type {
   GetBillOfQuantsResponse,
@@ -12,6 +14,7 @@ import type {
   UpdateProjectStatusResponse,
   DeletedLineItemsResponse,
   DeleteProjectBillOfQuantitiesResponse,
+  GetRecipeOptionsResponse,
 } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 
 // The backend identifies the user from the Clerk token that apiClient attaches
@@ -65,6 +68,31 @@ export async function deleteProjectBillOfQuantities(
 ): Promise<DeleteProjectBillOfQuantitiesResponse> {
   const response = await apiClient.delete(
     `${request.companyId}/projects/${request.projectId}/bill-of-quantities`,
+  );
+  return response.data;
+}
+export async function getRecipeOptions(
+  request: GetRecipeOptionsRequest,
+): Promise<GetRecipeOptionsResponse> {
+  const response = await apiClient.get(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities/recipe-options`,
+  );
+  return response.data;
+}
+ 
+// Adds one line to the project's takeoff and returns it in the same shape the
+// takeoff lists, so the page can append it without reloading.
+export async function addLineItem(
+  request: AddLineItemRequest,
+): Promise<GetBillOfQuantsResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/projects/${request.projectId}/bill-of-quantities`,
+    {
+      recipeId: request.recipeId,
+      measurement: request.measurement,
+      description: request.description,
+      notes: request.notes,
+    },
   );
   return response.data;
 }

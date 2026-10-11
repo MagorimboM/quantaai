@@ -3,7 +3,7 @@ import type {
   RecentProjectsResponse,
   RecentActivityResponse,
   KPIInformationResponse,
-} from '@/modules/dashboard/contracts/dashboard.response.contract'
+} from '@/modules/dashboard/contracts/dashboard.response.contract';
 import { DashboardService } from '@/modules/dashboard/dashboard.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
 
@@ -14,6 +14,12 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   // The four headline numbers
+
+  @Get('companyInformation')
+  async getCompanyInformation(@Param('companyId') companyId: string) {
+    return await this.dashboardService.getCompanyInformation(companyId);
+  }; 
+
   @Get('kpi')
   async getKPIInformation(
     @ClerkUserId() clerkId: string,

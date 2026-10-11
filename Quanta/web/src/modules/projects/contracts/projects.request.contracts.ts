@@ -31,3 +31,21 @@ export type UploadFilesRequest = {
   documentType: DocumentType;
   files: File[];
 };
+
+export type CreateNewProjectRequest = {
+  projectNumber: string;
+  projectName: string;
+  projectDescription: string;
+  projectContactName: string;
+  projectPhoneNumber: string;
+  projectAddress: string;
+  projectCity: string;
+  projectPostCode: number | null;
+  projectState:string; 
+  projectCountry:string; 
+  projectType: string;
+  projectContact: number | null;
+  clientName: string;
+  clientEmail: string;
+  clientPhoneNumber: string;
+};

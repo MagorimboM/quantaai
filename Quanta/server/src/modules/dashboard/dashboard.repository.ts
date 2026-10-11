@@ -1,5 +1,5 @@
 import { prisma } from '@/core/database/postgres';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type { DashboardRequest } from '@/modules/dashboard/contracts/dashboard.request.contracts';
 import type {
   RecentProjectsResponse,
@@ -10,6 +10,19 @@ import type {
 // Every method here assumes the caller was already checked to own the company.
 @Injectable()
 export class DashboardRepository {
+  async getCompanyInformation(companyId: string) {
+    const companyInformation = await prisma.company.findFirst({
+      where: {
+        id: companyId,
+      },
+    });
+
+    if (!companyInformation || null ) {
+      throw new NotFoundException('company does not exist');
+    }
+    return { id: companyInformation?.id, name: companyInformation?.name };
+  }
+
   async getKPIInformation(
     request: DashboardRequest,
   ): Promise<KPIInformationResponse> {

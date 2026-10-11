@@ -4,6 +4,7 @@ import type {
   DeleteFileRequest,
   UploadFilesRequest,
   GetListOfProjectsRequest,
+  CreateNewProjectRequest,
 } from "@/modules/projects/contracts/projects.request.contracts";
 import type {
   GetFilesResponse,
@@ -68,5 +69,17 @@ export async function deleteFile(
   const response = await apiClient.delete(
     `${request.companyId}/files/${request.projectId}/${request.documentId}`,
   );
+  return response.data;
+}
+
+export async function createNewProject(
+  companyId: string,
+  request: CreateNewProjectRequest,
+) {
+  const response = await apiClient.post(
+    `${companyId}/projects/new-project`,
+    request,
+  );
+
   return response.data;
 }

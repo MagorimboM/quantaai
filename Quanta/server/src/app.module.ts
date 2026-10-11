@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { SettingsModule } from '@/modules/settings/settings.module';
 import { DashBoardModule } from '@/modules/dashboard/dashboard.module';
 import { ProjectsModule } from '@/modules/projects/projects.module';
-import { BillOfQuantsModule } from '@/modules/billOfQuants/boq.module';
+import { QuantityTakeOffsModule } from '@/modules/quantityTakeOffs/qto.module';
 import { RecipeLibraryModule } from '@/modules/recipeLibrary/recipeLibrary.module';
 import { WorkspaceModule } from '@/modules/workspace/workspace.module';
 import { RecipeBuilderModule } from "@/modules/recipeBuilder/recipe.builder.module";
@@ -32,7 +32,7 @@ import { ClerkAuthGuard } from "@/auth/services/clerk.guard"
     SettingsModule,
     DashBoardModule,
     ProjectsModule,
-    BillOfQuantsModule,
+    QuantityTakeOffsModule,
     RecipeLibraryModule,
     WorkspaceModule,
     RecipeBuilderModule

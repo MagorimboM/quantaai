@@ -36,6 +36,14 @@ export type GetBillOfQuantsResponse = {
   recipe: RecipeDetail | null;
 };
 
+// A recipe as the "Add line item" picker shows it: a RecipeDetail plus the
+// recipe's own description and note, so the user can read it before adding it.
+export type RecipeOption = RecipeDetail & {
+  description: string | null;
+};
+
+export type GetRecipeOptionsResponse = RecipeOption[];
+
 export type UpdateLineItemsResponse = {
   success: boolean;
   updatedItems: number;

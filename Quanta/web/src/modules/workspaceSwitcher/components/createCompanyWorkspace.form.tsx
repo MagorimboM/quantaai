@@ -6,7 +6,6 @@ import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/c
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
 
-
 export function CreateCompanyWorkspaceForm({
   onClose,
   addToList,
@@ -33,18 +32,19 @@ export function CreateCompanyWorkspaceForm({
     useState<boolean>(false);
 
   function updateField(field: keyof typeof form, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value.trim() }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   }
 
   async function submitForm() {
     setShowCreatingWorkspaceModal(true);
+
     const response = await postNewWorkspace(form);
     if (!response) {
       console.log("something is up");
       setShowCreatingWorkspaceModal(false);
       return;
     }
-    addToList(response)
+    addToList(response);
     setShowCreatingWorkspaceModal(false);
     onClose();
   }
