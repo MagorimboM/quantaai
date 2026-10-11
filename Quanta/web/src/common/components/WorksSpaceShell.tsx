@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import { UserButton } from "@clerk/react";
 import { SideBarComp } from "@/common/components/sideBar";
 import { useEffect, useState } from "react";
