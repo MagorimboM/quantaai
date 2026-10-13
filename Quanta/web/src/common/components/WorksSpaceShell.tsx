@@ -3,8 +3,9 @@ import { UserButton } from "@clerk/react";
 import { SideBarComp } from "@/common/components/sideBar";
 import { useEffect, useState } from "react";
 import { fetchCompanyInformation } from "@/common/api/api";
+import { useNavigate } from "react-router";
 
-// The frame around every page inside a workspace: the sidebar on the left, 
+// The frame around every page inside a workspace: the sidebar on the left,
 // top bar with the account menu (profile and sign out, provided by Clerk), and
 // the page itself. API errors are shown by the global error banner that wraps
 // the whole signed-in app (see App), not here.
@@ -17,15 +18,20 @@ export function WorksSpaceShell({ children }: { children: ReactNode }) {
     name: "",
     id: "",
   });
-
+  const navigate = useNavigate();
   const companyId = localStorage.getItem("companyId");
 
   useEffect(() => {
     async function getCompanyInformation() {
-      const companyData = await fetchCompanyInformation(companyId!);
-      setCompanyInformation(companyData)
-    }
+      if (!companyId || companyId == null || companyId == undefined) {
+        // navigate back to workspace:
+        navigate("/");
+        return null;
+      }
 
+      const companyData = await fetchCompanyInformation(companyId!);
+      setCompanyInformation(companyData);
+    }
     getCompanyInformation();
   }, []);
 

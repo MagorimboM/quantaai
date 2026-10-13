@@ -53,7 +53,9 @@ export class WorkspaceRepository {
   // The person's own workspace (the one with no company), or null if they
   // don't have one. Its counts are the person's projects and recipes that
   // belong to no company.
-  async getPersonalWorkspace(userId: string): Promise<PersonalWorkspace | null> {
+  async getPersonalWorkspace(
+    userId: string,
+  ): Promise<PersonalWorkspace | null> {
     const rows = await prisma.$queryRaw<PersonalWorkspace[]>`
       SELECT
         w.id,
@@ -76,7 +78,7 @@ export class WorkspaceRepository {
   // companies, soonest first. Overdue ones come first on purpose: a late
   // project is the one that needs attention most.
   async getDueProjects(userId: string): Promise<DueProject[]> {
-    return await prisma.$queryRaw<DueProject[]>`
+    const response = await prisma.$queryRaw<DueProject[]>`
       SELECT
         p.id,
         p."companyId",
@@ -90,9 +92,12 @@ export class WorkspaceRepository {
         AND c."userId" = ${userId}
         AND c."isArchived" = false
         AND p.completed = false
-        AND p."endDate" IS NOT NULL
       ORDER BY p."endDate" ASC
       LIMIT ${DUE_PROJECT_LIMIT}`;
+
+    console.log(response);
+
+    return response;
   }
 
   // True if the person already has a company with this name (ignoring case)

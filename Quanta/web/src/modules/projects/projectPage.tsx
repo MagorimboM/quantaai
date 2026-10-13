@@ -27,6 +27,7 @@ export function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
 
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   async function loadProjects(term: string, page: number) {
@@ -86,7 +87,9 @@ export function ProjectsPage() {
       <header className="flex items-center justify-between border-b px-4 py-3">
         <div className="max-w-md flex-1">
           <SearchBarComp onSearch={handleSearch} />
+          
         </div>
+        
 
       </header>
 

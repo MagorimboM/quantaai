@@ -37,6 +37,7 @@ export async function postNewWorkspace(request: {
 }
 export async function getAllProjects() {
   const response = await apiClient.get("workspaces/due-projects");
+  console.log(response.data);
 
   return response.data;
 }
