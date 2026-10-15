@@ -84,7 +84,7 @@ RULES (apply to substantive QS/document answers only — not to identity questio
 - When multiple documents apply, reference all of them
 - When asked about loaded documents, always reflect what is actually present in this prompt
 - When a person's name is mentioned in a document, always include it in your answer
-`
+`;
 
 // Puts the documents of one type into a single block of text for the prompt.
 // Each document is headed with its name so the model can say which document
@@ -94,10 +94,14 @@ function joinDocuments(
   documents: AssistantDocument[],
   documentType: AssistantDocument['documentType'],
 ): string {
-  return documents
+  const joinedDocs = documents
     .filter((document) => document.documentType === documentType)
     .map((document) => `# ${document.nameOfDocument}\n${document.content}`)
     .join('\n\n');
+
+  console.log('here are the docs you looking for:' + joinedDocs);
+
+  return joinedDocs;
 }
 
 @Injectable()
@@ -182,6 +186,8 @@ export class AssistantService {
 
     // Fill the three document slots in the system prompt. A function is passed
     // to replace() so characters like "$&" in a spec's text are inserted as they are.
+
+
     const systemPrompt = QUANTA_AI_SYSTEM_PROMPT.replace(
       '{personalDocuments}',
       () => joinDocuments(documents, 'userDocument'),
@@ -192,6 +198,8 @@ export class AssistantService {
       .replace('{projectDocuments}', () =>
         joinDocuments(documents, 'projectDocument'),
       );
+
+    console.log(systemPrompt);
 
     let reply: string;
     try {

@@ -5,6 +5,10 @@ import type {
   UpdateRecipeRequest,
   ArchiveRecipeRequest,
   DeleteRecipeRequest,
+  GetRecipeCatalogueRequest, 
+  CreateCatalogueItemRequest,
+  CreateCategoryRequest,
+  CreateRecipeRequest
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import type {
   Recipe,
@@ -12,6 +16,9 @@ import type {
   GetRecipesResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
+  CreateCatalogueItemResponse, 
+  GetRecipeCatalogueResponse,
+  CreateCategoryResponse
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 
 // The backend identifies the user from the Clerk token that apiClient attaches
@@ -75,6 +82,55 @@ export async function deleteRecipe(
 ): Promise<DeleteRecipeResponse> {
   const response = await apiClient.delete(
     `${request.companyId}/recipe-library/recipes/${request.recipeId}`,
+  );
+  return response.data;
+}
+
+
+
+// The categories, materials, labour and overheads a new recipe can be built from
+export async function getRecipeCatalogue(
+  request: GetRecipeCatalogueRequest,
+): Promise<GetRecipeCatalogueResponse> {
+  const response = await apiClient.get(
+    `${request.companyId}/recipe-library/catalogue`,
+  );
+  return response.data;
+}
+
+// Adds a material, labour or overhead that was missing from the catalogue
+export async function createCatalogueItem(
+  request: CreateCatalogueItemRequest,
+): Promise<CreateCatalogueItemResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/recipe-library/catalogue-items`,
+    {
+      kind: request.kind,
+      name: request.name,
+      unit: request.unit,
+      categoryId: request.categoryId,
+      labourType: request.labourType,
+    },
+  );
+  return response.data;
+}
+
+export async function createCategory(
+  request: CreateCategoryRequest,
+): Promise<CreateCategoryResponse> {
+  const response = await apiClient.post(
+    `${request.companyId}/recipe-library/categories`,
+    { name: request.name },
+  );
+  return response.data;
+}
+
+// Creates a recipe with its components and returns it as the library shows it
+export async function createRecipe(request: CreateRecipeRequest): Promise<Recipe> {
+  const { companyId, ...recipe } = request;
+  const response = await apiClient.post(
+    `${companyId}/recipe-library/recipes`,
+    recipe,
   );
   return response.data;
 }

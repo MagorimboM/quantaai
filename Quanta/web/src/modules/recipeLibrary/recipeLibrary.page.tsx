@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   getUserRecipeCategories,
   getRecipes,
+  getRecipeCatalogue,
+  createCatalogueItem,
+  createCategory,
+  createRecipe,
 } from "@/modules/recipeLibrary/api/api";
 import { SearchBar } from "@/modules/recipeLibrary/components/searchBar";
 import { RecipeCategoryList } from "@/modules/recipeLibrary/components/recipeCategory";
@@ -10,7 +14,8 @@ import type {
   Category,
   Recipe,
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
-import { RecipeBuilderFormPage } from "@/modules/recipeBuilder/recipeBuilder.form.page";
+import { CreateRecipeModal } from "@/modules/recipeLibrary/components/createRecipeModal"
+import type { CreateRecipeApi } from "@/modules/recipeLibrary/contracts/createRecipe.types";
 import { getActiveScope } from "@/common/storage/activeScope";
 
 // TODO :: [backend] Recipes belong to a company here, so a personal workspace (no
@@ -51,6 +56,18 @@ export function RecipeLibraryPage() {
   const latestRequest = useRef<number>(0);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  // The calls the shared "Create recipe" form makes, bound to this company.
+  // null in a personal workspace, where there is no company to build for.
+  const createRecipeApi = useMemo<CreateRecipeApi<Recipe> | null>(() => {
+    if (!companyId) return null;
+    return {
+      loadCatalogue: () => getRecipeCatalogue({ companyId }),
+      createCatalogueItem: (item) => createCatalogueItem({ companyId, ...item }),
+      createCategory: (name) => createCategory({ companyId, name }),
+      createRecipe: (recipe) => createRecipe({ companyId, ...recipe }),
+    };
+  }, [companyId]);
 
   async function loadCategories() {
     if (!companyId) return;
@@ -234,10 +251,11 @@ export function RecipeLibraryPage() {
         </div>
       </main>
 
-      {showRecipeBuilder ? (
-        <RecipeBuilderFormPage
-          onClose={() => setShowRecipeBuilder(false)}
+      {showRecipeBuilder && createRecipeApi ? (
+        <CreateRecipeModal
+          api={createRecipeApi}
           onCreated={handleRecipeCreated}
+          onClose={() => setShowRecipeBuilder(false)}
         />
       ) : null}
     </div>

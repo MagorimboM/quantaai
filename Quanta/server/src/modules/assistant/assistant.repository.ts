@@ -3,6 +3,8 @@ import { prisma } from '@/core/database/postgres';
 
 // How many of the most recent messages are shown in the widget and sent to
 // the model as its memory of the conversation.
+
+//
 const CHAT_HISTORY_LIMIT = 20;
 
 // Which of the user's documents a piece of text came from.
@@ -118,25 +120,34 @@ export class AssistantRepository {
     // guard an undefined projectId would match every document the user owns.
     const projectDocs = projectId
       ? await prisma.document.findMany({
-          where: { userId, projectId, isArchived: false },
+          where: {companyId, projectId, isArchived: false },
           select: { id: true, name: true },
         })
       : [];
 
     const companyDocs = await prisma.document.findMany({
-      where: { userId, companyId, projectId: null, isArchived: false },
+      where: { companyId, projectId: null, isArchived: false },
       select: { id: true, name: true },
     });
 
     const userDocs = await prisma.document.findMany({
-      where: { userId, companyId: null, projectId: null, isArchived: false },
+      where: { companyId: null, projectId: null, isArchived: false },
       select: { id: true, name: true },
     });
 
     const documents = [
-      ...projectDocs.map((doc) => ({ ...doc, documentType: 'projectDocument' as const })),
-      ...companyDocs.map((doc) => ({ ...doc, documentType: 'companyDocument' as const })),
-      ...userDocs.map((doc) => ({ ...doc, documentType: 'userDocument' as const })),
+      ...projectDocs.map((doc) => ({
+        ...doc,
+        documentType: 'projectDocument' as const,
+      })),
+      ...companyDocs.map((doc) => ({
+        ...doc,
+        documentType: 'companyDocument' as const,
+      })),
+      ...userDocs.map((doc) => ({
+        ...doc,
+        documentType: 'userDocument' as const,
+      })),
     ];
     if (documents.length === 0) return [];
 
@@ -158,16 +169,24 @@ export class AssistantRepository {
     }
 
     // A document with no chunks yet is still being processed, so it is skipped
-    return documents.flatMap((doc) => {
+    const flattenedDocs = documents.flatMap((doc) => {
       const texts = chunkTextByDocument.get(doc.id);
       if (!texts) return [];
-      return [
+
+      const joinedDocs = [
         {
           nameOfDocument: doc.name,
           content: texts.join(''),
           documentType: doc.documentType,
         },
       ];
+
+      console.log('docs in the repository:' + joinedDocs);
+
+      return joinedDocs;
     });
+
+    console.log('here is the flattened Docs:' + flattenedDocs);
+    return flattenedDocs;
   }
 }

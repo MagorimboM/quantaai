@@ -1,15 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import type {
   UserRecipeCategoriesRequest,
   GetRecipesRequest,
   UpdateRecipeRecord,
+  GetRecipeCatalogueRequest,
+  CreateCatalogueItemRecord,
+  CreateCategoryRecord,
+  CreateRecipeRecord,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
   Recipe,
   UserRecipeCategoriesResponse,
   GetRecipesResponse,
   ArchiveRecipeResponse,
+  GetRecipeCatalogueResponse,
+  CreateCatalogueItemResponse,
+  CreateCategoryResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
 // The pseudo-category that means "every category"
@@ -34,6 +41,20 @@ const RECIPE_SELECT = {
     },
   },
 };
+
+// What a material, labour or overhead looks like in the recipe form
+const CATALOGUE_ITEM_SELECT = {
+  id: true,
+  name: true,
+  unit: true,
+  categoryId: true,
+} as const;
+
+// The catalogue rows a company can build recipes from: the user's own rows for
+// it, plus the shared ones that belong to no company (companyId null).
+function catalogueScope(companyId: string, userId: string) {
+  return { OR: [{ companyId, userId }, { companyId: null }] };
+}
 
 type RecipeRow = {
   id: string;
@@ -220,6 +241,181 @@ export class RecipeLibraryRepository {
       },
     });
     return count > 0;
+  }
+
+  // Everything a new recipe can be built from, in one request: the form searches
+  // it in the browser while the user types. The categories are the company's own,
+  // the same ones the library lists, so a new recipe always lands in a category
+  // the library shows.
+  // TODO :: [backend] Sends the whole catalogue at once. Search on the server
+  // when catalogues grow large.
+  async getRecipeCatalogue(
+    request: GetRecipeCatalogueRequest,
+  ): Promise<GetRecipeCatalogueResponse> {
+    const scope = catalogueScope(request.companyId, request.userId);
+    const orderBy = [{ name: 'asc' as const }, { id: 'asc' as const }];
+
+    const [categories, materials, labour, overheads] = await Promise.all([
+      prisma.category.findMany({
+        where: { companyId: request.companyId, userId: request.userId },
+        orderBy,
+        select: { id: true, name: true },
+      }),
+      prisma.material.findMany({
+        where: scope,
+        orderBy,
+        select: CATALOGUE_ITEM_SELECT,
+      }),
+      prisma.labour.findMany({
+        where: scope,
+        orderBy,
+        select: CATALOGUE_ITEM_SELECT,
+      }),
+      prisma.overhead.findMany({
+        where: scope,
+        orderBy,
+        select: CATALOGUE_ITEM_SELECT,
+      }),
+    ]);
+
+    return { categories, materials, labour, overheads };
+  }
+
+  // Adds a material, labour or overhead that was missing. The service has already
+  // checked the category is one of the company's.
+  async createCatalogueItem(
+    record: CreateCatalogueItemRecord,
+  ): Promise<CreateCatalogueItemResponse> {
+    const data = {
+      userId: record.userId,
+      companyId: record.companyId,
+      categoryId: record.categoryId,
+      name: record.name,
+      unit: record.unit,
+    };
+
+    if (record.kind === 'material') {
+      return await prisma.material.create({
+        data,
+        select: CATALOGUE_ITEM_SELECT,
+      });
+    }
+    if (record.kind === 'labour') {
+      return await prisma.labour.create({
+        data: { ...data, labourType: record.labourType! },
+        select: CATALOGUE_ITEM_SELECT,
+      });
+    }
+    return await prisma.overhead.create({
+      data,
+      select: CATALOGUE_ITEM_SELECT,
+    });
+  }
+
+  async createCategory(
+    record: CreateCategoryRecord,
+  ): Promise<CreateCategoryResponse> {
+    return await prisma.category.create({
+      data: {
+        userId: record.userId,
+        companyId: record.companyId,
+        name: record.name,
+      },
+      select: { id: true, name: true },
+    });
+  }
+
+  // True if the company already has a category with this name (ignoring case)
+  async categoryNameExists(
+    companyId: string,
+    userId: string,
+    name: string,
+  ): Promise<boolean> {
+    const count = await prisma.category.count({
+      where: {
+        companyId,
+        userId,
+        name: { equals: name, mode: 'insensitive' },
+      },
+    });
+    return count > 0;
+  }
+
+  // Creates a recipe and its components together, or nothing at all: a recipe
+  // saved without its components would be an empty shell in the library.
+  //
+  // Every component must be a catalogue row this company can use, and each takes
+  // its unit from its catalogue item (a brick is counted in Nr wherever it is
+  // used), which is why the browser never sends one.
+  async createRecipe(record: CreateRecipeRecord): Promise<Recipe> {
+    return await prisma.$transaction(async (tx) => {
+      const scope = catalogueScope(record.companyId, record.userId);
+
+      const materialUnits = await tx.material.findMany({
+        where: { id: { in: record.materials.map((c) => c.itemId) }, ...scope },
+        select: { id: true, unit: true },
+      });
+      const labourUnits = await tx.labour.findMany({
+        where: { id: { in: record.labour.map((c) => c.itemId) }, ...scope },
+        select: { id: true, unit: true },
+      });
+      const overheadUnits = await tx.overhead.findMany({
+        where: { id: { in: record.overheads.map((c) => c.itemId) }, ...scope },
+        select: { id: true, unit: true },
+      });
+
+      const unitOf = (rows: { id: string; unit: string }[], label: string) => {
+        const byId = new Map(rows.map((row) => [row.id, row.unit]));
+        return (itemId: string) => {
+          const unit = byId.get(itemId);
+          if (unit === undefined) {
+            throw new NotFoundException(`A ${label} in this recipe was not found`);
+          }
+          return unit;
+        };
+      };
+      const materialUnit = unitOf(materialUnits, 'material');
+      const labourUnit = unitOf(labourUnits, 'labour');
+      const overheadUnit = unitOf(overheadUnits, 'overhead');
+
+      const row = await tx.recipe.create({
+        data: {
+          userId: record.userId,
+          companyId: record.companyId,
+          categoryId: record.categoryId,
+          name: record.name,
+          description: record.description,
+          unit: record.unit,
+          recipeMaterials: {
+            create: record.materials.map((c) => ({
+              userId: record.userId,
+              materialId: c.itemId,
+              quantity: c.quantity,
+              unit: materialUnit(c.itemId),
+            })),
+          },
+          recipeLabour: {
+            create: record.labour.map((c) => ({
+              userId: record.userId,
+              labourId: c.itemId,
+              quantity: c.quantity,
+              unit: labourUnit(c.itemId),
+            })),
+          },
+          recipeOverheads: {
+            create: record.overheads.map((c) => ({
+              userId: record.userId,
+              overheadId: c.itemId,
+              quantity: c.quantity,
+              unit: overheadUnit(c.itemId),
+            })),
+          },
+        },
+        select: RECIPE_SELECT,
+      });
+
+      return toRecipe(row);
+    });
   }
 
   // Saves the edits together or not at all: the lines left out are removed,

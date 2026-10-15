@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Delete,
+  Post,
   Body,
   Param,
   Query,
@@ -14,6 +15,9 @@ import { ClerkUserId } from '@/auth/services/currentUser.guard';
 import type {
   UpdateRecipeRequest,
   ArchiveRecipeBody,
+  CreateRecipeInput,
+  CreateCategoryInput,
+  CreateCatalogueItemInput,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
   Recipe,
@@ -21,6 +25,9 @@ import type {
   GetRecipesResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
+  GetRecipeCatalogueResponse,
+  CreateCategoryResponse,
+  CreateCatalogueItemResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
 // The company's recipe library. Every route runs behind the global
@@ -108,6 +115,61 @@ export class RecipeLibraryController {
       clerkId,
       companyId,
       recipeId,
+    });
+  }
+
+  @Get('catalogue')
+  async getRecipeCatalogue(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+  ): Promise<GetRecipeCatalogueResponse> {
+    return await this.recipeLibraryService.getRecipeCatalogue({
+      clerkId,
+      companyId,
+    });
+  }
+
+  // Adds a material, labour or overhead that was missing from the catalogue
+  //   body: { kind, name, unit, categoryId, labourType }
+  @Post('catalogue-items')
+  async createCatalogueItem(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() body: CreateCatalogueItemInput,
+  ): Promise<CreateCatalogueItemResponse> {
+    return await this.recipeLibraryService.createCatalogueItem({
+      clerkId,
+      companyId,
+      item: body,
+    });
+  }
+
+  // Adds a category   body: { name }
+  @Post('categories')
+  async createCategory(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() body: CreateCategoryInput,
+  ): Promise<CreateCategoryResponse> {
+    return await this.recipeLibraryService.createCategory({
+      clerkId,
+      companyId,
+      category: body,
+    });
+  }
+
+  // Creates a recipe with its components and returns it as the library shows it
+  //   body: { name, categoryId, unit, description, materials, labour, overheads }
+  @Post('recipes')
+  async createRecipe(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() body: CreateRecipeInput,
+  ): Promise<Recipe> {
+    return await this.recipeLibraryService.createRecipe({
+      clerkId,
+      companyId,
+      recipe: body,
     });
   }
 }

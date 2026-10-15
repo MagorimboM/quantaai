@@ -4,7 +4,6 @@ import { ListOfProjects } from "@/modules/projects/components/listOfProjects";
 import { getListOfProjects } from "@/modules/projects/api/api";
 import type { ProjectSummary } from "@/modules/projects/contracts/projects.response.contracts";
 import { getActiveScope } from "@/common/storage/activeScope";
-
 const PAGE_SIZE = 10;
 
 /**

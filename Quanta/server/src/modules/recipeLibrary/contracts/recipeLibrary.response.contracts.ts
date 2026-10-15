@@ -49,3 +49,30 @@ export type DeleteRecipeResponse = {
   success: boolean;
   deletedRecipeId: string;
 };
+
+// ---- add to the end of recipeLibrary.response.contracts.ts (backend) ----
+
+// A category as the recipe form lists it (the library's own `Category` also
+// carries the company and a recipe count, which the form doesn't need)
+export type CatalogueCategory = { id: string; name: string };
+
+// A material, labour or overhead as the recipe form lists it
+export type CatalogueItem = {
+  id: string;
+  name: string;
+  unit: string;
+  categoryId: string;
+};
+
+export type GetRecipeCatalogueResponse = {
+  categories: CatalogueCategory[];
+  materials: CatalogueItem[];
+  labour: CatalogueItem[];
+  overheads: CatalogueItem[];
+};
+
+export type CreateCatalogueItemResponse = CatalogueItem;
+
+export type CreateCategoryResponse = CatalogueCategory;
+
+// A new recipe comes back as the library shows recipes: the existing `Recipe`.

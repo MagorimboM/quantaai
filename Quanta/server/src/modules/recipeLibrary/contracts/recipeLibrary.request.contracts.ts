@@ -44,3 +44,83 @@ export type UpdateRecipeRecord = {
   categoryId: string;
   ingredients: { id: string; quantity: number }[];
 };
+
+export type CatalogueKind = 'material' | 'labour' | 'overhead';
+ 
+// What the repository needs to list the catalogue. By the time it runs, the
+// caller has been checked to own the company (see AccessService).
+export type GetRecipeCatalogueRequest = {
+  companyId: string;
+  userId: string;
+};
+ 
+// The body of POST .../recipe-library/catalogue-items. `labourType` only
+// applies to labour and is null for the others.
+export type CreateCatalogueItemInput = {
+  kind: CatalogueKind;
+  name: string;
+  unit: string;
+  categoryId: string;
+  labourType: string | null;
+};
+ 
+export type CreateCatalogueItemRecord = CreateCatalogueItemInput & {
+  companyId: string;
+  userId: string;
+};
+ 
+// The body of POST .../recipe-library/categories
+export type CreateCategoryInput = {
+  name: string;
+};
+ 
+export type CreateCategoryRecord = CreateCategoryInput & {
+  companyId: string;
+  userId: string;
+};
+ 
+// One component of a new recipe: the catalogue item and how much of it 1 unit
+// of the recipe needs. The component's unit is not sent: it is the item's own unit.
+export type RecipeComponentInput = {
+  itemId: string;
+  quantity: number;
+};
+ 
+// The body of POST .../recipe-library/recipes
+export type CreateRecipeInput = {
+  name: string;
+  categoryId: string;
+  // What the recipe is priced per, for example m² for a wall
+  unit: string;
+  description: string | null;
+  materials: RecipeComponentInput[];
+  labour: RecipeComponentInput[];
+  overheads: RecipeComponentInput[];
+};
+ 
+export type CreateRecipeRecord = CreateRecipeInput & {
+  companyId: string;
+  userId: string;
+};
+
+export type CatalogueCategory = { id: string; name: string };
+ 
+// A material, labour or overhead as the recipe form lists it
+export type CatalogueItem = {
+  id: string;
+  name: string;
+  unit: string;
+  categoryId: string;
+};
+ 
+export type GetRecipeCatalogueResponse = {
+  categories: CatalogueCategory[];
+  materials: CatalogueItem[];
+  labour: CatalogueItem[];
+  overheads: CatalogueItem[];
+};
+ 
+export type CreateCatalogueItemResponse = CatalogueItem;
+ 
+export type CreateCategoryResponse = CatalogueCategory;
+ 
