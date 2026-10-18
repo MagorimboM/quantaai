@@ -3,19 +3,26 @@
 // Stack: NestJS + PostgreSQL + Prisma + pgvector
 //
 // OWNERSHIP MODEL:
-// userId    = owner of ALL data
-// companyId = optional tag (null = personal template)
+// userId    = owner of ALL data. Required on every owned table and a
+//             real foreign key to users, so a row can never exist
+//             without a valid owner.
+// companyId = the company the row belongs to. Required wherever a
+//             row lives inside a company, and a real foreign key.
 //
-// companyId = null   → John's personal template
-// companyId = set    → tagged to a specific company
+// There is no "personal" (company-less) data: everything belongs to
+// a company. Shared defaults are copied into each company when it
+// is created, not stored once with companyId = null.
 //
 // Workspace sits ABOVE Company only -- a company can have many
 // workspaces, but recipes/materials/labour/overheads/categories/
 // projects/documents/chat messages are tied directly to a company,
 // not separately scoped to a workspace.
 //
-// NOTE: All userId and companyId are optional for development.
-//       Make required before production.
+// Still optional on purpose (null has a real meaning):
+//   projectId on documents / chat messages (null = company level),
+//   siteConditionId (null = general purpose),
+//   australianTradeCodeId (null = a custom trade code),
+//   takeoff_items.recipeId (see the note on that model).
 // ============================================================
 
 generator client {
@@ -34,7 +41,7 @@ datasource db {
 
 model User {
   id        String   @id @default(uuid())
-  clerkId   String?  @unique
+  clerkId   String   @unique
   email     String   @unique
   firstName String
   lastName  String
@@ -42,7 +49,25 @@ model User {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+
+  companyTeamMembers CompanyTeamMembers[]
+  companies          Company[]
+  workspaces         Workspace[]
+  companyTradeCodes  CompanyTradeCode[]
+  categories         Category[]
+  materials          Material[]
+  labour             Labour[]
+  overheads          Overhead[]
+  recipes            Recipe[]
+  recipeMaterials    RecipeMaterial[]
+  recipeLabour       RecipeLabour[]
+  recipeOverheads    RecipeOverhead[]
+  projects           Project[]
+  takeoffItems       TakeoffItem[]
+  documents          Document[]
+  documentEmbeddings DocumentEmbedding[]
+  chatMessages       ChatMessage[]
+
   @@map("users")
 }
 
@@ -54,8 +79,8 @@ model User {
 
 model CompanyTeamMembers {
   id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
+  userId      String
+  companyId   String
   name        String
   lastName    String
   email       String
@@ -64,7 +89,8 @@ model CompanyTeamMembers {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("company_team_members")
 }
@@ -78,7 +104,7 @@ model CompanyTeamMembers {
 
 model Company {
   id           String     @id @default(uuid())
-  userId       String?
+  userId       String
   name         String
   address      String?
   city         String?
@@ -106,8 +132,10 @@ model Company {
   recipes            Recipe[]
   projects           Project[]
   documents          Document[]
+  takeoffItems       TakeoffItem[]
   chatMessages       ChatMessage[]
   companyTeamMembers CompanyTeamMembers[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("companies")
 }
@@ -115,8 +143,7 @@ model Company {
 // ============================================================
 // WORKSPACES
 // userId    = owner
-// companyId = null  → personal workspace
-// companyId = set   → company specific workspace
+// companyId = the company this workspace belongs to
 //
 // Workspace sits ABOVE Company only. It does not scope recipes,
 // materials, labour, overheads, categories, projects, documents,
@@ -125,15 +152,16 @@ model Company {
 
 model Workspace {
   id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
+  userId      String
+  companyId   String
   name        String
   description String?
   isArchived  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("workspaces")
 }
@@ -161,14 +189,13 @@ model AustralianTradeCode {
 // ============================================================
 // COMPANY TRADE CODES
 // userId = owner
-// companyId = null  → John's personal trade codes
-// companyId = set   → company specific trade codes
+// companyId = the company these trade codes belong to
 // ============================================================
 
 model CompanyTradeCode {
   id                    String   @id @default(uuid())
-  userId                String?
-  companyId             String?
+  userId                String
+  companyId             String
   australianTradeCodeId String?
   code                  String
   name                  String
@@ -177,8 +204,9 @@ model CompanyTradeCode {
   notes                 String?
   createdAt             DateTime @default(now())
 
-  company             Company?             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
   australianTradeCode AustralianTradeCode? @relation(fields: [australianTradeCodeId], references: [id])
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("company_trade_codes")
 }
@@ -209,9 +237,8 @@ model SiteCondition {
 // ============================================================
 // CATEGORIES
 // userId = owner
-// companyId = null  → personal category
-// companyId = set   → company category
-// isDefault = true  → pre-loaded global defaults
+// companyId = the company this category belongs to
+// isDefault = true  → copied in from the pre-loaded defaults
 //
 // Category now covers what RecipeType used to -- every recipe
 // belongs to exactly one category, and that same category also
@@ -220,19 +247,20 @@ model SiteCondition {
 
 model Category {
   id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
+  userId      String
+  companyId   String
   name        String
   description String?
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  company   Company?   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   materials Material[]
   labour    Labour[]
   overheads Overhead[]
   recipes   Recipe[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("categories")
 }
@@ -240,14 +268,13 @@ model Category {
 // ============================================================
 // MATERIALS
 // userId = owner
-// companyId = null  → John's personal material
-// companyId = set   → company specific material
+// companyId = the company this material belongs to
 // ============================================================
 
 model Material {
   id              String   @id @default(uuid())
-  userId          String?
-  companyId       String?
+  userId          String
+  companyId       String
   categoryId      String
   siteConditionId String?
   name            String
@@ -256,10 +283,11 @@ model Material {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
   siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("materials")
 }
@@ -267,14 +295,13 @@ model Material {
 // ============================================================
 // LABOUR
 // userId = owner
-// companyId = null  → John's personal labour
-// companyId = set   → company specific labour
+// companyId = the company this labour item belongs to
 // ============================================================
 
 model Labour {
   id              String   @id @default(uuid())
-  userId          String?
-  companyId       String?
+  userId          String
+  companyId       String
   categoryId      String
   siteConditionId String?
   name            String
@@ -284,10 +311,11 @@ model Labour {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  company       Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category      Category       @relation(fields: [categoryId], references: [id])
   siteCondition SiteCondition? @relation(fields: [siteConditionId], references: [id])
   recipeLabour  RecipeLabour[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("labour")
 }
@@ -295,14 +323,13 @@ model Labour {
 // ============================================================
 // OVERHEADS
 // userId = owner
-// companyId = null  → John's personal overhead
-// companyId = set   → company specific overhead
+// companyId = the company this overhead belongs to
 // ============================================================
 
 model Overhead {
   id              String   @id @default(uuid())
-  userId          String?
-  companyId       String?
+  userId          String
+  companyId       String
   categoryId      String
   siteConditionId String?
   name            String
@@ -311,10 +338,11 @@ model Overhead {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
   siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeOverheads RecipeOverhead[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("overheads")
 }
@@ -322,8 +350,7 @@ model Overhead {
 // ============================================================
 // RECIPES
 // userId = owner
-// companyId       = null  → John's personal template
-// companyId       = set   → company specific recipe
+// companyId       = the company this recipe belongs to
 // categoryId      = required — every recipe belongs to exactly one
 //                    category, but a category can have many recipes
 //                    (one-to-many). Category now also covers what
@@ -337,8 +364,8 @@ model Overhead {
 
 model Recipe {
   id              String   @id @default(uuid())
-  userId          String?
-  companyId       String?
+  userId          String
+  companyId       String
   categoryId      String
   siteConditionId String?
   name            String
@@ -348,13 +375,14 @@ model Recipe {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
   siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]
   takeoffItems    TakeoffItem[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipes")
 }
@@ -366,7 +394,7 @@ model Recipe {
 
 model RecipeMaterial {
   id         String  @id @default(uuid())
-  userId     String?
+  userId     String
   recipeId   String
   materialId String
   quantity   Float
@@ -374,6 +402,7 @@ model RecipeMaterial {
 
   recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   material Material @relation(fields: [materialId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipe_materials")
 }
@@ -385,7 +414,7 @@ model RecipeMaterial {
 
 model RecipeLabour {
   id       String  @id @default(uuid())
-  userId   String?
+  userId   String
   recipeId String
   labourId String
   quantity Float
@@ -393,6 +422,7 @@ model RecipeLabour {
 
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   labour Labour @relation(fields: [labourId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipe_labour")
 }
@@ -404,7 +434,7 @@ model RecipeLabour {
 
 model RecipeOverhead {
   id         String  @id @default(uuid())
-  userId     String?
+  userId     String
   recipeId   String
   overheadId String
   quantity   Float
@@ -412,6 +442,7 @@ model RecipeOverhead {
 
   recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   overhead Overhead @relation(fields: [overheadId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("recipe_overheads")
 }
@@ -419,14 +450,13 @@ model RecipeOverhead {
 // ============================================================
 // PROJECTS
 // userId = owner
-// companyId = null  → personal project
-// companyId = set   → company project
+// companyId = the company this project belongs to
 // ============================================================
 
 model Project {
   id               String    @id @default(uuid())
-  userId           String?
-  companyId        String?
+  userId           String
+  companyId        String
   projectNumber    String
   name             String
   description      String?
@@ -451,10 +481,11 @@ model Project {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  company      Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
   takeoffItems TakeoffItem[]
   documents    Document[]
   chatMessages ChatMessage[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("projects")
 }
@@ -462,14 +493,18 @@ model Project {
 // ============================================================
 // TAKEOFF ITEMS
 // userId = owner
-// companyId = tag (follows project)
+// companyId = the company (always the same as the project's)
 // John inputs ONE measurement — app calculates everything
 // ============================================================
 
+// recipeId stays optional on purpose: making it required would make
+// deleting a company (which cascades to its recipes and projects) fail
+// whenever a takeoff line points at one of its recipes. The app already
+// refuses to delete a recipe a takeoff uses.
 model TakeoffItem {
   id          String   @id @default(uuid())
-  userId      String?
-  companyId   String?
+  userId      String
+  companyId   String
   projectId   String
   recipeId    String?
   description String
@@ -479,45 +514,20 @@ model TakeoffItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  recipe    Recipe?    @relation(fields: [recipeId], references: [id])
-  auditLogs AuditLog[]
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  recipe  Recipe? @relation(fields: [recipeId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("takeoff_items")
 }
 
 // ============================================================
-// AUDIT LOGS
-// userId = who made the change
-// companyId = context tag
-// entityId is polymorphic — integrity enforced at app layer
-// takeoffItemId is a typed FK for Prisma relation only
-// ============================================================
-
-model AuditLog {
-  id            String   @id @default(uuid())
-  userId        String?
-  companyId     String?
-  entityType    String
-  entityId      String
-  action        String
-  oldValue      Json?
-  newValue      Json?
-  reason        String?
-  changedAt     DateTime @default(now())
-  takeoffItemId String?
-
-  takeoffItem TakeoffItem? @relation(fields: [takeoffItemId], references: [id], onDelete: SetNull)
-
-  @@map("audit_logs")
-}
-
-// ============================================================
 // DOCUMENTS
 // userId = owner
-// companyId = null  → company policy document
-// projectId = null  → personal document
-// all optional — covers personal, company, and project scoped docs
+// companyId = the company the document belongs to
+// projectId = null  → company level document (policies, standards)
+// projectId = set   → document for that project
 // isArchived = true → excluded from AI search / active use
 // archivedAt        → timestamp when archived
 // archivedReason    → optional note explaining why archived
@@ -525,8 +535,8 @@ model AuditLog {
 
 model Document {
   id              String    @id @default(uuid())
-  userId          String?
-  companyId       String?
+  userId          String
+  companyId       String
   projectId       String?
   name            String
   fileUrl         String
@@ -544,9 +554,10 @@ model Document {
   archivedReason  String?
   uploadedAt      DateTime  @default(now())
 
-  company    Company?            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company    Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   project    Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
   embeddings DocumentEmbedding[]
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("documents")
 }
@@ -566,7 +577,7 @@ model Document {
 
 model DocumentEmbedding {
   id         String    @id @default(uuid())
-  userId     String?
+  userId     String
   documentId String
   chunkText  String
   chunkTitle String?
@@ -576,6 +587,7 @@ model DocumentEmbedding {
   createdAt  DateTime  @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("document_embeddings")
 }
@@ -583,45 +595,23 @@ model DocumentEmbedding {
 // ============================================================
 // CHAT MESSAGES
 // userId = owner
-// companyId = null  → general AI chat
-// companyId = set   → company scoped AI
-// projectId = null  → general or company AI
-// projectId = set   → project scoped AI
+// companyId = the company the chat is about
+// projectId = null  → company level AI chat
+// projectId = set   → project scoped AI chat
 // ============================================================
 
 model ChatMessage {
   id        String   @id @default(uuid())
-  userId    String?
-  companyId String?
+  userId    String
+  companyId String
   projectId String?
   role      String
   content   String
   createdAt DateTime @default(now())
 
-  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
-}
-
-// ============================================================
-// TEMP FILE CACHE
-// Short-lived records for files uploaded but not yet committed
-// to a document or drawing record.
-// userId = who uploaded
-// fileUrl = S3 location of the cached file
-// expiresAt = when the cache entry should be purged
-//   (set to createdAt + 24hr at the app layer)
-// ============================================================
-
-model TempFileCache {
-  id        String    @id @default(uuid())
-  userId    String?
-  fileName  String    @unique
-  fileType  String
-  fileUrl   String
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-
-  @@map("temp_file_cache")
 }
