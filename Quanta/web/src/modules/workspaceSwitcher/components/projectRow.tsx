@@ -16,27 +16,32 @@ export function ProjectRow({ project }: { project: ProjectSummary }) {
   return (
     <button
       onClick={handleClick}
-      className="w-full text-left flex items-center gap-3 py-3 border-b border-[#F3DEC0] rounded-sm hover:bg-[#FFF4EA] transition-colors duration-100 cursor-pointer -mx-2 px-2"
+      className="flex min-h-16 w-full cursor-pointer items-center gap-3 border-b border-[#F0EDE8] px-1 py-3 text-left transition-all duration-150 hover:bg-[#FFF4EE] hover:px-2 focus-visible:bg-[#FFF4EE] focus-visible:outline-none"
     >
-      <div
-        className="w-[3px] h-8 rounded-full flex-shrink-0"
-        style={{ backgroundColor: color }}
-      />
-
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-[#2B1B0E] font-medium leading-snug truncate">
+      <div className="min-w-0 flex-1">
+        <p className="mb-1 truncate text-sm font-medium leading-[18px] text-[#1C1917]">
           {project.name}
         </p>
-        <p className="text-[11px] text-[#B89B6E] mt-0.5 truncate">{project.companyName}</p>
+        <p className="flex items-center gap-[7px] text-xs leading-4 text-[#78716C]">
+          <span
+            className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <span className="truncate">{project.companyName}</span>
+        </p>
       </div>
 
-      <div className="flex-shrink-0 text-right min-w-[4rem]">
+      <div className="min-w-16 flex-shrink-0 text-right">
         {dateInfo ? (
-          <span className={`text-[11px] ${urgencyTextClass[dateInfo.urgency]}`}>
+          <span
+            className={`text-xs tabular-nums ${urgencyTextClass[dateInfo.urgency]}`}
+          >
             {dateInfo.label}
           </span>
         ) : (
-          <span className="text-[11px] text-[#B89B6E]">{project.updatedAt}</span>
+          <span className="text-xs tabular-nums text-[#78716C]">
+            {project.updatedAt}
+          </span>
         )}
       </div>
     </button>

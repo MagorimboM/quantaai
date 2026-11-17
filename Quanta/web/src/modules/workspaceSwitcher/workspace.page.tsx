@@ -107,25 +107,14 @@ export function WorkspaceSwitcherPage() {
   }
 
   return (
-    <div
-      className="flex h-screen flex-col overflow-hidden"
-      style={{ background: "#FFF8F0" }}
-    >
+    <div className="flex h-screen flex-col overflow-hidden bg-white text-[#1C1917] antialiased">
       <WorkspaceSwitcherSidebar />
 
-      <header
-        className="flex-shrink-0 px-8 pt-10 pb-7"
-        style={{ borderBottom: "1px solid #F3DEC0" }}
-      >
-        <h1
-          className="text-3xl font-bold tracking-tight mb-1"
-          style={{ color: "#2B1B0E" }}
-        >
+      <header className="flex-shrink-0 px-10 pt-10 pb-2">
+        <h1 className="mb-2 text-[28px] font-semibold leading-[1.12] tracking-[-0.035em] text-[#1C1917]">
           Welcome back, {userName}.
         </h1>
-        <p className="text-sm" style={{ color: "#9C7B4F" }}>
-          Select a workspace to continue.
-        </p>
+        <p className="text-sm text-[#78716C]">Select a workspace to continue.</p>
       </header>
 
       {hasNoWorkspaces ? (
@@ -134,23 +123,17 @@ export function WorkspaceSwitcherPage() {
           onCreateWorkspace={() => setViewCreateCompanyWorkspace(true)}
         />
       ) : (
-        <div
-          className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[5fr_4fr_4fr] divide-x"
-          style={{ borderColor: "#F3DEC0" }}
-        >
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-10 px-10 pt-8 pb-10 lg:grid-cols-[5fr_4fr_4fr]">
           {/* Panel 1 */}
-          <div className="flex flex-col h-full min-h-0 px-8 py-7">
+          <div className="flex h-full min-h-0 flex-col">
             {/* Fixed: heading + search */}
             <div className="flex-shrink-0">
-              <h2
-                className="text-[10px] uppercase tracking-widest font-medium mb-4"
-                style={{ color: "#B89B6E" }}
-              >
+              <h2 className="mb-4 text-xs font-medium text-[#78716C]">
                 Companies
               </h2>
 
               <div className="relative mb-4">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                   <SearchIcon />
                 </span>
                 <input
@@ -158,20 +141,19 @@ export function WorkspaceSwitcherPage() {
                   placeholder="Filter companies…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-white rounded-md pl-9 pr-4 py-2.5 text-sm outline-none"
-                  style={{ border: "1px solid #F3DEC0", color: "#2B1B0E" }}
+                  className="h-10 w-full rounded-lg border border-transparent bg-[#FAFAF9] pl-9 pr-3 text-sm text-[#1C1917] outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-[#A8A29E] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
                 />
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {isLoading ? (
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <SkeletonCompanyCard />
                   <SkeletonCompanyCard />
                   <SkeletonCompanyCard />
                 </div>
               ) : activeCompanies.length > 0 ? (
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {activeCompanies.map((w) => (
                     <CompanyWorkSpaceCard
                       key={w.id}
@@ -185,10 +167,7 @@ export function WorkspaceSwitcherPage() {
                   ))}
                 </div>
               ) : (
-                <p
-                  className="text-sm py-6 text-center"
-                  style={{ color: "#B89B6E" }}
-                >
+                <p className="py-10 text-center text-[13px] text-[#A8A29E]">
                   {search
                     ? `No companies match "${search}"`
                     : "No company workspaces yet"}
@@ -196,19 +175,16 @@ export function WorkspaceSwitcherPage() {
               )}
 
               {archivedCompanies.length > 0 && !isLoading ? (
-                <div
-                  className="pt-4 mt-4"
-                  style={{ borderTop: "1px solid #F3DEC0" }}
-                >
+                <div className="mt-5">
                   <ToggleSwitch
                     checked={showArchived}
                     onChange={() => setShowArchived((prev) => !prev)}
                     label={`Show archived (${archivedCompanies.length})`}
                   />
                   {showArchived ? (
-                    <div className="mt-3 space-y-2.5">
+                    <div className="mt-3 space-y-2">
                       {archivedCompanies.map((w) => (
-                        <div key={w.id} className="opacity-40">
+                        <div key={w.id} className="opacity-60">
                           <CompanyWorkSpaceCard
                             id={w.id}
                             companyId={w.companyId}
@@ -224,17 +200,10 @@ export function WorkspaceSwitcherPage() {
                 </div>
               ) : null}
             </div>
-            <div className="flex-shrink-0 pt-4">
+            <div className="flex-shrink-0 pt-5">
               <button
                 onClick={() => setViewCreateCompanyWorkspace(true)}
-                className="text-white text-sm font-semibold py-2.5 px-5 rounded-md transition-colors duration-150 flex items-center gap-2 cursor-pointer"
-                style={{ background: "#FF6B35" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "#E85A26")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "#FF6B35")
-                }
+                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#FF6B35] bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors duration-150 hover:border-[#E85A26] hover:bg-[#E85A26] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
               >
                 <PlusIcon />
                 Create New Workspace
@@ -243,14 +212,11 @@ export function WorkspaceSwitcherPage() {
           </div>
 
           {/* Panel 2: Personal */}
-          <div className="flex flex-col h-full min-h-0 px-8 py-7">
-            <h2
-              className="flex-shrink-0 text-[10px] uppercase tracking-widest font-medium mb-4"
-              style={{ color: "#B89B6E" }}
-            >
+          <div className="flex h-full min-h-0 flex-col">
+            <h2 className="mb-4 flex-shrink-0 text-xs font-medium text-[#78716C]">
               Personal
             </h2>
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {isLoading ? (
                 <SkeletonPersonalCard />
               ) : personalWorkspace && personalWorkspace.id ? (
@@ -261,7 +227,7 @@ export function WorkspaceSwitcherPage() {
                   lastActivity={personalWorkspace.lastActivity}
                 />
               ) : (
-                <p className="text-sm" style={{ color: "#B89B6E" }}>
+                <p className="text-[13px] text-[#A8A29E]">
                   No personal workspace yet.
                 </p>
               )}
@@ -269,20 +235,15 @@ export function WorkspaceSwitcherPage() {
           </div>
 
           {/* Panel 3: All projects */}
-          <div className="flex flex-col h-full min-h-0 px-8 py-7">
-            <div className="flex-shrink-0 flex items-baseline justify-between mb-4">
-              <h2
-                className="text-[10px] uppercase tracking-widest font-medium"
-                style={{ color: "#B89B6E" }}
-              >
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="mb-4 flex flex-shrink-0 items-baseline justify-between">
+              <h2 className="text-xs font-medium text-[#78716C]">
                 All Projects
               </h2>
-              <span className="text-[10px]" style={{ color: "#B89B6E" }}>
-                by due date
-              </span>
+              <span className="text-xs text-[#A8A29E]">by due date</span>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#F0EDE8]">
               {isLoading ? (
                 <>
                   <SkeletonProjectRow />
@@ -293,10 +254,7 @@ export function WorkspaceSwitcherPage() {
               ) : allProjects.length > 0 ? (
                 allProjects.map((p) => <ProjectRow key={p.id} project={p} />)
               ) : (
-                <p
-                  className="text-sm py-6 text-center"
-                  style={{ color: "#B89B6E" }}
-                >
+                <p className="py-10 text-center text-[13px] text-[#A8A29E]">
                   No active projects.
                 </p>
               )}

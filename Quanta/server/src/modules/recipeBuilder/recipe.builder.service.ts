@@ -111,9 +111,7 @@ export class RecipeBuilderService {
         );
       }
       if (materialIds.has(ingredient.materialId)) {
-        throw new BadRequestException(
-          'Each ingredient can only be added once',
-        );
+        throw new BadRequestException('Each ingredient can only be added once');
       }
       materialIds.add(ingredient.materialId);
     }
@@ -173,5 +171,9 @@ export class RecipeBuilderService {
         unit: unitByMaterialId.get(ingredient.materialId) as string,
       })),
     });
+  }
+
+  async searchRecipeCategory(term: string, clerkId:string) {
+    return await this.recipeBuilderRepository.searchRecipeCategory(term, clerkId);
   }
 }

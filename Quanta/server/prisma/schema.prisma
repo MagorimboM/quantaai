@@ -23,6 +23,12 @@
 //   siteConditionId (null = general purpose),
 //   australianTradeCodeId (null = a custom trade code),
 //   takeoff_items.recipeId (see the note on that model).
+//
+// Recipe forms (form_types, forms, input_types, inputs, form_inputs,
+// input_options, operators) are SYSTEM data, like site_conditions:
+// the same for everyone, loaded by the seed, no userId / companyId.
+// Users never create or edit them. formulas is user data (it belongs
+// to a recipe), so it carries userId like recipe_materials does.
 // ============================================================
 
 generator client {
@@ -62,6 +68,7 @@ model User {
   recipeMaterials    RecipeMaterial[]
   recipeLabour       RecipeLabour[]
   recipeOverheads    RecipeOverhead[]
+  formulas           Formula[]
   projects           Project[]
   takeoffItems       TakeoffItem[]
   documents          Document[]
@@ -287,6 +294,7 @@ model Material {
   category        Category         @relation(fields: [categoryId], references: [id])
   siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
+  formulas        Formula[]
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("materials")
@@ -360,6 +368,12 @@ model Overhead {
 //                    the version of this recipe designed for that
 //                    condition (e.g. "110mm Brick Wall - Muddy Site"
 //                    vs "110mm Brick Wall" as a plain, general recipe)
+// formId          = required — every recipe has exactly one form (which
+//                    sets Rate-based or Advanced), but one form can be
+//                    used by many recipes
+// unit            = the one measurement unit of a Rate-based recipe
+//                    (m2, m, m3). Null for an Advanced recipe, which has
+//                    several inputs instead of one total.
 // ============================================================
 
 model Recipe {
@@ -367,29 +381,36 @@ model Recipe {
   userId          String
   companyId       String
   categoryId      String
+  formId          String
   siteConditionId String?
   name            String
   description     String?
-  unit            String
+  unit            String?
   isArchived      Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category        Category         @relation(fields: [categoryId], references: [id])
+  form            Form             @relation(fields: [formId], references: [id])
   siteCondition   SiteCondition?   @relation(fields: [siteConditionId], references: [id])
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]
+  formulas        Formula[]
   takeoffItems    TakeoffItem[]
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([formId])
   @@map("recipes")
 }
 
 // ============================================================
 // RECIPE MATERIALS
 // userId = owner — always follows recipe owner
+// quantity = the rate per 1 unit, used by Rate-based recipes. Null on an
+//   Advanced recipe, where the quantity comes from the material's formula
+//   (see FORMULAS).
 // ============================================================
 
 model RecipeMaterial {
@@ -397,7 +418,7 @@ model RecipeMaterial {
   userId     String
   recipeId   String
   materialId String
-  quantity   Float
+  quantity   Float?
   unit       String
 
   recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
@@ -614,4 +635,154 @@ model ChatMessage {
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
+}
+
+// ============================================================
+// RECIPE FORMS
+// System data: loaded by the seed, the same for everyone, read only.
+// No userId or companyId on these tables.
+//
+// A recipe has one form. The form's type decides how the recipe works:
+//   RATE_BASED -- one number typed at takeoff; every material has a rate
+//                 per 1 unit (recipe_materials.quantity). No inputs.
+//   ADVANCED   -- several inputs typed at takeoff (form_inputs); every
+//                 material has a formula (formulas) built from those inputs.
+// The front end sorts inputs and options, so none of these tables
+// stores a position.
+//
+// Seed rows (suggested codes):
+//   form_types   RATE_BASED, ADVANCED
+//   input_types  Number, Text, Option
+//   operators    ADD +, SUBTRACT -, MULTIPLY *, DIVIDE /,
+//                OPEN_BRACKET (, CLOSE_BRACKET )
+// ============================================================
+
+enum InputTypeKind {
+  OPTION
+  STRING
+  NUMBER
+}
+
+model FormType {
+  id   String @id @default(uuid())
+  name String
+  code String @unique
+
+  forms Form[]
+
+  @@map("form_types")
+}
+
+model Form {
+  id         String @id @default(uuid())
+  formTypeId String
+  name       String
+  code       String @unique
+
+  formType   FormType    @relation(fields: [formTypeId], references: [id])
+  formInputs FormInput[]
+  recipes    Recipe[]
+
+  @@index([formTypeId])
+  @@map("forms")
+}
+
+model InputType {
+  id          String        @id @default(uuid())
+  name        String
+  typeOfInput InputTypeKind
+
+  inputs Input[]
+
+  @@map("input_types")
+}
+
+// Inputs already used by a formula are never renamed or removed,
+// only added -- changing one would break the recipes that use it.
+model Input {
+  id          String @id @default(uuid())
+  inputTypeId String
+  name        String
+
+  inputType  InputType     @relation(fields: [inputTypeId], references: [id])
+  formInputs FormInput[]
+  options    InputOption[]
+  formulas   Formula[]
+
+  @@index([inputTypeId])
+  @@map("inputs")
+}
+
+// Which inputs a form has. No position: the front end sorts them.
+model FormInput {
+  id      String @id @default(uuid())
+  formId  String
+  inputId String
+
+  form  Form  @relation(fields: [formId], references: [id], onDelete: Cascade)
+  input Input @relation(fields: [inputId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, inputId])
+  @@index([inputId])
+  @@map("form_inputs")
+}
+
+// The choices of an input whose type is OPTION.
+model InputOption {
+  id      String @id @default(uuid())
+  inputId String
+  label   String
+  value   String
+
+  input Input @relation(fields: [inputId], references: [id], onDelete: Cascade)
+
+  @@index([inputId])
+  @@map("input_options")
+}
+
+model Operator {
+  id     String @id @default(uuid())
+  name   String @unique
+  symbol String
+
+  formulas Formula[]
+
+  @@map("operators")
+}
+
+// ============================================================
+// FORMULAS
+// userId = owner — always follows recipe owner
+// Used by Advanced recipes only. One row is one part of one
+// material's quantity formula. Every row sets exactly one of
+// operatorId / inputId / value:
+//   (Length + Width) * 2  =  (  Length  +  Width  )  *  2
+// position is the order of the parts within that formula.
+//
+// Prisma cannot express "exactly one is set", so add this to the
+// migration SQL and check it in the service too:
+//   ALTER TABLE formulas ADD CONSTRAINT formulas_one_part CHECK (
+//     (operator_id IS NOT NULL)::int + (input_id IS NOT NULL)::int
+//     + (value IS NOT NULL)::int = 1);
+// ============================================================
+
+model Formula {
+  id         String  @id @default(uuid())
+  userId     String
+  recipeId   String
+  materialId String
+  position   Int
+  operatorId String?
+  inputId    String?
+  value      Float?
+
+  recipe   Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  material Material  @relation(fields: [materialId], references: [id])
+  operator Operator? @relation(fields: [operatorId], references: [id])
+  input    Input?    @relation(fields: [inputId], references: [id])
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, materialId, position])
+  @@index([materialId])
+  @@map("formulas")
 }

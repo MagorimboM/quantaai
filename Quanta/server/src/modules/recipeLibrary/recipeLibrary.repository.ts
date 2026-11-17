@@ -51,21 +51,24 @@ const CATALOGUE_ITEM_SELECT = {
 } as const;
 
 // The catalogue rows a company can build recipes from: the user's own rows for
-// it, plus the shared ones that belong to no company (companyId null).
+// it. Every row belongs to a company (companyId is required), so there are no
+// shared company-less rows to include.
 function catalogueScope(companyId: string, userId: string) {
-  return { OR: [{ companyId, userId }, { companyId: null }] };
+  return { OR: [{ companyId, userId }] };
 }
 
 type RecipeRow = {
   id: string;
   name: string;
   description: string | null;
-  unit: string;
+  // null for an Advanced recipe, which has several inputs instead of one unit
+  unit: string | null;
   categoryId: string;
   category: { name: string };
   recipeMaterials: {
     id: string;
-    quantity: number;
+    // null for an Advanced recipe, where a formula gives the quantity
+    quantity: number | null;
     unit: string;
     material: { name: string };
   }[];
@@ -79,11 +82,13 @@ function toRecipe(row: RecipeRow): Recipe {
     recipeId: row.id,
     recipeName: row.name,
     recipeDescription: row.description ?? '',
-    recipeUnit: row.unit,
+    // Only Advanced recipes have no unit, and they can't be built yet
+    recipeUnit: row.unit ?? '',
     recipeMaterials: row.recipeMaterials.map((line) => ({
       id: line.id,
       name: line.material.name,
-      quantity: line.quantity,
+      // Only Advanced recipes have no rate (a formula gives the quantity)
+      quantity: line.quantity ?? 0,
       unit: line.unit,
     })),
   };
@@ -378,11 +383,19 @@ export class RecipeLibraryRepository {
       const labourUnit = unitOf(labourUnits, 'labour');
       const overheadUnit = unitOf(overheadUnits, 'overhead');
 
+      // Every recipe uses the Rate-based form until the form chooser exists.
+      // Needs the Rate-based form type and a form of that type to be seeded.
+      const rateBasedForm = await tx.form.findFirstOrThrow({
+        where: { formType: { code: 'RATE_BASED' } },
+        select: { id: true },
+      });
+
       const row = await tx.recipe.create({
         data: {
           userId: record.userId,
           companyId: record.companyId,
           categoryId: record.categoryId,
+          formId: rateBasedForm.id,
           name: record.name,
           description: record.description,
           unit: record.unit,

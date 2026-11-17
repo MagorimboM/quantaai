@@ -23,12 +23,12 @@ export function WorkspaceSwitcherSidebar() {
 
   return (
     <div
-      className="flex w-full items-center justify-between px-6 py-3"
-      style={{ background: "#FFFFFF", borderBottom: "1px solid #F3DEC0" }}
+      className="flex w-full items-center justify-between px-10 py-3"
+      style={{ background: "#FFFFFF", borderBottom: "1px solid #F0EDE8" }}
     >
       <div className="flex flex-row items-center gap-2">
         <HiOutlineCube size={22} style={{ color: "#FF6B35" }} />
-        <h1 className="font-display font-800 text-lg tracking-widest" style={{ color: "#2B1B0E" }}>
+        <h1 className="font-display font-800 text-base tracking-widest" style={{ color: "#1C1917" }}>
           QUANTA
         </h1>
       </div>
@@ -36,22 +36,22 @@ export function WorkspaceSwitcherSidebar() {
       <div className="flex flex-row items-center gap-1">
         <button
           onClick={() => navigate("/settings")}
-          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-mono transition-colors cursor-pointer"
-          style={{ color: "#2B1B0E" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF4EA")}
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer"
+          style={{ color: "#57534E" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAF9")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
-          <MdOutlineSettings size={18} style={{ color: "#9C7B4F" }} />
+          <MdOutlineSettings size={18} style={{ color: "#78716C" }} />
           Settings
         </button>
         {/* TODO :: no Help & Support destination exists in the app yet */}
         <button
-          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-mono transition-colors cursor-pointer"
-          style={{ color: "#2B1B0E" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF4EA")}
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer"
+          style={{ color: "#57534E" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAF9")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
-          <MdOutlineHelpOutline size={18} style={{ color: "#9C7B4F" }} />
+          <MdOutlineHelpOutline size={18} style={{ color: "#78716C" }} />
           Help &amp; Support
         </button>
       </div>
@@ -65,25 +65,25 @@ export function WorkspaceSwitcherSidebar() {
             {initial}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-sm font-medium font-mono" style={{ color: "#2B1B0E" }}>
+            <span className="truncate text-sm font-medium" style={{ color: "#1C1917" }}>
               {displayName}
             </span>
-            <span className="truncate text-xs font-mono" style={{ color: "#B89B6E" }}>
+            <span className="truncate text-xs" style={{ color: "#A8A29E" }}>
               {email}
             </span>
           </div>
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-mono transition-colors cursor-pointer"
-          style={{ color: "#9C7B4F" }}
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors cursor-pointer"
+          style={{ color: "#78716C" }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#FFF4EA";
-            e.currentTarget.style.color = "#B85C4F";
+            e.currentTarget.style.background = "#FFF4EE";
+            e.currentTarget.style.color = "#E85A26";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.color = "#9C7B4F";
+            e.currentTarget.style.color = "#78716C";
           }}
         >
           <MdLogout size={18} />

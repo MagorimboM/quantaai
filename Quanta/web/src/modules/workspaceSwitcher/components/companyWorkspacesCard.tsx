@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { ChevronRight } from "@/modules/workspaceSwitcher/components/workspaceSwitcherIcons";
-import { getInitials, getColorForName } from "@/modules/workspaceSwitcher/components/workspaceSwitcher.utils";
+import { getInitials } from "@/modules/workspaceSwitcher/components/workspaceSwitcher.utils";
 
 // TODO :: [backend] badge (e.g. "5 due this week") needs per-company due-date
 // aggregation that doesn't exist yet -- left out until that data is real.
@@ -29,42 +29,30 @@ export function CompanyWorkSpaceCard({
   }
 
   const initials = getInitials(companyName);
-  const color = getColorForName(companyName);
 
   return (
     <button
       onClick={goToWorkSpace}
-      className="w-full text-left bg-white border border-[#F3DEC0] rounded-md p-4 transition-all duration-150 hover:border-[#E8C99A] hover:shadow-[0_2px_12px_rgba(43,27,14,0.07)] group cursor-pointer"
+      className="group w-full cursor-pointer rounded-xl border border-[#F0EDE8] bg-white p-4 text-left transition-colors duration-150 hover:border-[#FFD9C9] hover:bg-[#FFF4EE] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
     >
-      <div className="flex items-start gap-3">
-        <div
-          className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 text-xs font-bold text-white select-none"
-          style={{ backgroundColor: color }}
-        >
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 select-none items-center justify-center rounded-[9px] bg-[#F5F5F4] text-xs font-semibold text-[#57534E] transition-colors duration-150 group-hover:bg-white group-hover:text-[#E85A26]">
           {initials}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-0.5">
-            <span className="text-[#2B1B0E] font-semibold text-sm leading-snug truncate">
-              {companyName}
-            </span>
-            <span className="flex-shrink-0 mt-0.5 transition-transform duration-150 group-hover:translate-x-0.5">
-              <ChevronRight />
-            </span>
-          </div>
-
-          <p className="text-[11px] text-[#B89B6E] mb-2.5">Active {lastActivity}</p>
-
-          <div className="flex items-center gap-4 text-xs text-[#9C7B4F]">
-            <span>
-              <span className="text-[#2B1B0E] font-medium">{numberOfProjects}</span> proj
-            </span>
-            <span>
-              <span className="text-[#2B1B0E] font-medium">{numberOfRecipes}</span> recipes
-            </span>
-          </div>
+        <div className="min-w-0 flex-1">
+          <p className="mb-1.5 truncate text-sm font-medium leading-[18px] text-[#1C1917]">
+            {companyName}
+          </p>
+          <p className="truncate text-xs leading-4 text-[#78716C]">
+            {numberOfProjects} projects · {numberOfRecipes} recipes · Active{" "}
+            {lastActivity}
+          </p>
         </div>
+
+        <span className="flex-shrink-0 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
+          <ChevronRight />
+        </span>
       </div>
     </button>
   );

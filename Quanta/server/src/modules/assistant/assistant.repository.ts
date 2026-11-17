@@ -131,7 +131,7 @@ export class AssistantRepository {
     });
 
     const userDocs = await prisma.document.findMany({
-      where: { companyId: null, projectId: null, isArchived: false },
+      where: { companyId: companyId, projectId: projectId, isArchived: false },
       select: { id: true, name: true },
     });
 

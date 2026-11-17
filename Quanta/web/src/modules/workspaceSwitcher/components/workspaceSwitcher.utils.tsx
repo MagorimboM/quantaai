@@ -2,8 +2,10 @@
 // generated client-side since the backend doesn't (and shouldn't need to)
 // store presentation data like this.
 
+// Small dots, so the colours are soft and few: orange first, then neutrals
+// and two muted accents.
 const PALETTE = [
-  '#7A5C3A', '#4A7B6F', '#6B5B8A', '#B85C4F', '#7A7060', '#5C7A9A',
+  '#FF6B35', '#A8A29E', '#5B8A72', '#78716C', '#E0A458', '#8B9DB0',
 ];
 
 export function getInitials(name: string): string {
@@ -39,7 +41,7 @@ export function formatDueDate(iso: string): { label: string; urgency: DueUrgency
 }
 
 export const urgencyTextClass: Record<DueUrgency, string> = {
-  overdue: 'text-[#B85C4F]',
-  soon: 'text-[#9C7B4F] font-semibold',
-  normal: 'text-[#B89B6E]',
+  overdue: 'text-[#E85A26] font-medium',
+  soon: 'text-[#57534E] font-medium',
+  normal: 'text-[#78716C]',
 };

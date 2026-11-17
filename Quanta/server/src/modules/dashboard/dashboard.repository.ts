@@ -17,7 +17,7 @@ export class DashboardRepository {
       },
     });
 
-    if (!companyInformation || null ) {
+    if (!companyInformation || null) {
       throw new NotFoundException('company does not exist');
     }
     return { id: companyInformation?.id, name: companyInformation?.name };
@@ -90,39 +90,9 @@ export class DashboardRepository {
   async getRecentActivity(
     request: DashboardRequest,
   ): Promise<RecentActivityResponse> {
-    const auditLogs = await prisma.auditLog.findMany({
-      where: { companyId: request.companyId },
-      orderBy: { changedAt: 'desc' },
-      take: 10,
-    });
 
-    const distinctUserIds = [
-      ...new Set(
-        auditLogs
-          .map((log) => log.userId)
-          .filter((id): id is string => id !== null),
-      ),
-    ];
+    let getRecentActivity:any = []
 
-    const users = await prisma.user.findMany({
-      where: { id: { in: distinctUserIds } },
-      select: { id: true, firstName: true, lastName: true },
-    });
-
-    const userNameById = new Map(
-      users.map((user) => [user.id, `${user.firstName} ${user.lastName}`]),
-    );
-
-    return auditLogs.map((log) => ({
-      id: log.id,
-      // An entry with no user was made by the system itself, not a person
-      userName: log.userId
-        ? (userNameById.get(log.userId) ?? 'Unknown user')
-        : 'System',
-      entityType: log.entityType,
-      action: log.action,
-      reason: log.reason,
-      changedAt: log.changedAt,
-    }));
+    return getRecentActivity;
   }
 }

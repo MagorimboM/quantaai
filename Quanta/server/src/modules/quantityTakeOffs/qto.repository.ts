@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
 import type {
   BillOfQuantsScope,
@@ -13,6 +17,8 @@ import type {
   CreateRecipeRequest,
 } from '@/modules/quantityTakeOffs/contracts/qto.request.contracts';
 import type {
+  RecipeDetail,
+  RecipeOption,
   GetBillOfQuantsResponse,
   GetRecipeOptionsResponse,
   GetRecipeCatalogueResponse,
@@ -25,10 +31,10 @@ import type {
   DeleteProjectBillOfQuantsResponse,
 } from '@/modules/quantityTakeOffs/contracts/qto.response.contracts';
 
-// What a company can see in its catalogue: its own rows plus the shared ones
-// that belong to no company (companyId null).
+// What a company can see in its catalogue: its own rows. Every row belongs to a
+// company (companyId is required), so there are no shared company-less rows.
 function visibleTo(companyId: string) {
-  return { OR: [{ companyId }, { companyId: null }] };
+  return { OR: [{ companyId }] };
 }
 
 // The one place that decides what a recipe looks like in the picker, so a recipe
@@ -65,6 +71,49 @@ const recipeOptionSelect = {
   },
 } as const;
 
+// A recipe as the database returns it. An Advanced recipe has no single unit
+// and no per-unit rates (a formula gives the quantities), so those can be null.
+type RecipeRowForDetail = {
+  id: string;
+  name: string;
+  unit: string | null;
+  category: { id: string; name: string };
+  recipeMaterials: {
+    id: string;
+    quantity: number | null;
+    unit: string;
+    material: { id: string; name: string };
+  }[];
+  recipeLabour: RecipeDetail['recipeLabour'];
+  recipeOverheads: RecipeDetail['recipeOverheads'];
+};
+
+// Turns a stored recipe into the shape the screens use. Only Advanced recipes
+// have a null unit or rate, and they can't be built yet, so a null becomes
+// '' / 0 here. Revisit when Advanced recipes arrive.
+function toRecipeDetail(row: RecipeRowForDetail): RecipeDetail {
+  return {
+    id: row.id,
+    name: row.name,
+    unit: row.unit ?? '',
+    category: row.category,
+    recipeMaterials: row.recipeMaterials.map((line) => ({
+      id: line.id,
+      quantity: line.quantity ?? 0,
+      unit: line.unit,
+      material: line.material,
+    })),
+    recipeLabour: row.recipeLabour,
+    recipeOverheads: row.recipeOverheads,
+  };
+}
+
+function toRecipeOption(
+  row: RecipeRowForDetail & { description: string | null },
+): RecipeOption {
+  return { ...toRecipeDetail(row), description: row.description };
+}
+
 const catalogueItemSelect = {
   id: true,
   name: true,
@@ -100,7 +149,7 @@ export class QuantityTakeOffsRepository {
     projectId: string;
     id?: string;
   }): Promise<GetBillOfQuantsResponse[]> {
-    return await prisma.takeoffItem.findMany({
+    const rows = await prisma.takeoffItem.findMany({
       where,
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       select: {
@@ -143,6 +192,11 @@ export class QuantityTakeOffsRepository {
         },
       },
     });
+
+    return rows.map((row) => ({
+      ...row,
+      recipe: row.recipe ? toRecipeDetail(row.recipe) : null,
+    }));
   }
 
   // The company's recipes that can newly be put on a takeoff, each with its
@@ -155,11 +209,12 @@ export class QuantityTakeOffsRepository {
   async getRecipeOptions(
     request: GetRecipeOptionsRequest,
   ): Promise<GetRecipeOptionsResponse> {
-    return await prisma.recipe.findMany({
+    const rows = await prisma.recipe.findMany({
       where: { companyId: request.companyId, isArchived: false },
       orderBy: [{ name: 'asc' }, { id: 'asc' }],
       select: recipeOptionSelect,
     });
+    return rows.map(toRecipeOption);
   }
 
   // Everything a recipe can be built from, in one request: the form searches it
@@ -174,13 +229,33 @@ export class QuantityTakeOffsRepository {
 
     const [categories, materials, labour, overheads] = await Promise.all([
       prisma.category.findMany({
-        where,
+        where: {
+          companyId: request.companyId,
+        },
         orderBy,
         select: { id: true, name: true },
       }),
-      prisma.material.findMany({ where, orderBy, select: catalogueItemSelect }),
-      prisma.labour.findMany({ where, orderBy, select: catalogueItemSelect }),
-      prisma.overhead.findMany({ where, orderBy, select: catalogueItemSelect }),
+      prisma.material.findMany({
+        where: {
+          companyId: request.companyId,
+        },
+        orderBy,
+        select: catalogueItemSelect,
+      }),
+      prisma.labour.findMany({
+        where: {
+          companyId: request.companyId,
+        },
+        orderBy,
+        select: catalogueItemSelect,
+      }),
+      prisma.overhead.findMany({
+        where: {
+          companyId: request.companyId,
+        },
+        orderBy,
+        select: catalogueItemSelect,
+      }),
     ]);
 
     return { categories, materials, labour, overheads };
@@ -193,7 +268,7 @@ export class QuantityTakeOffsRepository {
     request: CreateCatalogueItemRequest,
   ): Promise<CreateCatalogueItemResponse> {
     const category = await prisma.category.findFirst({
-      where: { id: request.categoryId, ...visibleTo(request.companyId) },
+      where: { id: request.categoryId, companyId: request.companyId },
       select: { id: true },
     });
     if (!category) {
@@ -260,7 +335,10 @@ export class QuantityTakeOffsRepository {
       }
 
       const materialUnits = await tx.material.findMany({
-        where: { id: { in: request.materials.map((c) => c.itemId) }, ...visible },
+        where: {
+          id: { in: request.materials.map((c) => c.itemId) },
+          ...visible,
+        },
         select: { id: true, unit: true },
       });
       const labourUnits = await tx.labour.findMany({
@@ -268,7 +346,10 @@ export class QuantityTakeOffsRepository {
         select: { id: true, unit: true },
       });
       const overheadUnits = await tx.overhead.findMany({
-        where: { id: { in: request.overheads.map((c) => c.itemId) }, ...visible },
+        where: {
+          id: { in: request.overheads.map((c) => c.itemId) },
+          ...visible,
+        },
         select: { id: true, unit: true },
       });
 
@@ -277,7 +358,9 @@ export class QuantityTakeOffsRepository {
         return (itemId: string) => {
           const unit = byId.get(itemId);
           if (unit === undefined) {
-            throw new NotFoundException(`A ${label} in this recipe was not found`);
+            throw new NotFoundException(
+              `A ${label} in this recipe was not found`,
+            );
           }
           return unit;
         };
@@ -286,11 +369,19 @@ export class QuantityTakeOffsRepository {
       const labourUnit = unitOf(labourUnits, 'labour');
       const overheadUnit = unitOf(overheadUnits, 'overhead');
 
+      // Every recipe uses the Rate-based form until the form chooser exists.
+      // Needs the Rate-based form type and a form of that type to be seeded.
+      const rateBasedForm = await tx.form.findFirstOrThrow({
+        where: { formType: { code: 'RATE_BASED' } },
+        select: { id: true },
+      });
+
       const created = await tx.recipe.create({
         data: {
           userId: request.userId,
           companyId: request.companyId,
           categoryId: category.id,
+          formId: rateBasedForm.id,
           name: request.name,
           description: request.description,
           unit: request.unit,
@@ -322,7 +413,7 @@ export class QuantityTakeOffsRepository {
         select: recipeOptionSelect,
       });
 
-      return created;
+      return toRecipeOption(created);
     });
   }
 
@@ -344,6 +435,12 @@ export class QuantityTakeOffsRepository {
     });
     if (!recipe) {
       throw new NotFoundException('Recipe not found');
+    }
+    // An Advanced recipe has no single unit to take off against yet
+    if (recipe.unit === null) {
+      throw new BadRequestException(
+        'This recipe has no single unit, so it cannot be added to a takeoff yet.',
+      );
     }
 
     const created = await prisma.takeoffItem.create({

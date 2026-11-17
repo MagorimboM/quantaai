@@ -12,16 +12,16 @@ export function ToggleSwitch({
       role="switch"
       aria-checked={checked}
       onClick={onChange}
-      className="flex items-center gap-2.5 text-xs text-[#B89B6E] hover:text-[#9C7B4F] transition-colors duration-150 cursor-pointer"
+      className="flex cursor-pointer items-center gap-[9px] text-xs text-[#78716C] transition-colors duration-150 hover:text-[#57534E]"
     >
       <div
-        className={`relative w-8 h-4 rounded-full border transition-colors duration-200 ${
-          checked ? "bg-[#9C7B4F] border-[#9C7B4F]" : "bg-transparent border-[#D4B896]"
+        className={`relative h-[18px] w-[30px] rounded-full border transition-colors duration-200 ${
+          checked ? "border-[#FF6B35] bg-[#FF6B35]" : "border-[#DEDAD4] bg-[#F5F5F4]"
         }`}
       >
         <div
-          className={`absolute top-0.5 w-3 h-3 rounded-full transition-all duration-200 ${
-            checked ? "left-4 bg-white" : "left-0.5 bg-[#B89B6E]"
+          className={`absolute top-[2px] h-3 w-3 rounded-full border bg-white transition-all duration-200 ${
+            checked ? "left-[14px] border-white" : "left-[2px] border-[#D6D3D1]"
           }`}
         />
       </div>

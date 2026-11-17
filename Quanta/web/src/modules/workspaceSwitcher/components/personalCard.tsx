@@ -27,32 +27,34 @@ export function PersonalWorkSpaceCard({
   return (
     <button
       onClick={goToWorkSpace}
-      className="w-full text-left bg-white border border-[#F3DEC0] rounded-md p-6 transition-all duration-150 hover:border-[#E8C99A] hover:shadow-[0_3px_18px_rgba(43,27,14,0.08)] group cursor-pointer"
+      className="group flex min-h-[215px] w-full cursor-pointer flex-col rounded-xl border border-[#F0EDE8] bg-white p-6 text-left transition-colors duration-150 hover:border-[#FFD9C9] hover:bg-[#FFF4EE] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
     >
-      <div className="flex items-start justify-between mb-6">
-        <div className="w-12 h-12 rounded-full bg-[#F3DEC0] flex items-center justify-center text-[#9C7B4F] text-xl font-bold select-none">
+      <div className="mb-6 flex items-start justify-between">
+        <div className="flex h-10 w-10 select-none items-center justify-center rounded-full border border-[#F0EDE8] bg-[#FAFAF9] text-sm font-semibold text-[#57534E]">
           ✦
         </div>
-        <span className="mt-1 transition-transform duration-150 group-hover:translate-x-0.5">
-          <ChevronRight color="#9C7B4F" />
+        <span className="mt-1 -translate-x-1 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
+          <ChevronRight />
         </span>
       </div>
 
-      <p className="text-[#2B1B0E] font-semibold text-base mb-1">My Workspace</p>
-      <p className="text-[11px] text-[#B89B6E] mb-7">Active {lastActivity}</p>
+      <p className="mb-1.5 text-base font-semibold leading-5 tracking-[-0.015em] text-[#1C1917]">
+        My Workspace
+      </p>
+      <p className="text-[13px] text-[#78716C]">Active {lastActivity}</p>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="mt-auto grid grid-cols-2 gap-4 pt-7">
         <div>
-          <p className="text-3xl font-bold text-[#2B1B0E] leading-none mb-1.5 tracking-tight">
+          <p className="mb-1 text-2xl font-semibold leading-none tracking-tight text-[#1C1917]">
             {numberOfProjects}
           </p>
-          <p className="text-[10px] text-[#9C7B4F] uppercase tracking-widest">Projects</p>
+          <p className="text-xs text-[#78716C]">Projects</p>
         </div>
         <div>
-          <p className="text-3xl font-bold text-[#2B1B0E] leading-none mb-1.5 tracking-tight">
+          <p className="mb-1 text-2xl font-semibold leading-none tracking-tight text-[#1C1917]">
             {numberOfRecipes}
           </p>
-          <p className="text-[10px] text-[#9C7B4F] uppercase tracking-widest">Recipes</p>
+          <p className="text-xs text-[#78716C]">Recipes</p>
         </div>
       </div>
     </button>

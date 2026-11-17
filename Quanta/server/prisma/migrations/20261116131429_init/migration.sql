@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "InputTypeKind" AS ENUM ('OPTION', 'STRING', 'NUMBER');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
@@ -177,10 +180,11 @@ CREATE TABLE "recipes" (
     "userId" TEXT NOT NULL,
     "companyId" TEXT NOT NULL,
     "categoryId" TEXT NOT NULL,
+    "formId" TEXT NOT NULL,
     "siteConditionId" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "unit" TEXT NOT NULL,
+    "unit" TEXT,
     "isArchived" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -194,7 +198,7 @@ CREATE TABLE "recipe_materials" (
     "userId" TEXT NOT NULL,
     "recipeId" TEXT NOT NULL,
     "materialId" TEXT NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
+    "quantity" DOUBLE PRECISION,
     "unit" TEXT NOT NULL,
 
     CONSTRAINT "recipe_materials_pkey" PRIMARY KEY ("id")
@@ -326,6 +330,85 @@ CREATE TABLE "chat_messages" (
     CONSTRAINT "chat_messages_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "form_types" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+
+    CONSTRAINT "form_types_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "forms" (
+    "id" TEXT NOT NULL,
+    "formTypeId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+
+    CONSTRAINT "forms_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "input_types" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "typeOfInput" "InputTypeKind" NOT NULL,
+
+    CONSTRAINT "input_types_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "inputs" (
+    "id" TEXT NOT NULL,
+    "inputTypeId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "inputs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "form_inputs" (
+    "id" TEXT NOT NULL,
+    "formId" TEXT NOT NULL,
+    "inputId" TEXT NOT NULL,
+
+    CONSTRAINT "form_inputs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "input_options" (
+    "id" TEXT NOT NULL,
+    "inputId" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+
+    CONSTRAINT "input_options_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "operators" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "symbol" TEXT NOT NULL,
+
+    CONSTRAINT "operators_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "formulas" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "recipeId" TEXT NOT NULL,
+    "materialId" TEXT NOT NULL,
+    "position" INTEGER NOT NULL,
+    "operatorId" TEXT,
+    "inputId" TEXT,
+    "value" DOUBLE PRECISION,
+
+    CONSTRAINT "formulas_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_clerkId_key" ON "users"("clerkId");
 
@@ -334,6 +417,39 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "australian_trade_codes_code_key" ON "australian_trade_codes"("code");
+
+-- CreateIndex
+CREATE INDEX "recipes_formId_idx" ON "recipes"("formId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "form_types_code_key" ON "form_types"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "forms_code_key" ON "forms"("code");
+
+-- CreateIndex
+CREATE INDEX "forms_formTypeId_idx" ON "forms"("formTypeId");
+
+-- CreateIndex
+CREATE INDEX "inputs_inputTypeId_idx" ON "inputs"("inputTypeId");
+
+-- CreateIndex
+CREATE INDEX "form_inputs_inputId_idx" ON "form_inputs"("inputId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "form_inputs_formId_inputId_key" ON "form_inputs"("formId", "inputId");
+
+-- CreateIndex
+CREATE INDEX "input_options_inputId_idx" ON "input_options"("inputId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "operators_name_key" ON "operators"("name");
+
+-- CreateIndex
+CREATE INDEX "formulas_materialId_idx" ON "formulas"("materialId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "formulas_recipeId_materialId_position_key" ON "formulas"("recipeId", "materialId", "position");
 
 -- AddForeignKey
 ALTER TABLE "company_team_members" ADD CONSTRAINT "company_team_members_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -406,6 +522,9 @@ ALTER TABLE "recipes" ADD CONSTRAINT "recipes_companyId_fkey" FOREIGN KEY ("comp
 
 -- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "recipes" ADD CONSTRAINT "recipes_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_siteConditionId_fkey" FOREIGN KEY ("siteConditionId") REFERENCES "site_conditions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -481,3 +600,33 @@ ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_projectId_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "forms" ADD CONSTRAINT "forms_formTypeId_fkey" FOREIGN KEY ("formTypeId") REFERENCES "form_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "inputs" ADD CONSTRAINT "inputs_inputTypeId_fkey" FOREIGN KEY ("inputTypeId") REFERENCES "input_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_inputId_fkey" FOREIGN KEY ("inputId") REFERENCES "inputs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "input_options" ADD CONSTRAINT "input_options_inputId_fkey" FOREIGN KEY ("inputId") REFERENCES "inputs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "formulas" ADD CONSTRAINT "formulas_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "recipes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "formulas" ADD CONSTRAINT "formulas_materialId_fkey" FOREIGN KEY ("materialId") REFERENCES "materials"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "formulas" ADD CONSTRAINT "formulas_operatorId_fkey" FOREIGN KEY ("operatorId") REFERENCES "operators"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "formulas" ADD CONSTRAINT "formulas_inputId_fkey" FOREIGN KEY ("inputId") REFERENCES "inputs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "formulas" ADD CONSTRAINT "formulas_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

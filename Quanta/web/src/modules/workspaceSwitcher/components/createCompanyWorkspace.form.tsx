@@ -3,6 +3,11 @@ import { MdClose } from "react-icons/md";
 import { postNewWorkspace } from "@/modules/workspaceSwitcher/api/api";
 import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/creatingWorkspace.modal";
 
+// Shared look for every field in this form
+const labelClass = "mb-1.5 block text-xs font-medium text-[#57534E]";
+const inputClass =
+  "h-10 w-full rounded-lg border border-[#DEDAD4] bg-white px-3 text-sm text-[#1C1917] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#A8A29E] focus:border-[#FF6B35] focus:ring-[3px] focus:ring-[#FFF4EE]";
+
 // TODO :: create modal component showing the creating workspace
 // TODO  :: create modal component showing success in creating workspace
 
@@ -53,21 +58,21 @@ export function CreateCompanyWorkspaceForm({
     <>
       <div
         title="background"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/20 p-6"
         onClick={onClose}
       >
         <div
           title="create-workspace-form"
           onClick={(e) => e.stopPropagation()}
-          className="flex max-h-[90vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg border bg-card p-6 text-card-foreground shadow-lg"
+          className="flex max-h-[90vh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-2xl border border-[#F0EDE8] bg-white p-6 text-[#1C1917]"
         >
-          <div className="flex items-center justify-between border-b pb-3">
-            <h1 className="text-lg font-semibold text-foreground">
+          <div className="flex items-center justify-between border-b border-[#F0EDE8] pb-4">
+            <h1 className="text-xl font-semibold tracking-[-0.025em] text-[#1C1917]">
               Create Company Workspace
             </h1>
             <button
               onClick={onClose}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+              className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#78716C] transition-colors hover:bg-[#FAFAF9] hover:text-[#1C1917]"
             >
               <MdClose size={18} />
             </button>
@@ -75,7 +80,7 @@ export function CreateCompanyWorkspaceForm({
 
           <div className="flex flex-col gap-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label className={labelClass}>
                 Company Name
               </label>
               <input
@@ -84,12 +89,12 @@ export function CreateCompanyWorkspaceForm({
                 required
                 value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              <label className={labelClass}>
                 Address
               </label>
               <input
@@ -98,13 +103,13 @@ export function CreateCompanyWorkspaceForm({
                 required
                 value={form.address}
                 onChange={(e) => updateField("address", e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className={inputClass}
               />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   City
                 </label>
                 <input
@@ -113,11 +118,11 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.city}
                   onChange={(e) => updateField("city", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   State
                 </label>
                 <input
@@ -126,11 +131,11 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.state}
                   onChange={(e) => updateField("state", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Postcode
                 </label>
                 <input
@@ -139,14 +144,14 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.postcode}
                   onChange={(e) => updateField("postcode", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Country
                 </label>
                 <input
@@ -154,11 +159,11 @@ export function CreateCompanyWorkspaceForm({
                   type="text"
                   value={form.country}
                   onChange={(e) => updateField("country", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Company Type
                 </label>
                 <input
@@ -167,14 +172,14 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.companyType}
                   onChange={(e) => updateField("companyType", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Phone Number
                 </label>
                 <input
@@ -183,11 +188,11 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.phone}
                   onChange={(e) => updateField("phone", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Email
                 </label>
                 <input
@@ -196,17 +201,17 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.email}
                   onChange={(e) => updateField("email", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 border-t pt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="flex flex-col gap-3 border-t border-[#F0EDE8] pt-5">
+              <p className="text-xs font-medium text-[#78716C]">
                 Primary Contact
               </p>
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                <label className={labelClass}>
                   Contact Name
                 </label>
                 <input
@@ -215,12 +220,12 @@ export function CreateCompanyWorkspaceForm({
                   required
                   value={form.contactName}
                   onChange={(e) => updateField("contactName", e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className={inputClass}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className={labelClass}>
                     Contact Phone
                   </label>
                   <input
@@ -230,11 +235,11 @@ export function CreateCompanyWorkspaceForm({
                     onChange={(e) =>
                       updateField("contactPhone", e.target.value)
                     }
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  <label className={labelClass}>
                     Contact Email
                   </label>
                   <input
@@ -244,23 +249,23 @@ export function CreateCompanyWorkspaceForm({
                     onChange={(e) =>
                       updateField("contactEmail", e.target.value)
                     }
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className={inputClass}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="flex justify-end gap-2 border-t border-[#F0EDE8] pt-5">
             <button
               onClick={onClose}
-              className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted cursor-pointer"
+              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#57534E] transition-colors hover:border-[#DEDAD4] hover:bg-[#FAFAF9]"
             >
               Cancel
             </button>
             <button
               onClick={() => submitForm()}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 cursor-pointer"
+              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#FF6B35] bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:border-[#E85A26] hover:bg-[#E85A26] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
             >
               Create Workspace
             </button>

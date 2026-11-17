@@ -7,6 +7,8 @@ import type {
   MaterialSearchResult,
   CreateRecipeResponse,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts';
+import { NotFound } from '@aws-sdk/client-s3';
+import { NotFoundException } from '@nestjs/common';
 
 // The most materials one search returns
 const SEARCH_RESULT_LIMIT = 50;
@@ -124,7 +126,9 @@ export class RecipeBuilderRepository {
 
   // Saves the recipe and its ingredients together: either both are stored or,
   // if anything fails, neither is, so there is never a recipe with half its lines.
-  async createNewRecipe(record: NewRecipeRecord): Promise<CreateRecipeResponse> {
+  async createNewRecipe(
+    record: NewRecipeRecord,
+  ): Promise<CreateRecipeResponse> {
     return await prisma.$transaction(async (tx) => {
       const created = await tx.$queryRaw<CreateRecipeResponse[]>`
         INSERT INTO recipes
@@ -158,5 +162,81 @@ export class RecipeBuilderRepository {
 
       return recipe;
     });
+  }
+
+  async searchRecipeCategory(term: string, clerkId: string) {
+    // TODO :: to include pagination/offset
+    const response = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({ where: { clerkId: clerkId } });
+
+      if (!user || user == undefined || user == null) {
+        throw new NotFoundException('user does not exist');
+      }
+
+      const categories = await tx.$queryRaw`
+      SELECT c."id", c."name", c."description" 
+      FROM category c 
+      WHERE c."userId" = ${user.id} 
+      AND c."name" ILIKE '${'%' + term + '%'}'
+      ORDER BY c."name" ASC 
+      LIMIT 10
+      `;
+      return categories;
+    });
+
+    return response;
+  }
+
+  async searchRecipeMaterial(term: string, clerkId: string) {
+    // TODO :: to include pagination/offset
+    const response = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: {
+          clerkId: clerkId,
+        },
+      });
+
+      if (user == null || user == undefined) {
+        throw new NotFoundException('user does not exist');
+      }
+
+      const results = await tx.$queryRaw`
+      SELECT m."id", m."name", m."description", m."unit" 
+      FROM materials m 
+      WHERE m."name" ILIKE ${'%' + term + '%'}
+      AND m."userId" = ${user.id}
+      ORDER BY m."name" ASC
+      LIMIT 10
+      `;
+      return results;
+    });
+
+    return response;
+  }
+
+  async searchSiteConditions(term: string, clerkId: string) {
+    // TODO :: to include pagination/offset
+    const response = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: {
+          clerkId: clerkId,
+        },
+      });
+
+      if (!user || user == null || user == undefined) {
+        throw new NotFoundException('user does not exist');
+      }
+
+      const results = await tx.$queryRaw`SELECT
+      SELECT s."id", s."name", s."description"
+  FROM site_conditions s
+  WHERE s."name" ILIKE ${'%' + term + '%'}
+  ORDER BY s."name" ASC
+  LIMIT 10`;
+
+      return results;
+    });
+
+    return response;
   }
 }

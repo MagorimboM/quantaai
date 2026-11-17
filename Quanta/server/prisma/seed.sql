@@ -1,4 +1,10 @@
 TRUNCATE TABLE
+  formulas,
+  form_inputs,
+  input_options,
+  inputs,
+  input_types,
+  operators,
   chat_messages,
   document_embeddings,
   documents,
@@ -11,6 +17,8 @@ TRUNCATE TABLE
   labour,
   materials,
   site_conditions,
+  forms,
+  form_types,
   categories,
   company_trade_codes,
   australian_trade_codes,
@@ -128,13 +136,42 @@ VALUES
   ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', NULL, 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW());
 
 -- ============================================================
+-- RECIPE FORMS  (system data: same for everyone, no userId/companyId)
+-- Every recipe needs a form, so these come before recipes.
+-- ============================================================
+
+INSERT INTO form_types (id, name, code)
+VALUES
+  ('seed-ft-rate', 'Rate-based recipe', 'RATE_BASED'),
+  ('seed-ft-adv',  'Advanced recipe',   'ADVANCED');
+
+INSERT INTO forms (id, "formTypeId", name, code)
+VALUES
+  ('seed-form-rate', 'seed-ft-rate', 'Rate-based form', 'RATE_BASED_DEFAULT');
+
+INSERT INTO input_types (id, name, "typeOfInput")
+VALUES
+  (gen_random_uuid(), 'Number', 'NUMBER'),
+  (gen_random_uuid(), 'Text',   'STRING'),
+  (gen_random_uuid(), 'Option', 'OPTION');
+
+INSERT INTO operators (id, name, symbol)
+VALUES
+  (gen_random_uuid(), 'ADD',           '+'),
+  (gen_random_uuid(), 'SUBTRACT',      '-'),
+  (gen_random_uuid(), 'MULTIPLY',      '*'),
+  (gen_random_uuid(), 'DIVIDE',        '/'),
+  (gen_random_uuid(), 'OPEN_BRACKET',  '('),
+  (gen_random_uuid(), 'CLOSE_BRACKET', ')');
+
+-- ============================================================
 -- RECIPES
 -- ============================================================
 
-INSERT INTO recipes (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "isArchived", "createdAt", "updatedAt")
+INSERT INTO recipes (id, "userId", "companyId", "categoryId", "formId", "siteConditionId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
-  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW());
+  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', NULL, '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'seed-form-rate', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 

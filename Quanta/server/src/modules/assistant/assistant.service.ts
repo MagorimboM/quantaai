@@ -199,8 +199,7 @@ export class AssistantService {
         joinDocuments(documents, 'projectDocument'),
       );
 
-    console.log(systemPrompt);
-
+  
     let reply: string;
     try {
       const response = await openAi.responses.create({

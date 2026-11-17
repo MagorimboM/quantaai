@@ -60,3 +60,16 @@ export async function createNewRecipe(
   );
   return response.data;
 }
+
+export async function searchCategory(searchTerm: string): Promise<
+  {
+    id: string;
+    name: string;
+    description: string;
+  }[]
+> {
+  const response = await apiClient.get(`/category/query?${searchTerm}`);
+  return response.data;
+}; 
+
+

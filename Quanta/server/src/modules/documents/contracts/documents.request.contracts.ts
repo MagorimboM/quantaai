@@ -1,7 +1,7 @@
 export type UploadFilesRequest = {
-  userId?: string;
-  companyId?: string;
-  projectId?: string;
+  userId: string;
+  companyId: string;
+  projectId: string;
   documentType?: string;
 };
 
@@ -21,9 +21,9 @@ export type SaveNewFileRequest = {
   fileType: string;
   fileName: string;
   fileBuffer: Buffer;
-  companyId?: string;
-  projectId?: string;
-  userId?: string;
+  companyId: string;
+  projectId: string;
+  userId: string;
 };
 export type File = {
   buffer: Buffer;

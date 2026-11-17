@@ -69,4 +69,12 @@ export class RecipeBuilderController {
       recipe,
     });
   }
+
+  @Get('category/:query')
+  async searchRecipeCategory(
+    @ClerkUserId() clerkId: string,
+    @Param('query') term: string,
+  ) {
+    return await this.recipeBuilderService.searchRecipeCategory(term, clerkId);
+  }
 }
