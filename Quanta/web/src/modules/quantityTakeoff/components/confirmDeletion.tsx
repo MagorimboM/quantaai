@@ -54,16 +54,23 @@ export function ConfirmDeletionModal({
           if (!open) onClose();
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{header}</AlertDialogTitle>
-            <AlertDialogDescription>{message}</AlertDialogDescription>
+            <AlertDialogTitle className="text-lg font-semibold tracking-tight text-[#1C1917]">
+              {header}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-[#78716C]">
+              {message}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           {errorMessage ? (
-            <p className="text-sm text-destructive">{errorMessage}</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
           ) : null}
           <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer" onClick={onClose}>
+            <AlertDialogCancel
+              className="cursor-pointer rounded-lg border border-[#F0EDE8] bg-white text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
+              onClick={onClose}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -72,7 +79,7 @@ export function ConfirmDeletionModal({
                 e.preventDefault();
                 confirm();
               }}
-              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="cursor-pointer rounded-lg bg-red-600 text-white transition-colors hover:bg-red-700"
             >
               Confirm
             </AlertDialogAction>

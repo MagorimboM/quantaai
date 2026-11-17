@@ -10,7 +10,7 @@ export function RecipeCategoryList({
   onSelectCategory: (categoryId: string) => void;
 }) {
   return (
-    <ul className="flex w-1/6 flex-col gap-2">
+    <ul className="flex w-1/6 flex-col gap-1.5">
       {categoryList.length > 0
         ? categoryList.map((category) => {
             const isActive = category.categoryId === selectedCategoryId;
@@ -20,12 +20,12 @@ export function RecipeCategoryList({
                   onClick={() => onSelectCategory(category.categoryId)}
                   className={
                     isActive
-                      ? "inline-flex w-full items-center justify-between rounded-md border border-zinc-900 bg-zinc-900 px-3 py-2 text-left text-sm font-medium text-white shadow-sm cursor-pointer"
-                      : "inline-flex w-full items-center justify-between rounded-md border border-zinc-300 bg-white px-3 py-2 text-left text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 hover:text-zinc-900 cursor-pointer"
+                      ? "inline-flex w-full items-center justify-between rounded-lg border border-[#FFD9C9] bg-[#FFF4EE] px-3 py-2 text-left text-sm font-medium text-[#FF6B35] cursor-pointer"
+                      : "inline-flex w-full items-center justify-between rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917] cursor-pointer"
                   }
                 >
                   <span>{category.categoryName}</span>
-                  <span className={isActive ? "text-zinc-300" : "text-zinc-400"}>
+                  <span className={isActive ? "text-[#FF6B35]" : "text-[#A8A29E]"}>
                     {category.numberOfRecipes}
                   </span>
                 </button>
@@ -34,10 +34,10 @@ export function RecipeCategoryList({
           })
         : Array.from({ length: 5 }).map((_, index) => (
             <li key={index} className="w-full">
-              <div className="w-full animate-pulse rounded-md border border-zinc-200 bg-white px-3 py-2 shadow-sm">
+              <div className="w-full animate-pulse rounded-lg bg-[#F5F5F4] px-3 py-2">
                 <div className="flex items-center justify-between">
-                  <div className="h-4 w-24 rounded bg-zinc-200" />
-                  <div className="h-4 w-8 rounded bg-zinc-100" />
+                  <div className="h-4 w-24 rounded bg-[#F0EDE8]" />
+                  <div className="h-4 w-8 rounded bg-[#F0EDE8]" />
                 </div>
               </div>
             </li>

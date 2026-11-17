@@ -5,12 +5,12 @@ import type { ProjectSummary } from "@/modules/projects/contracts/projects.respo
 
 // Shared classes so every input, label and section looks the same.
 const inputClass =
-  "w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring";
-const labelClass = "mb-1 block text-xs font-medium text-muted-foreground";
+  "w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-1.5 text-sm text-[#1C1917] placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]";
+const labelClass = "mb-1 block text-xs font-medium text-[#78716C]";
 const sectionClass =
-  "flex flex-col space-y-3 rounded-lg border bg-card p-4 text-card-foreground";
+  "flex flex-col space-y-3 rounded-xl border border-[#F0EDE8] bg-white p-4 text-[#1C1917]";
 const sectionTitleClass =
-  "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+  "text-xs font-semibold uppercase tracking-wider text-[#A8A29E]";
 
 export function NewProjectForm({
   onClose,
@@ -62,23 +62,23 @@ export function NewProjectForm({
   return (
     <div
       title="new-project-form"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
     >
       <form
         onSubmit={(e) => {
           e.preventDefault();
           submitNewProjectForm();
         }}
-        className="w-full max-w-4xl space-y-4 rounded-lg bg-background p-5 shadow-lg"
+        className="w-full max-w-4xl space-y-4 rounded-2xl border border-[#F0EDE8] bg-[#FAFAF9] p-5 shadow-xl"
       >
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">
+          <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">
             Enter Details Of New Projects
           </h1>
           <button
             type="button"
             onClick={onClose}
-            className=" cursor-pointer rounded-lg border px-3 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            className=" cursor-pointer rounded-lg border px-3 py-1 text-sm text-[#78716C] hover:border-[#FFD9C9] hover:bg-[#FFF4EE] hover:text-[#1C1917]"
           >
             x
           </button>
@@ -89,7 +89,7 @@ export function NewProjectForm({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className={labelClass}>
-                  Name<span className="ml-0.5 text-destructive">*</span>
+                  Name<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-name"
@@ -101,7 +101,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  Description<span className="ml-0.5 text-destructive">*</span>
+                  Description<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-description"
@@ -115,7 +115,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  Project-type<span className="ml-0.5 text-destructive">*</span>
+                  Project-type<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-type"
@@ -127,7 +127,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  Site Contact<span className="ml-0.5 text-destructive">*</span>
+                  Site Contact<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-site-contact-name"
@@ -141,7 +141,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  Site Address<span className="ml-0.5 text-destructive">*</span>
+                  Site Address<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-address"
@@ -154,7 +154,7 @@ export function NewProjectForm({
 
               <div>
                 <label className={labelClass}>
-                  Contact<span className="ml-0.5 text-destructive">*</span>
+                  Contact<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-site-contact-phone"
@@ -169,7 +169,7 @@ export function NewProjectForm({
 
               <div>
                 <label className={labelClass}>
-                  City<span className="ml-0.5 text-destructive">*</span>
+                  City<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-city"
@@ -181,7 +181,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  PostCode<span className="ml-0.5 text-destructive">*</span>
+                  PostCode<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-postcode"
@@ -195,7 +195,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  State<span className="ml-0.5 text-destructive">*</span>
+                  State<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-state"
@@ -207,7 +207,7 @@ export function NewProjectForm({
               </div>
               <div>
                 <label className={labelClass}>
-                  Country<span className="ml-0.5 text-destructive">*</span>
+                  Country<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-country"
@@ -220,7 +220,7 @@ export function NewProjectForm({
               <div>
                 <label className={labelClass}>
                   Project Number
-                  <span className="ml-0.5 text-destructive">*</span>
+                  <span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-number"
@@ -237,7 +237,7 @@ export function NewProjectForm({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className={labelClass}>
-                  Name<span className="ml-0.5 text-destructive">*</span>
+                  Name<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-client-name"
@@ -250,7 +250,7 @@ export function NewProjectForm({
 
               <div>
                 <label className={labelClass}>
-                  Email<span className="ml-0.5 text-destructive">*</span>
+                  Email<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-client-email"
@@ -264,7 +264,7 @@ export function NewProjectForm({
               <div>
                 <label className={labelClass}>
                   Phone/Mobile Number
-                  <span className="ml-0.5 text-destructive">*</span>
+                  <span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   title="project-client-phone"
@@ -281,7 +281,7 @@ export function NewProjectForm({
         </div>
         <div className="flex justify-end">
           <button
-            className="rounded-md cursor-pointer bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="rounded-lg cursor-pointer bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]"
             type="submit"
           >
             Create New Project

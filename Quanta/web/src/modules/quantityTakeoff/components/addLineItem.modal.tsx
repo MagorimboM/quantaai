@@ -153,21 +153,21 @@ export function AddLineItemModal({
   function renderResults() {
     if (isLoading) {
       return (
-        <p className="py-10 text-center text-sm text-muted-foreground">
+        <p className="py-10 text-center text-sm text-[#78716C]">
           Loading recipes…
         </p>
       );
     }
     if (recipes.length === 0) {
       return (
-        <p className="py-10 text-center text-sm text-muted-foreground">
+        <p className="py-10 text-center text-sm text-[#78716C]">
           You have no recipes yet. Press Create recipe to make your first one.
         </p>
       );
     }
     if (visibleRecipes.length === 0) {
       return (
-        <p className="py-10 text-center text-sm text-muted-foreground">
+        <p className="py-10 text-center text-sm text-[#78716C]">
           No recipes match your search. Try another word or clear the filter.
         </p>
       );
@@ -185,20 +185,20 @@ export function AddLineItemModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
         // A stray click must not close the modal while the line is being added
         onClick={isAdding ? undefined : onClose}
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="flex h-160 max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg"
+          className="flex h-160 max-h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
         >
-          <div className="flex items-start justify-between border-b px-5 py-4">
+          <div className="flex items-start justify-between border-b border-[#F0EDE8] px-5 py-4">
             <div>
-              <h1 className="text-base font-semibold text-foreground">
+              <h1 className="text-base font-semibold text-[#1C1917]">
                 Add line item
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-[#78716C]">
                 Pick a recipe, check what it contains, then enter the
                 measurement.
               </p>
@@ -207,16 +207,16 @@ export function AddLineItemModal({
               <button
                 type="button"
                 onClick={() => setShowCreateRecipe(true)}
-                className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+                className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[#F0EDE8] bg-white px-3 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
               >
-                <MdAdd size={14} className="text-primary" />
+                <MdAdd size={14} className="text-[#FF6B35]" />
                 Create recipe
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="cursor-pointer rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="cursor-pointer rounded-lg border border-[#F0EDE8] p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
               >
                 <MdClose size={18} />
               </button>
@@ -225,12 +225,12 @@ export function AddLineItemModal({
 
           <div className="flex min-h-0 flex-1">
             {/* Left: search, category filter, results */}
-            <div className="flex w-95 shrink-0 flex-col border-r">
+            <div className="flex w-95 shrink-0 flex-col border-r border-[#F0EDE8]">
               <div className="flex flex-col gap-2.5 p-4 pb-2.5">
-                <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-2.5 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+                <div className="flex h-9 items-center gap-2 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 focus-within:border-[#FF6B35] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FFF4EE]">
                   <MdOutlineSearch
                     size={18}
-                    className="text-muted-foreground"
+                    className="text-[#78716C]"
                   />
                   <input
                     type="text"
@@ -238,7 +238,7 @@ export function AddLineItemModal({
                     placeholder="Search recipes by name or description…"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-[#1C1917] outline-none placeholder:text-[#78716C]"
                   />
                 </div>
 
@@ -251,8 +251,8 @@ export function AddLineItemModal({
                         onClick={() => setCategoryId(category.id)}
                         className={`h-7 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
                           categoryId === category.id
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "bg-card text-muted-foreground hover:bg-muted"
+                            ? "border-[#FF6B35] bg-[#FF6B35] text-white"
+                            : "border-[#F0EDE8] bg-white text-[#78716C] hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
                         }`}
                       >
                         {category.name}
@@ -261,7 +261,7 @@ export function AddLineItemModal({
                   )}
                 </div>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[#78716C]">
                   {visibleRecipes.length}{" "}
                   {visibleRecipes.length === 1 ? "recipe" : "recipes"}
                 </p>
@@ -301,12 +301,12 @@ export function AddLineItemModal({
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 p-10 text-center">
                   <MdOutlineDescription
                     size={32}
-                    className="text-muted-foreground"
+                    className="text-[#78716C]"
                   />
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-medium text-[#1C1917]">
                     Select a recipe to preview it
                   </p>
-                  <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+                  <p className="max-w-xs text-sm leading-relaxed text-[#78716C]">
                     You’ll see its description and every material, labour and
                     overhead before it goes on the takeoff.
                   </p>

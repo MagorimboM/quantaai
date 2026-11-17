@@ -25,7 +25,7 @@ import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
 const inputClass =
-  "h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring";
+  "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 
 type RecipeFormState = {
   name: string;
@@ -260,20 +260,20 @@ export function CreateRecipeModal<TCreated>({
   return (
     <>
       <div
-        className="fixed inset-0 z-55 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-55 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
         // A stray click must not close the modal while the recipe is saving
         onClick={isSaving ? undefined : onClose}
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg"
+          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
         >
-          <div className="flex items-start justify-between border-b px-5 py-4">
+          <div className="flex items-start justify-between border-b border-[#F0EDE8] px-5 py-4">
             <div>
-              <h1 className="text-base font-semibold text-foreground">
+              <h1 className="text-base font-semibold text-[#1C1917]">
                 Create recipe
               </h1>
-              <p className="text-sm text-secondary-foreground">
+              <p className="text-sm text-[#78716C]">
                 Describe what 1 unit of this work needs. Quantities are per 1 unit.
               </p>
             </div>
@@ -281,7 +281,7 @@ export function CreateRecipeModal<TCreated>({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="cursor-pointer rounded-md border p-1.5 text-secondary-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="cursor-pointer rounded-lg border border-[#F0EDE8] p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
             >
               <MdClose size={18} />
             </button>
@@ -289,14 +289,14 @@ export function CreateRecipeModal<TCreated>({
 
           <div className="flex min-h-0 flex-1">
             {/* Left: the recipe's own details */}
-            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r px-5 py-4">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#F0EDE8] px-5 py-4">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
                 Recipe details
               </span>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-name" className="text-xs font-medium text-foreground">
-                  Name<span className="ml-0.5 text-destructive">*</span>
+                <label htmlFor="recipe-name" className="text-xs font-medium text-[#1C1917]">
+                  Name<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   id="recipe-name"
@@ -309,8 +309,8 @@ export function CreateRecipeModal<TCreated>({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-category" className="text-xs font-medium text-foreground">
-                  Category<span className="ml-0.5 text-destructive">*</span>
+                <label htmlFor="recipe-category" className="text-xs font-medium text-[#1C1917]">
+                  Category<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <select
                   id="recipe-category"
@@ -328,7 +328,7 @@ export function CreateRecipeModal<TCreated>({
                 <button
                   type="button"
                   onClick={openCreateCategory}
-                  className="flex cursor-pointer items-center gap-1 self-start py-0.5 text-xs font-medium text-primary hover:underline"
+                  className="flex cursor-pointer items-center gap-1 self-start py-0.5 text-xs font-medium text-[#FF6B35] hover:underline"
                 >
                   <MdAdd size={12} />
                   Create new category
@@ -336,8 +336,8 @@ export function CreateRecipeModal<TCreated>({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-unit" className="text-xs font-medium text-foreground">
-                  Per (unit)<span className="ml-0.5 text-destructive">*</span>
+                <label htmlFor="recipe-unit" className="text-xs font-medium text-[#1C1917]">
+                  Per (unit)<span className="ml-0.5 text-red-600">*</span>
                 </label>
                 <input
                   id="recipe-unit"
@@ -350,7 +350,7 @@ export function CreateRecipeModal<TCreated>({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-description" className="text-xs font-medium text-foreground">
+                <label htmlFor="recipe-description" className="text-xs font-medium text-[#1C1917]">
                   Description
                 </label>
                 <textarea
@@ -358,14 +358,14 @@ export function CreateRecipeModal<TCreated>({
                   placeholder="What this recipe covers and what it leaves out"
                   value={form.description}
                   onChange={(e) => updateField("description", e.target.value)}
-                  className="h-22 w-full resize-none rounded-md border border-input bg-background px-2.5 py-2 text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
+                  className="h-22 w-full resize-none rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 py-2 text-sm leading-relaxed text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
                 />
               </div>
             </div>
 
             {/* Right: pick components from the catalogue, then set quantities */}
             <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-5 py-4">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
                 Components
               </span>
 
@@ -390,9 +390,9 @@ export function CreateRecipeModal<TCreated>({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t px-5 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-t border-[#F0EDE8] px-5 py-3.5">
             <p
-              className={`text-xs ${errorMessage ? "text-destructive" : "text-muted-foreground"}`}
+              className={`text-xs ${errorMessage ? "text-red-600" : "text-[#78716C]"}`}
             >
               {errorMessage ??
                 (isLoading
@@ -405,7 +405,7 @@ export function CreateRecipeModal<TCreated>({
               <button
                 type="button"
                 onClick={onClose}
-                className="h-9 cursor-pointer rounded-md border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+                className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
               >
                 Cancel
               </button>
@@ -413,7 +413,7 @@ export function CreateRecipeModal<TCreated>({
                 type="button"
                 onClick={saveRecipe}
                 disabled={!canSave}
-                className="h-9 cursor-pointer rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Save recipe
               </button>

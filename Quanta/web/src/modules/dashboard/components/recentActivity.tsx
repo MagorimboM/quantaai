@@ -28,10 +28,14 @@ export function RecentActivity({ companyId }: { companyId: string }) {
   }, [companyId]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">
-      <div className="flex flex-row items-center gap-2 shrink-0">
-        <HiOutlineClock size={20} className="text-muted-foreground" />
-        <h1 className="text-lg font-semibold text-foreground">Recent Activity</h1>
+    <div className="flex h-full min-h-0 flex-col gap-4 rounded-2xl border border-[#F0EDE8] bg-white p-5 text-[#1C1917]">
+      <div className="flex flex-row items-center gap-3 shrink-0">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
+          <HiOutlineClock size={18} />
+        </span>
+        <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">
+          Recent Activity
+        </h1>
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col gap-2 overflow-y-auto">
@@ -39,22 +43,22 @@ export function RecentActivity({ companyId }: { companyId: string }) {
           activity.map((item) => (
             <div
               key={item.id}
-              className="flex flex-row items-center justify-between rounded-md border bg-muted/40 px-3 py-2"
+              className="flex flex-row items-center justify-between rounded-xl border border-[#F0EDE8] bg-white px-3 py-2.5"
             >
-              <p className="text-sm text-foreground">
+              <p className="text-sm text-[#1C1917]">
                 <span className="font-medium">{item.userName}</span>{" "}
-                <span className="text-muted-foreground">{item.action}</span>{" "}
-                <span className="font-medium">{item.entityType}</span>
+                <span className="text-[#78716C]">{item.action}</span>{" "}
+                <span className="font-medium text-[#FF6B35]">{item.entityType}</span>
               </p>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-xs text-[#A8A29E] whitespace-nowrap">
                 {timeAgo(item.changedAt)}
               </span>
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center gap-2 py-12 text-[#A8A29E]">
             <HiOutlineClock size={32} />
-            <p className="text-sm">No recent activity</p>
+            <p className="text-sm text-[#78716C]">No recent activity</p>
           </div>
         )}
       </div>

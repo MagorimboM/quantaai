@@ -36,30 +36,34 @@ export function CompanyStandardsComplianceDocs({
   }, [companyId]);
 
   return (
-    <div className="flex w-full flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
+    <div className="flex w-full flex-col gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6">
       <div className="flex flex-row items-center gap-3">
-        <MdOutlineShield size={26} />
-        <h1 className="text-2xl font-bold">Standards and Compliance</h1>
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
+          <MdOutlineShield size={18} />
+        </span>
+        <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">
+          Standards and Compliance
+        </h1>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading documents…</p>
+        <p className="text-sm text-[#78716C]">Loading documents…</p>
       ) : documents.length > 0 ? (
-        <ul className="flex flex-col divide-y">
+        <ul className="flex flex-col divide-y divide-[#F0EDE8]">
           {documents.map((document) => (
             <li
               key={document.id}
-              className="flex flex-row items-center justify-between gap-3 py-2"
+              className="flex flex-row items-center justify-between gap-3 py-3"
             >
-              <p className="text-sm text-foreground">{document.name}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-medium text-[#1C1917]">{document.name}</p>
+              <p className="text-xs text-[#A8A29E]">
                 Added {new Date(document.uploadedAt).toLocaleDateString()}
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="rounded-xl border border-dashed border-[#F0EDE8] bg-[#FAFAF9] px-4 py-6 text-center text-sm text-[#78716C]">
           No standards or compliance documents yet.
         </p>
       )}

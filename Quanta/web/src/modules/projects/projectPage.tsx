@@ -72,8 +72,8 @@ export function ProjectsPage() {
 
   if (!companyId) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-1 items-center justify-center bg-white p-4">
+        <p className="text-sm text-[#78716C]">
           Select a company workspace to see its projects.
         </p>
       </div>
@@ -81,9 +81,9 @@ export function ProjectsPage() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-background text-foreground">
+    <div className="flex h-full w-full flex-col bg-[#FAFAF9] text-[#1C1917]">
       {/* Header */}
-      <header className="flex items-center justify-between border-b px-4 py-3">
+      <header className="flex items-center justify-between border-b border-[#F0EDE8] bg-white px-4 py-3">
         <div className="max-w-md flex-1">
           <SearchBarComp onSearch={handleSearch} />
           
@@ -102,8 +102,8 @@ export function ProjectsPage() {
         />
 
         {totalCount > 0 ? (
-          <div className="flex items-center justify-between border-t px-4 py-3">
-            <p className="text-xs text-muted-foreground">
+          <div className="flex items-center justify-between border-t border-[#F0EDE8] bg-white px-4 py-3">
+            <p className="text-xs text-[#78716C]">
               Page {currentPage} of {totalPages} — {totalCount} project
               {totalCount === 1 ? "" : "s"}
             </p>
@@ -111,14 +111,14 @@ export function ProjectsPage() {
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage <= 1}
-                className="rounded-md border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-[#F0EDE8] bg-white px-3 py-1.5 text-xs font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
                 Previous
               </button>
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className="rounded-md border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                className="rounded-lg border border-[#F0EDE8] bg-white px-3 py-1.5 text-xs font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
                 Next
               </button>

@@ -37,19 +37,19 @@ export function ProjectCard({
   return (
     <button
       onClick={openProjectTakeoff}
-      className="flex w-full flex-row justify-between rounded-lg border bg-muted/40 text-left cursor-pointer transition-colors hover:bg-muted"
+      className="group flex w-full flex-row justify-between rounded-xl border border-[#F0EDE8] bg-white text-left cursor-pointer transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]/40"
     >
       <div className="flex flex-1 flex-col gap-1 p-4">
-        <h1 className="text-sm font-medium text-foreground">{project.name}</h1>
-        <p className="text-sm text-muted-foreground capitalize">
+        <h1 className="text-sm font-semibold text-[#1C1917]">{project.name}</h1>
+        <p className="text-sm text-[#78716C] capitalize">
           {humanise(project.type)}
         </p>
         <div className="flex flex-row items-center justify-between gap-4">
-          <p className="flex flex-row items-center gap-1.5 text-xs text-muted-foreground">
+          <p className="flex flex-row items-center gap-1.5 text-xs text-[#A8A29E]">
             <HiOutlineClock size={14} /> Updated {timeAgo(project.updatedAt)}
           </p>
           {project.numberOfLineItems !== undefined ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[#A8A29E]">
               {project.numberOfLineItems} item
               {project.numberOfLineItems === 1 ? "" : "s"}
             </p>
@@ -57,11 +57,14 @@ export function ProjectCard({
         </div>
       </div>
       <div className="flex flex-col items-end justify-between p-4">
-        <span className="inline-flex items-center rounded-full border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground capitalize">
+        <span className="inline-flex items-center rounded-full bg-[#FFF4EE] px-2.5 py-0.5 text-xs font-medium text-[#FF6B35] capitalize">
           {humanise(project.status)}
         </span>
 
-        <MdOutlineArrowRightAlt className="text-muted-foreground" size={20} />
+        <MdOutlineArrowRightAlt
+          className="text-[#A8A29E] transition-colors group-hover:text-[#FF6B35]"
+          size={20}
+        />
       </div>
     </button>
   );

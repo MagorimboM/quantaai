@@ -104,10 +104,12 @@ export function CompanyProfile({ companyId }: { companyId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
+    <div className="flex flex-col gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6">
       <div className="flex flex-row items-center gap-3">
-        <HiOutlineOfficeBuilding size={24} />
-        <h1 className="text-2xl font-bold">Company Information</h1>
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
+          <HiOutlineOfficeBuilding size={18} />
+        </span>
+        <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">Company Information</h1>
       </div>
 
       {form ? (
@@ -115,47 +117,47 @@ export function CompanyProfile({ companyId }: { companyId: string }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {FIELDS.map(({ key, label, type, wide }) => (
               <div key={key} className={wide ? "sm:col-span-2" : ""}>
-                <label className="mb-1 block text-sm text-muted-foreground">
+                <label className="mb-1.5 block text-xs font-medium text-[#78716C]">
                   {label}
                 </label>
                 <input
                   type={type ?? "text"}
                   value={form[key]}
                   onChange={(e) => updateField(key, e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-2 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors hover:border-[#FFD9C9] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
                 />
               </div>
             ))}
           </div>
 
           {errorMessage ? (
-            <p className="text-sm text-destructive">{errorMessage}</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
           ) : null}
 
-          <div className="flex flex-row items-center justify-end gap-3">
+          <div className="flex flex-row items-center justify-end gap-3 border-t border-[#F0EDE8] pt-4">
             {justSaved ? (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-[#A8A29E]">
                 All changes saved
               </span>
             ) : null}
             <button
               onClick={cancelChanges}
               disabled={!hasChanges || isSaving}
-              className="rounded-lg border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/70 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={saveChanges}
               disabled={!hasChanges || isSaving}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">Loading company details…</p>
+        <p className="text-sm text-[#78716C]">Loading company details…</p>
       )}
     </div>
   );

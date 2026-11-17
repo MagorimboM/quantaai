@@ -35,15 +35,15 @@ import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 // endpoint doesn't return one. Add it to the response and show it under the title.
 
 const toolbarButton =
-  "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-all hover:bg-secondary/70 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+  "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-all hover:border-[#FFD9C9] hover:bg-[#FFF4EE] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
 
 // Secondary actions are icon-only (a 36px square) so the toolbar stays on one
 // line. Their meaning is carried by a hover tooltip (`title`) and `aria-label`.
 const iconButton =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-md border bg-secondary text-secondary-foreground transition-all hover:bg-secondary/70 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#F0EDE8] bg-white text-[#78716C] transition-all hover:border-[#FFD9C9] hover:bg-[#FFF4EE] hover:text-[#FF6B35] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
 
 const primaryButton =
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100";
+  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#E85A26] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
 
 /**
  * The quantity takeoff of one project: the heart of the product.
@@ -201,20 +201,20 @@ function TakeoffEditor({
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-background text-foreground">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 shrink-0">
+    <div className="flex h-full w-full flex-col bg-[#FAFAF9] text-[#1C1917]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0EDE8] bg-white px-4 py-3 shrink-0">
         <div className="flex flex-col">
-          <h1 className="text-sm font-medium text-foreground">
+          <h1 className="text-base font-semibold tracking-tight text-[#1C1917]">
             Quantity takeoff
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[#78716C]">
             {lineItems.length} line item{lineItems.length === 1 ? "" : "s"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           {hasUnsavedChanges ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-[#78716C]">
               Unsaved changes
             </span>
           ) : null}
@@ -254,7 +254,7 @@ function TakeoffEditor({
             </button>
           </div>
 
-          <span className="h-6 w-px bg-border" aria-hidden="true" />
+          <span className="h-6 w-px bg-[#F0EDE8]" aria-hidden="true" />
 
           <div className="flex items-center gap-1.5">
             <button
@@ -262,7 +262,7 @@ function TakeoffEditor({
               aria-label="Start afresh"
               disabled={lineItems.length === 0}
               onClick={() => setShowStartAfresh(true)}
-              className={`${iconButton} text-destructive`}
+              className={`${iconButton} text-red-600`}
             >
               <MdOutlineRestartAlt size={18} />
             </button>
@@ -287,13 +287,13 @@ function TakeoffEditor({
         </div>
       </div>
 
-      <div className="flex flex-row justify-start border-b p-2 shrink-0">
-        <div className="flex flex-row items-center gap-2 rounded-md border border-input bg-background px-2 py-1.5">
-          <MdOutlineSearch size={20} className="text-muted-foreground" />
+      <div className="flex flex-row justify-start border-b border-[#F0EDE8] bg-white p-2 shrink-0">
+        <div className="flex flex-row items-center gap-2 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2 py-1.5">
+          <MdOutlineSearch size={20} className="text-[#78716C]" />
           <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-0 bg-transparent text-sm focus-visible:outline-none placeholder:text-muted-foreground"
+            className="border-0 bg-transparent text-sm focus-visible:outline-none placeholder:text-[#78716C]"
             type="text"
             placeholder="Search line items…"
           />
@@ -302,19 +302,19 @@ function TakeoffEditor({
 
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {isLoading ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-[#78716C]">
             Loading line items…
           </p>
         ) : lineItems.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-[#78716C]">
             No line items yet.
           </p>
         ) : visibleItems.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-[#78716C]">
             No line items match "{searchTerm}".
           </p>
         ) : (
-          <div className="rounded-lg border bg-card text-card-foreground">
+          <div className="rounded-xl border border-[#F0EDE8] bg-white text-[#1C1917]">
             {visibleItems.map((item) => (
               <LineItem
                 key={item.id}

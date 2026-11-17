@@ -28,10 +28,12 @@ export function RecentProjects({ companyId }: { companyId: string }) {
   }, [companyId]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 rounded-lg border bg-card p-4 text-card-foreground">
-      <div className="flex flex-row items-center gap-2 shrink-0">
-        <HiOutlineDocumentText size={20} className="text-muted-foreground" />
-        <h1 className="text-lg font-semibold text-foreground">
+    <div className="flex h-full min-h-0 flex-col gap-4 rounded-2xl border border-[#F0EDE8] bg-white p-5 text-[#1C1917]">
+      <div className="flex flex-row items-center gap-3 shrink-0">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
+          <HiOutlineDocumentText size={18} />
+        </span>
+        <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">
           Recent Projects
         </h1>
       </div>
@@ -42,9 +44,9 @@ export function RecentProjects({ companyId }: { companyId: string }) {
             <ProjectCard key={project.id} project={project} />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center gap-2 py-12 text-[#A8A29E]">
             <HiOutlineDocumentText size={32} />
-            <p className="text-sm">No projects yet</p>
+            <p className="text-sm text-[#78716C]">No projects yet</p>
           </div>
         )}
       </div>

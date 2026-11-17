@@ -19,8 +19,8 @@ export function SettingsPage() {
 
   if (!companyId) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-1 items-center justify-center bg-white p-4">
+        <p className="text-sm text-[#78716C]">
           Select a company workspace to see its settings.
         </p>
       </div>
@@ -28,21 +28,21 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background text-foreground">
-      <header className="flex w-full flex-col gap-4 px-4 py-3">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-bold text-3xl">Settings</h1>
-          <p className="text-sm text-muted-foreground">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#FAFAF9] text-[#1C1917]">
+      <div className="flex w-full flex-col gap-8 px-6 py-8">
+        <header className="flex w-full flex-col gap-1.5">
+          <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
+          <p className="text-sm text-[#78716C]">
             Manage your company workspace configuration
           </p>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex w-full flex-col gap-6 p-4">
-        <CompanyProfile companyId={companyId} />
-        <CompanyTeamMembers companyId={companyId} />
-        <CompanyStandardsComplianceDocs companyId={companyId} />
-      </main>
+        <main className="flex w-full flex-col gap-6">
+          <CompanyProfile companyId={companyId} />
+          <CompanyTeamMembers companyId={companyId} />
+          <CompanyStandardsComplianceDocs companyId={companyId} />
+        </main>
+      </div>
     </div>
   );
 }

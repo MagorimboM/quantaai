@@ -12,7 +12,7 @@ import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
 const menuItemClass =
-  "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted cursor-pointer";
+  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[#1C1917] transition-colors hover:bg-[#FFF4EE] cursor-pointer";
 
 /**
  * One recipe in the library, with its menu:
@@ -77,13 +77,13 @@ export function RecipeCard({
   }
 
   return (
-    <div className="relative rounded-lg border bg-card p-4 text-card-foreground shadow-sm transition-shadow hover:shadow-md">
+    <div className="relative rounded-xl border border-[#F0EDE8] bg-white p-4 text-[#1C1917] transition-colors hover:border-[#FFD9C9]">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h1 className="text-sm font-semibold text-foreground">
+          <h1 className="text-sm font-semibold text-[#1C1917]">
             {recipe.recipeName}
           </h1>
-          <h2 className="text-xs text-muted-foreground">
+          <h2 className="text-xs text-[#78716C]">
             {recipe.categoryName}
           </h2>
         </div>
@@ -93,14 +93,14 @@ export function RecipeCard({
             title="recipe-actions-toggle"
             aria-label="Recipe actions"
             onClick={() => setShowMenu((prev) => !prev)}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+            className="rounded-lg p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917] cursor-pointer"
           >
             <MdMoreVert size={18} />
           </button>
           {showMenu ? (
             <div
               title="recipe-action-option"
-              className="absolute right-0 top-full z-10 mt-1 w-40 rounded-md border bg-popover p-1 shadow-md"
+              className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-[#F0EDE8] bg-white p-1 shadow-lg"
             >
               {!isArchivedView ? (
                 <button
@@ -127,7 +127,7 @@ export function RecipeCard({
                   setShowMenu(false);
                   setShowDeleteConfirm(true);
                 }}
-                className={`${menuItemClass} text-destructive`}
+                className={`${menuItemClass} text-red-600`}
               >
                 <FiTrash2 size={14} />
                 Delete
@@ -138,12 +138,12 @@ export function RecipeCard({
       </div>
 
       {recipe.recipeDescription ? (
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-[#78716C]">
           {recipe.recipeDescription}
         </p>
       ) : null}
 
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className="mt-3 text-xs text-[#78716C]">
         Per {recipe.recipeUnit} · {recipe.recipeMaterials.length} material
         {recipe.recipeMaterials.length === 1 ? "" : "s"}
       </p>

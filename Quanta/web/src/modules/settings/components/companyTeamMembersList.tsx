@@ -21,7 +21,7 @@ const EMPTY_MEMBER = {
 type NewMember = typeof EMPTY_MEMBER;
 
 const inputClass =
-  "w-full rounded-lg border border-input bg-background p-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+  "w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-2 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors hover:border-[#FFD9C9] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 
 /**
  * The people on the company's team: a contact list (name, email, phone,
@@ -110,31 +110,33 @@ export function CompanyTeamMembers({ companyId }: { companyId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
+    <div className="flex flex-col gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6">
       <div className="flex flex-row items-center gap-3">
-        <AiOutlineTeam size={24} />
-        <h1 className="text-2xl font-bold">Team Members</h1>
+        <span className="flex size-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
+          <AiOutlineTeam size={18} />
+        </span>
+        <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">Team Members</h1>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading team…</p>
+        <p className="text-sm text-[#78716C]">Loading team…</p>
       ) : members.length > 0 ? (
-        <ul className="flex flex-col divide-y">
+        <ul className="flex flex-col divide-y divide-[#F0EDE8]">
           {members.map((member) => (
             <li
               key={member.id}
-              className="flex flex-row items-center justify-between gap-3 py-2"
+              className="flex flex-row items-center justify-between gap-3 py-3"
             >
               <div className="flex flex-col">
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-sm font-medium text-[#1C1917]">
                   {member.name} {member.lastName}
                   {member.position ? (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    <span className="ml-2 rounded-full bg-[#FFF4EE] px-2 py-0.5 text-xs font-normal text-[#FF6B35]">
                       {member.position}
                     </span>
                   ) : null}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-[#78716C]">
                   {member.email}
                   {member.phoneNumber ? ` · ${member.phoneNumber}` : ""}
                 </p>
@@ -142,7 +144,7 @@ export function CompanyTeamMembers({ companyId }: { companyId: string }) {
               <button
                 onClick={() => setMemberToDelete(member)}
                 aria-label={`Remove ${member.name} ${member.lastName}`}
-                className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive cursor-pointer"
+                className="rounded-lg p-2 text-[#A8A29E] transition-colors hover:bg-[#FFF4EE] hover:text-red-600 cursor-pointer"
               >
                 <FiTrash2 size={16} />
               </button>
@@ -150,11 +152,11 @@ export function CompanyTeamMembers({ companyId }: { companyId: string }) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">No team members yet.</p>
+        <p className="text-sm text-[#78716C]">No team members yet.</p>
       )}
 
       {showForm ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4">
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[#FFD9C9] bg-[#FFF4EE]/40 p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               placeholder="First name"
@@ -191,21 +193,21 @@ export function CompanyTeamMembers({ companyId }: { companyId: string }) {
           </div>
 
           {errorMessage ? (
-            <p className="text-sm text-destructive">{errorMessage}</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
           ) : null}
 
           <div className="flex flex-row justify-end gap-3">
             <button
               onClick={closeForm}
               disabled={isAdding}
-              className="rounded-lg border bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/70 disabled:opacity-50 cursor-pointer"
+              className="rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={addMember}
               disabled={isAdding}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             >
               {isAdding ? "Adding..." : "Add Team Member"}
             </button>
@@ -214,7 +216,7 @@ export function CompanyTeamMembers({ companyId }: { companyId: string }) {
       ) : (
         <button
           onClick={() => setShowForm(true)}
-          className="w-full rounded-lg border bg-secondary p-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/70 cursor-pointer"
+          className="w-full rounded-lg border border-dashed border-[#F0EDE8] bg-white p-2.5 text-sm font-medium text-[#78716C] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] hover:text-[#FF6B35] cursor-pointer"
         >
           + Add New Team Member
         </button>

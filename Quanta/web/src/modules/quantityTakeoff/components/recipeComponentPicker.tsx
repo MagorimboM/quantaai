@@ -53,8 +53,8 @@ export function RecipeComponentPicker({
             onClick={() => onSectionChange(key)}
             className={`h-8 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
               section === key
-                ? "border-primary bg-primary text-primary-foreground"
-                : "bg-card text-secondary-foreground hover:bg-muted/40"
+                ? "border-[#FF6B35] bg-[#FF6B35] text-white"
+                : "border-[#F0EDE8] bg-white text-[#78716C] hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
             }`}
           >
             {SECTION_LABEL[key]}{" "}
@@ -65,19 +65,19 @@ export function RecipeComponentPicker({
         ))}
       </div>
 
-      <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-2.5 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
-        <MdOutlineSearch size={18} className="text-muted-foreground" />
+      <div className="flex h-9 items-center gap-2 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 focus-within:border-[#FF6B35] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FFF4EE]">
+        <MdOutlineSearch size={18} className="text-[#78716C]" />
         <input
           type="text"
           aria-label="Search the catalogue"
           placeholder={`Search ${SECTION_LABEL[section].toLowerCase()}…`}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          className="min-w-0 flex-1 bg-transparent text-sm text-[#1C1917] outline-none placeholder:text-[#78716C]"
         />
       </div>
 
-      <div className="flex h-47.5 shrink-0 flex-col overflow-hidden rounded-lg border bg-card">
+      <div className="flex h-47.5 shrink-0 flex-col overflow-hidden rounded-lg border border-[#F0EDE8] bg-white">
         <div className="min-h-0 flex-1 overflow-y-auto">
           {results.length > 0 ? (
             results.map((item) => {
@@ -85,22 +85,22 @@ export function RecipeComponentPicker({
               return (
                 <div
                   key={item.id}
-                  className="flex items-center gap-2.5 border-b border-secondary px-3 py-1.75"
+                  className="flex items-center gap-2.5 border-b border-[#F0EDE8] px-3 py-1.75"
                 >
-                  <span className="flex-1 text-sm text-foreground">
+                  <span className="flex-1 text-sm text-[#1C1917]">
                     {item.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-[#78716C]">
                     {item.unit}
                   </span>
                   <button
                     type="button"
                     disabled={isAdded}
                     onClick={() => onAdd(item.id)}
-                    className={`h-7 rounded-md border px-3 text-xs font-medium transition-colors ${
+                    className={`h-7 rounded-lg border px-3 text-xs font-medium transition-colors ${
                       isAdded
-                        ? "border-border bg-background text-muted-foreground"
-                        : "cursor-pointer border-primary bg-card text-primary hover:bg-secondary"
+                        ? "border-[#F0EDE8] bg-[#FAFAF9] text-[#78716C]"
+                        : "cursor-pointer border-[#FF6B35] bg-white text-[#FF6B35] hover:bg-[#FFF4EE]"
                     }`}
                   >
                     {isAdded ? "Added" : "Add"}
@@ -110,7 +110,7 @@ export function RecipeComponentPicker({
             })
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2.5 p-4 text-center">
-              <p className="text-sm leading-relaxed text-secondary-foreground">
+              <p className="text-sm leading-relaxed text-[#78716C]">
                 {typed
                   ? `No ${SECTION_LABEL[section].toLowerCase()} match “${typed}”.`
                   : `There are no ${SECTION_LABEL[section].toLowerCase()} in your catalogue yet.`}
@@ -118,7 +118,7 @@ export function RecipeComponentPicker({
               <button
                 type="button"
                 onClick={() => onCreate(typed)}
-                className="h-8.5 cursor-pointer rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="h-8.5 cursor-pointer rounded-lg bg-[#FF6B35] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#E85A26]"
               >
                 {typed ? `Create “${typed}” as a new ${word}` : `Create new ${word}`}
               </button>
@@ -129,7 +129,7 @@ export function RecipeComponentPicker({
         <button
           type="button"
           onClick={() => onCreate(typed)}
-          className="flex h-9.5 shrink-0 cursor-pointer items-center gap-2 border-t bg-background px-3 text-left text-sm font-medium text-primary transition-colors hover:bg-secondary"
+          className="flex h-9.5 shrink-0 cursor-pointer items-center gap-2 border-t border-[#F0EDE8] bg-[#FAFAF9] px-3 text-left text-sm font-medium text-[#FF6B35] transition-colors hover:bg-[#FFF4EE]"
         >
           <MdAdd size={16} />
           Create new {word}

@@ -72,18 +72,23 @@ export function FileModalComp({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-lg bg-background shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">Project Documents</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+    <div className="fixed inset-0 z-999 flex items-center justify-center bg-[#1C1917]/30 backdrop-blur-sm">
+      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-[#F0EDE8] bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
+          <h2 className="text-lg font-semibold tracking-tight text-[#1C1917]">Project Documents</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-[#FFF4EE] hover:text-[#1C1917]"
+          >
             <X size={16} />
           </Button>
         </div>
 
         <div className="overflow-y-auto px-6 py-4">
           {files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-12 gap-2 text-[#78716C]">
               <AiOutlineFile size={32} />
               <p className="text-sm">No documents found</p>
             </div>
@@ -96,9 +101,9 @@ export function FileModalComp({
 
                 return (
                   <div key={group.type} className="flex flex-col gap-4">
-                    {index > 0 ? <Separator /> : null}
+                    {index > 0 ? <Separator className="bg-[#F0EDE8]" /> : null}
                     <div className="flex flex-col gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#78716C]">
                         {group.title}
                       </p>
                       {groupFiles.length > 0 ? (
@@ -113,7 +118,7 @@ export function FileModalComp({
                           />
                         ))
                       ) : (
-                        <p className="text-xs text-muted-foreground">None</p>
+                        <p className="text-xs text-[#78716C]">None</p>
                       )}
                     </div>
                   </div>

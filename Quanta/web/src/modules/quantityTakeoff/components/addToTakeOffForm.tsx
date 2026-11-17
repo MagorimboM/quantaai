@@ -30,8 +30,8 @@ export function AddToTakeoffForm({
   onAdd: () => void;
 }) {
   const inputClass =
-    "h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring";
-  const labelClass = "text-xs font-medium text-foreground";
+    "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors hover:border-[#FFD9C9] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
+  const labelClass = "text-xs font-medium text-[#78716C]";
 
   return (
     <form
@@ -39,12 +39,12 @@ export function AddToTakeoffForm({
         e.preventDefault();
         if (canAdd) onAdd();
       }}
-      className="flex flex-col gap-3 border-t bg-card px-5 py-4"
+      className="flex flex-col gap-3 border-t border-[#F0EDE8] bg-white px-5 py-4"
     >
       <div className="flex items-end gap-3">
         <div className="flex w-40 shrink-0 flex-col gap-1">
           <label htmlFor="takeoff-measurement" className={labelClass}>
-            Measurement<span className="ml-0.5 text-destructive">*</span>
+            Measurement<span className="ml-0.5 text-red-600">*</span>
           </label>
           <div className="flex items-center gap-1.5">
             <input
@@ -57,7 +57,7 @@ export function AddToTakeoffForm({
               onChange={(e) => onMeasurementChange(e.target.value)}
               className={`${inputClass} text-right tabular-nums`}
             />
-            <span className="text-sm text-muted-foreground">{unit}</span>
+            <span className="text-sm text-[#78716C]">{unit}</span>
           </div>
         </div>
 
@@ -91,23 +91,23 @@ export function AddToTakeoffForm({
       </div>
 
       {errorMessage ? (
-        <p className="text-sm text-destructive">{errorMessage}</p>
+        <p className="text-sm text-red-600">{errorMessage}</p>
       ) : null}
 
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">{summary}</p>
+        <p className="text-xs text-[#78716C]">{summary}</p>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="h-9 cursor-pointer rounded-md border px-4 text-sm font-medium text-foreground hover:bg-accent"
+            className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!canAdd}
-            className="h-9 cursor-pointer rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Add to takeoff
           </button>

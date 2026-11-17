@@ -14,15 +14,15 @@ export function LoadingModal({
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-[#1C1917]/30 backdrop-blur-sm"
     >
-      <div className="flex flex-col items-center gap-4 rounded-lg border bg-card p-6 shadow-lg">
+      <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#F0EDE8] bg-white p-6 shadow-xl">
         <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 animate-bounce rounded-full bg-foreground [animation-delay:-0.3s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-foreground [animation-delay:-0.15s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-foreground" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-[#FF6B35] [animation-delay:-0.3s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-[#FF6B35] [animation-delay:-0.15s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-[#FF6B35]" />
         </div>
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <p className="text-sm text-[#78716C]">{message}</p>
       </div>
     </div>
   );

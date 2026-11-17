@@ -51,34 +51,36 @@ export function UploadModalComp({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/30 backdrop-blur-sm"
       // Don't let a stray click close the modal mid-upload
       onClick={isUploading ? undefined : closeModal}
     >
       <div
-        className="w-150 rounded-lg border bg-card p-6 text-card-foreground shadow-lg"
+        className="w-150 rounded-2xl border border-[#F0EDE8] bg-white p-6 text-[#1C1917] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-4 text-xl font-semibold">Upload Project Files</h2>
+        <h2 className="mb-4 text-xl font-semibold tracking-tight">
+          Upload Project Files
+        </h2>
 
         <input
           title="project-file-upload"
           type="file"
           multiple
           onChange={handleFileChange}
-          className="w-full rounded-md border p-2"
+          className="w-full rounded-xl border border-dashed border-[#FFD9C9] bg-[#FFF4EE]/40 p-3 text-sm text-[#78716C] file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#FF6B35] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-[#E85A26]"
         />
 
         {files.length > 0 ? (
           <div className="mt-4">
-            <h3 className="mb-2 font-medium">
+            <h3 className="mb-2 text-sm font-medium text-[#1C1917]">
               Selected Files ({files.length})
             </h3>
-            <div className="max-h-48 overflow-y-auto rounded border">
+            <div className="max-h-48 overflow-y-auto rounded-xl border border-[#F0EDE8]">
               {files.map((file) => (
                 <div
                   key={`${file.name}-${file.size}`}
-                  className="border-b p-2 text-sm last:border-b-0"
+                  className="border-b border-[#F0EDE8] p-2.5 text-sm text-[#1C1917] last:border-b-0"
                 >
                   {file.name}
                 </div>
@@ -87,13 +89,13 @@ export function UploadModalComp({
           </div>
         ) : null}
 
-        {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
+        {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={closeModal}
             disabled={isUploading}
-            className="rounded-md border px-4 py-2 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            className="rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Cancel
           </button>
@@ -101,7 +103,7 @@ export function UploadModalComp({
           <button
             onClick={uploadSelectedFiles}
             disabled={files.length === 0 || isUploading}
-            className="rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            className="rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             {isUploading
               ? "Uploading..."

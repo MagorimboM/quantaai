@@ -55,27 +55,27 @@ export function RecipePreview({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-[#1C1917]">
             {recipe.name}
           </h2>
-          <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+          <span className="rounded-lg bg-[#F5F5F4] px-2 py-0.5 text-xs text-[#78716C]">
             {recipe.category.name}
           </span>
         </div>
         {recipe.description ? (
-          <p className="text-sm leading-relaxed text-foreground/80">
+          <p className="text-sm leading-relaxed text-[#44403C]">
             {recipe.description}
           </p>
         ) : null}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-[#78716C]">
           Quantities below are per 1 {recipe.unit}.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-lg border border-[#F0EDE8]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
+            <tr className="border-b border-[#F0EDE8] bg-[#FAFAF9] text-xs text-[#78716C]">
               <th className="px-3 py-2 text-left font-normal">Component</th>
               <th className="w-16 text-left font-normal">Unit</th>
               <th className="w-24 text-right font-normal">
@@ -96,7 +96,7 @@ export function RecipePreview({
           </tbody>
         </table>
         {measurement === null ? (
-          <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+          <p className="border-t border-[#F0EDE8] px-3 py-2 text-xs text-[#78716C]">
             Enter a measurement below to see the totals for this job.
           </p>
         ) : null}
@@ -119,19 +119,19 @@ function GroupRows({
       <tr>
         <td
           colSpan={4}
-          className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-[#78716C]"
         >
           {label}
         </td>
       </tr>
       {rows.map((row) => (
         <tr key={row.id}>
-          <td className="px-3 py-1 text-foreground">{row.name}</td>
-          <td className="text-muted-foreground">{row.unit}</td>
-          <td className="text-right tabular-nums text-muted-foreground">
+          <td className="px-3 py-1 text-[#1C1917]">{row.name}</td>
+          <td className="text-[#78716C]">{row.unit}</td>
+          <td className="text-right tabular-nums text-[#78716C]">
             {formatRate(row.quantity)}
           </td>
-          <td className="px-3 text-right font-medium tabular-nums text-foreground">
+          <td className="px-3 text-right font-medium tabular-nums text-[#1C1917]">
             {measurement === null
               ? "—"
               : formatQuantity(

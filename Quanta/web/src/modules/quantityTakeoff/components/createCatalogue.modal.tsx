@@ -19,7 +19,7 @@ const UNITS: Record<CatalogueKind, string[]> = {
 };
 
 const inputClass =
-  "h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring";
+  "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 
 type CreateFormState = {
   name: string;
@@ -115,19 +115,19 @@ export function CreateCatalogueItemDialog({
 
   return (
     <div
-      className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-60 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
       onClick={isSaving ? undefined : onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-105 rounded-lg border bg-card text-card-foreground shadow-lg"
+        className="w-full max-w-105 rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
       >
-        <div className="flex items-start justify-between gap-3 border-b px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-[#F0EDE8] px-5 py-4">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-[15px] font-semibold text-foreground">
+            <h2 className="text-[15px] font-semibold text-[#1C1917]">
               Create new {kind}
             </h2>
-            <p className="text-xs leading-relaxed text-secondary-foreground">
+            <p className="text-xs leading-relaxed text-[#78716C]">
               {isCategory
                 ? "Categories group your recipes, such as Walls or Roofing."
                 : `It is saved to your catalogue under ${categoryName} and added to this recipe straight away.`}
@@ -137,7 +137,7 @@ export function CreateCatalogueItemDialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border text-secondary-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#F0EDE8] text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
           >
             <MdClose size={14} />
           </button>
@@ -145,8 +145,8 @@ export function CreateCatalogueItemDialog({
 
         <div className="flex flex-col gap-3.5 px-5 py-4">
           <div className="flex flex-col gap-1">
-            <label htmlFor="create-name" className="text-xs font-medium text-foreground">
-              Name<span className="ml-0.5 text-destructive">*</span>
+            <label htmlFor="create-name" className="text-xs font-medium text-[#1C1917]">
+              Name<span className="ml-0.5 text-red-600">*</span>
             </label>
             <input
               id="create-name"
@@ -160,8 +160,8 @@ export function CreateCatalogueItemDialog({
 
           {isCategory ? null : (
             <div className="flex flex-col gap-1">
-              <label htmlFor="create-unit" className="text-xs font-medium text-foreground">
-                Unit<span className="ml-0.5 text-destructive">*</span>
+              <label htmlFor="create-unit" className="text-xs font-medium text-[#1C1917]">
+                Unit<span className="ml-0.5 text-red-600">*</span>
               </label>
               <select
                 id="create-unit"
@@ -176,7 +176,7 @@ export function CreateCatalogueItemDialog({
                   </option>
                 ))}
               </select>
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-xs leading-relaxed text-[#78716C]">
                 The unit this is counted in, such as bricks in Nr or hours in hr.
               </p>
             </div>
@@ -184,8 +184,8 @@ export function CreateCatalogueItemDialog({
 
           {needsLabourType ? (
             <div className="flex flex-col gap-1">
-              <label htmlFor="create-labour-type" className="text-xs font-medium text-foreground">
-                Labour type<span className="ml-0.5 text-destructive">*</span>
+              <label htmlFor="create-labour-type" className="text-xs font-medium text-[#1C1917]">
+                Labour type<span className="ml-0.5 text-red-600">*</span>
               </label>
               <input
                 id="create-labour-type"
@@ -199,15 +199,15 @@ export function CreateCatalogueItemDialog({
           ) : null}
 
           {errorMessage ? (
-            <p className="text-xs text-destructive">{errorMessage}</p>
+            <p className="text-xs text-red-600">{errorMessage}</p>
           ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t px-5 py-3.5">
+        <div className="flex justify-end gap-2 border-t border-[#F0EDE8] px-5 py-3.5">
           <button
             type="button"
             onClick={onClose}
-            className="h-9 cursor-pointer rounded-md border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/40"
+            className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
           >
             Cancel
           </button>
@@ -215,7 +215,7 @@ export function CreateCatalogueItemDialog({
             type="button"
             onClick={save}
             disabled={!canSave}
-            className="h-9 cursor-pointer rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isCategory ? "Create category" : "Create and add"}
           </button>

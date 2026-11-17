@@ -16,13 +16,15 @@ function MetricCard({
   label: string;
 }) {
   return (
-    <div className="flex flex-1 flex-col gap-3 rounded-lg border bg-card p-4 text-card-foreground transition-colors hover:bg-muted/40">
-      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+    <div className="flex flex-1 flex-col gap-4 rounded-2xl border border-[#F0EDE8] bg-white p-5 text-[#1C1917] transition-colors hover:border-[#FFD9C9]">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FFF4EE] text-[#FF6B35]">
         {icon}
       </div>
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{value}</h1>
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-[#1C1917]">
+          {value}
+        </h1>
+        <p className="mt-0.5 text-sm text-[#78716C]">{label}</p>
       </div>
     </div>
   );

@@ -56,11 +56,11 @@ export function ViewFileModalComp({
   return (
     <>
       {showFile ? (
-        <div className="fixed inset-3 z-100 flex flex-col rounded-lg bg-background shadow-2xl">
-          <div className="flex items-center justify-between border-b px-4 py-2">
+        <div className="fixed inset-3 z-100 flex flex-col rounded-2xl border border-[#F0EDE8] bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-[#F0EDE8] px-4 py-2">
             <h1
               title="view-doc-modal-header"
-              className="text-sm font-medium truncate"
+              className="truncate text-sm font-medium text-[#1C1917]"
             >
               {file.name}
             </h1>
@@ -68,12 +68,13 @@ export function ViewFileModalComp({
               variant="ghost"
               size="icon"
               onClick={() => setShowFile(false)}
+              className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-[#FFF4EE] hover:text-[#1C1917]"
             >
               <X size={16} />
             </Button>
           </div>
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden rounded-b-2xl">
             {pdfSrc ? (
               <iframe
                 src={pdfSrc}
@@ -81,21 +82,21 @@ export function ViewFileModalComp({
                 className="h-full w-full"
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-full items-center justify-center text-sm text-[#78716C]">
                 This document can't be displayed.
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between rounded-md border px-3 py-2 hover:bg-muted transition-colors">
-          <div className="flex items-center gap-2 text-sm">
-            <AiOutlineFile className="text-muted-foreground" />
+        <div className="flex items-center justify-between rounded-xl border border-[#F0EDE8] bg-white px-3 py-2 transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]/40">
+          <div className="flex items-center gap-2 text-sm text-[#1C1917]">
+            <AiOutlineFile className="text-[#FF6B35]" />
             {file.name}
           </div>
           <div>
             <Button
-              className="cursor-pointer"
+              className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-[#FFF4EE] hover:text-[#FF6B35]"
               variant="ghost"
               size="icon"
               onClick={() => setShowFile(true)}
@@ -103,7 +104,7 @@ export function ViewFileModalComp({
               <Eye size={16} />
             </Button>
             <Button
-              className="cursor-pointer"
+              className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-red-50 hover:text-red-600"
               variant="ghost"
               size="icon"
               onClick={deleteThisFile}

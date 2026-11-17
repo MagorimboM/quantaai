@@ -26,40 +26,40 @@ export function ListOfProjects({
     <div className="flex w-full flex-1 min-h-0 flex-col">
       <div className="flex flex-row justify-between">
         <div className="flex flex-col gap-1 p-4">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-[#1C1917]">
             Projects
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[#78716C]">
             Manage your quantity take offs
           </p>
         </div>
         {projects.length > 0 ? (
           <button
             onClick={() => setShowNewProjectForm(true)}
-            className="mr-4 cursor-pointer self-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+            className="mr-4 cursor-pointer self-center rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]"
           >
             Create New Project
           </button>
         ) : null}
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto p-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto p-4">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading projects...</p>
+          <p className="text-sm text-[#78716C]">Loading projects...</p>
         ) : projects.length > 0 ? (
           projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))
         ) : (
-          <div className="flex w-full flex-col items-center gap-4 rounded-lg border border-dashed bg-card p-10 text-center text-card-foreground">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-dashed border-[#F0EDE8] bg-[#FAFAF9] p-10 text-center text-[#1C1917]">
+            <p className="text-sm text-[#78716C]">
               {searchTerm
                 ? `No projects match "${searchTerm}".`
                 : "No projects yet."}
             </p>
             <button
               onClick={() => setShowNewProjectForm(true)}
-              className="cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              className="cursor-pointer rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]"
             >
               {" "}
               Create New Project

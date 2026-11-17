@@ -60,20 +60,22 @@ export function StartAfreshModalConfirmation({
           if (!open) openCloseModal();
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6 shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Start project afresh</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg font-semibold tracking-tight text-[#1C1917]">
+              Start project afresh
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-[#78716C]">
               Are you sure you want to restart the project? All takeoff will be
               deleted and this action cannot be reversed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {errorMessage ? (
-            <p className="text-sm text-destructive">{errorMessage}</p>
+            <p className="text-sm text-red-600">{errorMessage}</p>
           ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
-              className="cursor-pointer"
+              className="cursor-pointer rounded-lg border border-[#F0EDE8] bg-white text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
               onClick={() => openCloseModal()}
             >
               Cancel
@@ -83,7 +85,7 @@ export function StartAfreshModalConfirmation({
                 e.preventDefault();
                 clearAllTakeOffItemsOfProject();
               }}
-              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="cursor-pointer rounded-lg bg-red-600 text-white transition-colors hover:bg-red-700"
             >
               Confirm
             </AlertDialogAction>
@@ -92,13 +94,13 @@ export function StartAfreshModalConfirmation({
       </AlertDialog>
 
       <AlertDialog open={showDeletingItems}>
-        <AlertDialogContent className="flex flex-col items-center gap-4 text-center">
+        <AlertDialogContent className="flex flex-col items-center gap-4 rounded-2xl border border-[#F0EDE8] bg-white p-6 text-center shadow-xl">
           <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-foreground animate-bounce [animation-delay:-0.3s]" />
-            <span className="h-2 w-2 rounded-full bg-foreground animate-bounce [animation-delay:-0.15s]" />
-            <span className="h-2 w-2 rounded-full bg-foreground animate-bounce" />
+            <span className="h-2 w-2 rounded-full bg-[#FF6B35] animate-bounce [animation-delay:-0.3s]" />
+            <span className="h-2 w-2 rounded-full bg-[#FF6B35] animate-bounce [animation-delay:-0.15s]" />
+            <span className="h-2 w-2 rounded-full bg-[#FF6B35] animate-bounce" />
           </div>
-          <p className="text-sm text-muted-foreground">Deleting items</p>
+          <p className="text-sm text-[#78716C]">Deleting items</p>
         </AlertDialogContent>
       </AlertDialog>
     </>

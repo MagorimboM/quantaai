@@ -16,8 +16,8 @@ export function DashBoardPage() {
 
   if (!companyId) {
     return (
-      <div className="flex flex-1 items-center justify-center p-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-1 items-center justify-center bg-white p-4">
+        <p className="text-sm text-[#78716C]">
           Select a company workspace to see its dashboard.
         </p>
       </div>
@@ -25,7 +25,7 @@ export function DashBoardPage() {
   }
 
   return (
-    <div className="flex flex-col p-4 flex-1 min-h-0 gap-6">
+    <div className="flex flex-col p-4 flex-1 min-h-0 gap-6 bg-[#FAFAF9] text-[#1C1917]">
       <Metrics companyId={companyId} />
       <div className="flex flex-1 min-h-0 gap-6">
         <div className="flex flex-1 min-h-0 flex-col">
