@@ -1,4 +1,4 @@
-import { searchCategory } from "@/modules/recipeBuilder/api/api";
+/* import { searchCategory } from "@/modules/recipeBuilder/api/api";
 import { useEffect, useState } from "react";
 
 export function AdvancedRecipeBuilder() {
@@ -27,3 +27,4 @@ export function AdvancedRecipeBuilder() {
     </>
   );
 }
+ */
