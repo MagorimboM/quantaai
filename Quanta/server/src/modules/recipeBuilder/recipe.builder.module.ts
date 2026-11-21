@@ -4,6 +4,7 @@ import { RecipeBuilderService } from '@/modules/recipeBuilder/recipe.builder.ser
 import { RecipeBuilderRepository } from '@/modules/recipeBuilder/recipe.builder.repository';
 import { AuthModule } from '@/auth/auth.module';
 
+
 // AuthModule provides AccessService, the "is this company the caller's?" check
 @Module({
   imports: [AuthModule],

@@ -15,6 +15,7 @@ import { WorkspaceModule } from '@/modules/workspace/workspace.module';
 import { RecipeBuilderModule } from "@/modules/recipeBuilder/recipe.builder.module";
 import { ClerkAuthGuard } from "@/auth/services/clerk.guard"
 
+
 // NOTE :: [auth] ClerkAuthGuard is now registered globally via APP_GUARD --
 // every route in every module above is protected by default. The one
 // exception is the Clerk webhook (auth.controller.ts's handleClerkWebhook),

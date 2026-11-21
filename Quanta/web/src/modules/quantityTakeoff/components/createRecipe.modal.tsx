@@ -1,55 +1,27 @@
-import { useEffect, useState } from "react";
-import { MdAdd, MdClose } from "react-icons/md";
-import { createRecipe, getRecipeCatalogue } from "@/modules/quantityTakeoff/api/api";
-import type {
-  CatalogueCategory,
-  CatalogueItem,
-  GetRecipeCatalogueResponse,
-  RecipeOption,
-} from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
-import type { CatalogueKind } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.request";
+import { useMemo } from "react";
+import { CreateRecipeModal as SharedCreateRecipeModal } from "@/modules/recipeLibrary/components/createRecipeModal";
+import type { CreateRecipeApi } from "@/modules/recipeLibrary/contracts/createRecipe.types";
 import {
-  COMPONENT_SECTIONS,
-  SECTION_KIND,
-  SECTION_LABEL,
-  type AddedComponents,
-  type ComponentSection,
-  type CreateKind,
-} from "@/modules/quantityTakeoff/components/recipeComponents";
-import { RecipeComponentPicker } from "@/modules/quantityTakeoff/components/recipeComponentPicker";
+  createCatalogueItem,
+  createCategory,
+  createRecipe,
+  getRecipeCatalogue,
+} from "@/modules/quantityTakeoff/api/api";
 import {
-  RecipeComponentList,
-  type RecipeComponentRow,
-} from "@/modules/quantityTakeoff/components/recipeComponent.list";
-import { CreateCatalogueItemDialog } from "@/modules/quantityTakeoff/components/createCatalogue.modal";
-import { LoadingModal } from "@/common/components/loadingModal";
-import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
-
-const inputClass =
-  "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
-
-type RecipeFormState = {
-  name: string;
-  categoryId: string;
-  unit: string;
-  description: string;
-};
-
-// What the "create" dialog is open for. null while it is closed.
-type CreateDialogState = { kind: CreateKind; name: string } | null;
-
-// Which catalogue section a newly created item belongs to
-const SECTION_OF_KIND: Record<CatalogueKind, ComponentSection> = {
-  material: "materials",
-  labour: "labour",
-  overhead: "overheads",
-};
+  createBuildingClass,
+  createSiteClass,
+  getRecipeClassifications,
+} from "@/modules/recipeLibrary/api/api";
+import type { RecipeOption } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 
 /**
- * Builds a new recipe: describe it, then search the catalogue and add the
- * materials, labour and overheads that 1 unit of the work needs. Anything
- * missing from the catalogue is created from the small second form without
- * leaving this one.
+ * The takeoff's "Create recipe" form. It is the same form as the recipe
+ * library's (one form, so the two can't drift apart). This file only binds that
+ * form to the takeoff's own routes for this project.
+ *
+ * The catalogue, new catalogue items, new categories and the recipe itself go
+ * through the takeoff's routes. Building classes and site classes belong to the
+ * user, not the project, so they come from the recipe library's routes.
  *
  * `onCreated` receives the saved recipe shaped like the "Add line item" list,
  * so the picker can show it and select it straight away.
@@ -65,384 +37,51 @@ export function CreateRecipeModal({
   onCreated: (recipe: RecipeOption) => void;
   onClose: () => void;
 }) {
-  const [catalogue, setCatalogue] = useState<GetRecipeCatalogueResponse>({
-    categories: [],
-    materials: [],
-    labour: [],
-    overheads: [],
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Stable between renders: the form loads the catalogue when `api` changes
+  const api = useMemo<CreateRecipeApi<RecipeOption>>(
+    () => ({
+      loadCatalogue: () => getRecipeCatalogue({ companyId, projectId }),
+      createCatalogueItem: (item) =>
+        createCatalogueItem({ companyId, projectId, ...item }),
+      createCategory: (name) => createCategory({ companyId, projectId, name }),
+      createRecipe: (recipe) => createRecipe({ companyId, projectId, ...recipe }),
 
-  const [form, setForm] = useState<RecipeFormState>({
-    name: "",
-    categoryId: "",
-    unit: "",
-    description: "",
-  });
-  const [added, setAdded] = useState<AddedComponents>({
-    materials: [],
-    labour: [],
-    overheads: [],
-  });
-
-  const [section, setSection] = useState<ComponentSection>("materials");
-  const [query, setQuery] = useState<string>("");
-  const [createDialog, setCreateDialog] = useState<CreateDialogState>(null);
-
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadCatalogue() {
-      try {
-        setCatalogue(await getRecipeCatalogue({ companyId, projectId }));
-      } catch {
-        // apiClient already reports the failure; the lists stay empty
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadCatalogue();
-  }, [companyId, projectId]);
-
-  function updateField<K extends keyof RecipeFormState>(
-    field: K,
-    value: RecipeFormState[K],
-  ) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
-
-  function changeSection(next: ComponentSection) {
-    setSection(next);
-    setQuery("");
-  }
-
-  function addComponent(itemId: string) {
-    setAdded((prev) => ({
-      ...prev,
-      [section]: [...prev[section], { itemId, quantity: "1" }],
-    }));
-  }
-
-  function removeComponent(target: ComponentSection, itemId: string) {
-    setAdded((prev) => ({
-      ...prev,
-      [target]: prev[target].filter((component) => component.itemId !== itemId),
-    }));
-  }
-
-  function changeQuantity(
-    target: ComponentSection,
-    itemId: string,
-    quantity: string,
-  ) {
-    setAdded((prev) => ({
-      ...prev,
-      [target]: prev[target].map((component) =>
-        component.itemId === itemId ? { ...component, quantity } : component,
-      ),
-    }));
-  }
-
-  // A catalogue item has to be filed under a category, and it takes the
-  // recipe's. So the category must be chosen before anything can be created
-  // (a new category itself is always allowed).
-  function openCreateItem(name: string) {
-    if (form.categoryId === "") {
-      setErrorMessage("Choose a category first. New items are filed under it.");
-      return;
-    }
-    setErrorMessage(null);
-    setCreateDialog({ kind: SECTION_KIND[section], name });
-  }
-
-  function openCreateCategory() {
-    setErrorMessage(null);
-    setCreateDialog({ kind: "category", name: "" });
-  }
-
-  // A just-created item goes into the catalogue and straight into the recipe
-  function itemCreated(kind: CatalogueKind, item: CatalogueItem) {
-    const target = SECTION_OF_KIND[kind];
-    setCatalogue((prev) => ({ ...prev, [target]: [...prev[target], item] }));
-    setAdded((prev) => ({
-      ...prev,
-      [target]: [...prev[target], { itemId: item.id, quantity: "1" }],
-    }));
-    setSection(target);
-    setQuery("");
-  }
-
-  // A just-created category is chosen for the recipe straight away
-  function categoryCreated(category: CatalogueCategory) {
-    setCatalogue((prev) => ({
-      ...prev,
-      categories: [...prev.categories, category].sort((a, b) =>
-        a.name.localeCompare(b.name),
-      ),
-    }));
-    updateField("categoryId", category.id);
-  }
-
-  const rows: RecipeComponentRow[] = COMPONENT_SECTIONS.flatMap((key) =>
-    added[key].flatMap((component) => {
-      const item = catalogue[key].find((i) => i.id === component.itemId);
-      return item
-        ? [
-            {
-              section: key,
-              itemId: item.id,
-              name: item.name,
-              unit: item.unit,
-              quantity: component.quantity,
-            },
-          ]
-        : [];
+      loadClasses: async () => {
+        const response = await getRecipeClassifications({ companyId });
+        return {
+          buildingClasses: response.buildingClass.map((item) => ({
+            id: item.buildingClassId,
+            name: item.buildingClassName,
+            description: item.buildingClassDescription,
+          })),
+          siteClasses: response.siteClass.map((item) => ({
+            id: item.siteClassId,
+            name: item.siteClassName,
+            description: item.siteClassDescription,
+          })),
+        };
+      },
+      createBuildingClass: async (buildingClass) => {
+        const created = await createBuildingClass({ companyId, ...buildingClass });
+        return {
+          id: created.buildingClassId,
+          name: created.buildingClassName,
+          description: created.buildingClassDescription,
+        };
+      },
+      createSiteClass: async (siteClass) => {
+        const created = await createSiteClass({ companyId, ...siteClass });
+        return {
+          id: created.siteClassId,
+          name: created.siteClassName,
+          description: created.siteClassDescription,
+        };
+      },
     }),
+    [companyId, projectId],
   );
-
-  const addedCounts: Record<ComponentSection, number> = {
-    materials: added.materials.length,
-    labour: added.labour.length,
-    overheads: added.overheads.length,
-  };
-
-  // Every quantity must be a number above zero (the backend checks again)
-  const quantitiesValid = COMPONENT_SECTIONS.every((key) =>
-    added[key].every((component) => {
-      const quantity = parseFloat(component.quantity);
-      return !Number.isNaN(quantity) && quantity > 0;
-    }),
-  );
-  const canSave =
-    form.name.trim() !== "" &&
-    form.categoryId !== "" &&
-    form.unit.trim() !== "" &&
-    rows.length > 0 &&
-    quantitiesValid &&
-    !isSaving;
-
-  async function saveRecipe() {
-    if (!canSave) return;
-
-    function toRequest(key: ComponentSection) {
-      return added[key].map((component) => ({
-        itemId: component.itemId,
-        quantity: parseFloat(component.quantity),
-      }));
-    }
-
-    setErrorMessage(null);
-    setIsSaving(true);
-    try {
-      const created = await createRecipe({
-        companyId,
-        projectId,
-        name: form.name.trim(),
-        categoryId: form.categoryId,
-        unit: form.unit.trim(),
-        description: form.description.trim() === "" ? null : form.description.trim(),
-        materials: toRequest("materials"),
-        labour: toRequest("labour"),
-        overheads: toRequest("overheads"),
-      });
-      onCreated(created);
-      onClose();
-    } catch (error) {
-      setErrorMessage(
-        apiErrorMessage(error, "Couldn't save the recipe. Please try again."),
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  const categoryName =
-    catalogue.categories.find((c) => c.id === form.categoryId)?.name ?? "";
 
   return (
-    <>
-      <div
-        className="fixed inset-0 z-55 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
-        // A stray click must not close the modal while the recipe is saving
-        onClick={isSaving ? undefined : onClose}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
-        >
-          <div className="flex items-start justify-between border-b border-[#F0EDE8] px-5 py-4">
-            <div>
-              <h1 className="text-base font-semibold text-[#1C1917]">
-                Create recipe
-              </h1>
-              <p className="text-sm text-[#78716C]">
-                Describe what 1 unit of this work needs. Quantities are per 1 unit.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="cursor-pointer rounded-lg border border-[#F0EDE8] p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
-            >
-              <MdClose size={18} />
-            </button>
-          </div>
-
-          <div className="flex min-h-0 flex-1">
-            {/* Left: the recipe's own details */}
-            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#F0EDE8] px-5 py-4">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
-                Recipe details
-              </span>
-
-              <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-name" className="text-xs font-medium text-[#1C1917]">
-                  Name<span className="ml-0.5 text-red-600">*</span>
-                </label>
-                <input
-                  id="recipe-name"
-                  type="text"
-                  placeholder="e.g. 110mm Brick Wall"
-                  value={form.name}
-                  onChange={(e) => updateField("name", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-category" className="text-xs font-medium text-[#1C1917]">
-                  Category<span className="ml-0.5 text-red-600">*</span>
-                </label>
-                <select
-                  id="recipe-category"
-                  value={form.categoryId}
-                  onChange={(e) => updateField("categoryId", e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="">Select a category</option>
-                  {catalogue.categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={openCreateCategory}
-                  className="flex cursor-pointer items-center gap-1 self-start py-0.5 text-xs font-medium text-[#FF6B35] hover:underline"
-                >
-                  <MdAdd size={12} />
-                  Create new category
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-unit" className="text-xs font-medium text-[#1C1917]">
-                  Per (unit)<span className="ml-0.5 text-red-600">*</span>
-                </label>
-                <input
-                  id="recipe-unit"
-                  type="text"
-                  placeholder="e.g. m²"
-                  value={form.unit}
-                  onChange={(e) => updateField("unit", e.target.value)}
-                  className={`${inputClass} w-30`}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label htmlFor="recipe-description" className="text-xs font-medium text-[#1C1917]">
-                  Description
-                </label>
-                <textarea
-                  id="recipe-description"
-                  placeholder="What this recipe covers and what it leaves out"
-                  value={form.description}
-                  onChange={(e) => updateField("description", e.target.value)}
-                  className="h-22 w-full resize-none rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 py-2 text-sm leading-relaxed text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
-                />
-              </div>
-            </div>
-
-            {/* Right: pick components from the catalogue, then set quantities */}
-            <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-5 py-4">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
-                Components
-              </span>
-
-              <RecipeComponentPicker
-                section={section}
-                query={query}
-                items={catalogue[section]}
-                addedIds={added[section].map((component) => component.itemId)}
-                addedCounts={addedCounts}
-                onSectionChange={changeSection}
-                onQueryChange={setQuery}
-                onAdd={addComponent}
-                onCreate={openCreateItem}
-              />
-
-              <RecipeComponentList
-                rows={rows}
-                recipeUnit={form.unit.trim()}
-                onQuantityChange={changeQuantity}
-                onRemove={removeComponent}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 border-t border-[#F0EDE8] px-5 py-3.5">
-            <p
-              className={`text-xs ${errorMessage ? "text-red-600" : "text-[#78716C]"}`}
-            >
-              {errorMessage ??
-                (isLoading
-                  ? "Loading your catalogue…"
-                  : COMPONENT_SECTIONS.map(
-                      (key) => `${addedCounts[key]} ${SECTION_LABEL[key].toLowerCase()}`,
-                    ).join(" · "))}
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={saveRecipe}
-                disabled={!canSave}
-                className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Save recipe
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <LoadingModal show={isSaving} message="Saving recipe" />
-      </div>
-
-      {/* A sibling of the overlay above, not a child: a click inside it must not
-          bubble up and close the recipe form behind it */}
-      {createDialog ? (
-        <CreateCatalogueItemDialog
-          companyId={companyId}
-          projectId={projectId}
-          kind={createDialog.kind}
-          initialName={createDialog.name}
-          categoryId={form.categoryId}
-          categoryName={categoryName}
-          onCreatedItem={itemCreated}
-          onCreatedCategory={categoryCreated}
-          onClose={() => setCreateDialog(null)}
-        />
-      ) : null}
-    </>
+    <SharedCreateRecipeModal api={api} onCreated={onCreated} onClose={onClose} />
   );
 }

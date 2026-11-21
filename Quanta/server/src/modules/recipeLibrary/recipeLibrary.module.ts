@@ -4,6 +4,7 @@ import { RecipeLibraryService } from '@/modules/recipeLibrary/recipeLibrary.serv
 import { RecipeLibraryRepository } from '@/modules/recipeLibrary/recipeLibrary.repository';
 import { AuthModule } from '@/auth/auth.module';
 
+
 // AuthModule provides AccessService, the "is this company the caller's?" check
 @Module({
   imports: [AuthModule],

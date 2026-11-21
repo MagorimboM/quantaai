@@ -6,7 +6,6 @@ import type {
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
 import type {
   Category,
-  SiteCondition,
   SiteClassOption,
   BuildingClassOption,
   MaterialSearchResult,
@@ -49,14 +48,6 @@ export class RecipeBuilderRepository {
       WHERE c."companyId" = ${companyId}
         AND c."userId" = ${userId}
       ORDER BY c.name ASC`;
-  }
-
-  // Ground conditions are a shared list, the same for every company
-  async getListOfSiteConditions(): Promise<SiteCondition[]> {
-    return await prisma.$queryRaw<SiteCondition[]>`
-      SELECT s.id, s.name
-      FROM site_conditions s
-      ORDER BY s.name ASC`;
   }
 
   // The user's building classes, for the "suits these buildings" picker
@@ -128,11 +119,6 @@ export class RecipeBuilderRepository {
   // The company's materials, optionally narrowed by a name fragment and a
   // category. Each filter is skipped when it is null.
   //
-  // Site condition rule: a material with no site condition is general and always
-  // offered. A material made for one ground (geotextile for muddy sites) is only
-  // offered when the recipe is tagged with that same ground. With no site
-  // condition chosen, only general materials come back.
-  //
   // Only id, name and unit are read, each under its own name: that is all the
   // material picker needs.
   async searchMaterials(request: {
@@ -140,11 +126,9 @@ export class RecipeBuilderRepository {
     userId: string;
     term?: string;
     categoryId?: string;
-    siteConditionId?: string;
   }): Promise<MaterialSearchResult[]> {
     const pattern = request.term ? `%${request.term}%` : null;
     const categoryId = request.categoryId ?? null;
-    const siteConditionId = request.siteConditionId ?? null;
 
     return await prisma.$queryRaw<MaterialSearchResult[]>`
       SELECT m.id, m.name, m.unit
@@ -153,7 +137,6 @@ export class RecipeBuilderRepository {
         AND m."userId" = ${request.userId}
         AND (${categoryId}::text IS NULL OR m."categoryId" = ${categoryId})
         AND (${pattern}::text IS NULL OR m.name ILIKE ${pattern})
-        AND (m."siteConditionId" IS NULL OR m."siteConditionId" = ${siteConditionId})
       ORDER BY m.name ASC
       LIMIT ${SEARCH_RESULT_LIMIT}`;
   }
@@ -179,13 +162,6 @@ export class RecipeBuilderRepository {
   ): Promise<boolean> {
     const count = await prisma.category.count({
       where: { id: categoryId, companyId, userId },
-    });
-    return count > 0;
-  }
-
-  async siteConditionExists(siteConditionId: string): Promise<boolean> {
-    const count = await prisma.siteCondition.count({
-      where: { id: siteConditionId },
     });
     return count > 0;
   }
@@ -229,7 +205,6 @@ export class RecipeBuilderRepository {
           companyId: record.companyId,
           categoryId: record.categoryId,
           formId: rateBasedForm.id,
-          siteConditionId: record.siteConditionId,
           name: record.name,
           description: record.description,
           unit: record.unit,
@@ -296,18 +271,6 @@ export class RecipeBuilderRepository {
       orderBy: { name: 'asc' },
       take: TYPEAHEAD_LIMIT,
       select: { id: true, name: true, description: true, unit: true },
-    });
-  }
-
-  // Site conditions are shared by everyone, so the caller isn't needed to
-  // filter them. The second argument is kept so existing callers still compile.
-  // TODO :: to include pagination/offset
-  async searchSiteConditions(term: string, _clerkId?: string) {
-    return await prisma.siteCondition.findMany({
-      where: { name: { contains: term, mode: 'insensitive' } },
-      orderBy: { name: 'asc' },
-      take: TYPEAHEAD_LIMIT,
-      select: { id: true, name: true, description: true },
     });
   }
 }

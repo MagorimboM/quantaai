@@ -1,22 +1,17 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import type { z } from 'zod';
+import type {
+  chatHistoryQuerySchema,
+  sendMessageSchema,
+} from '@/modules/assistant/contracts/assistant.schema';
 
-// Body of POST /:companyId/assistant/chat.
-//
-// Deliberately NOT accepted from the client:
-//  - userId: taken from the verified Clerk token, so nobody can chat as someone else
-//  - companyId: taken from the URL, so there is one source of truth
-//  - role: a question is always saved as "user"; the client can't write
-//    "assistant" messages into the history the model later reads
-export class SendMessageRequest {
-  // Capped because every question is sent to a paid model
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(4000)
-  userMessage!: string;
+// The body and query the routes accept come from the Zod schemas in
+// assistant.schema.ts, so the rules and the types can't drift apart. Each is
+// what the route receives once ZodValidationPipe has checked it.
 
-  // Set when the user is inside a project: the assistant then also reads that
-  // project's documents and keeps a separate conversation for it
-  @IsString()
-  @IsOptional()
-  projectId?: string;
-}
+// Body of POST /:companyId/assistant/chat: the question (trimmed, at most 4000
+// characters) and, inside a project, the project's id. See the schema for what
+// is deliberately not accepted from the client.
+export type SendMessageRequest = z.output<typeof sendMessageSchema>;
+
+// Query of GET /:companyId/assistant/chatHistory
+export type ChatHistoryQuery = z.output<typeof chatHistoryQuerySchema>;

@@ -1,13 +1,19 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { RecipeBuilderService } from '@/modules/recipeBuilder/recipe.builder.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
+import {
+  createRecipeSchema,
+  createSiteClassSchema,
+  searchMaterialsQuerySchema,
+} from '@/modules/recipeBuilder/contracts/recipeBuilder.schema';
 import type {
   CreateRecipeRequest,
   CreateSiteClassRequest,
+  SearchMaterialsRequest,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
 import type {
   Category,
-  SiteCondition,
   SiteClassOption,
   BuildingClassOption,
   MaterialSearchResult,
@@ -17,6 +23,10 @@ import type {
 // Everything the recipe builder form needs. Every route runs behind the global
 // ClerkAuthGuard, so @ClerkUserId() is the verified caller; the service checks
 // the company in the URL is really theirs.
+//
+// Every body and query is checked and tidied by the schemas in
+// recipeBuilder.schema.ts first: a bad one gets a 400 and never reaches the
+// service.
 @Controller(':companyId/recipe/new-recipe')
 export class RecipeBuilderController {
   constructor(private readonly recipeBuilderService: RecipeBuilderService) {}
@@ -28,18 +38,6 @@ export class RecipeBuilderController {
     @Param('companyId') companyId: string,
   ): Promise<Category[]> {
     return await this.recipeBuilderService.getListOfCategories({
-      clerkId,
-      companyId,
-    });
-  }
-
-  // The ground conditions a recipe can be tagged with
-  @Get('site-conditions')
-  async getListOfSiteConditions(
-    @ClerkUserId() clerkId: string,
-    @Param('companyId') companyId: string,
-  ): Promise<SiteCondition[]> {
-    return await this.recipeBuilderService.getListOfSiteConditions({
       clerkId,
       companyId,
     });
@@ -75,7 +73,8 @@ export class RecipeBuilderController {
   async createSiteClass(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() siteClass: CreateSiteClassRequest,
+    @Body(new ZodValidationPipe(createSiteClassSchema))
+    siteClass: CreateSiteClassRequest,
   ): Promise<SiteClassOption> {
     return await this.recipeBuilderService.createSiteClass({
       clerkId,
@@ -84,30 +83,29 @@ export class RecipeBuilderController {
     });
   }
 
-  // The company's materials, filtered: ?term=brick&categoryId=...&siteConditionId=...
+  // The company's materials, filtered: ?term=brick&categoryId=...
   @Get('materials')
   async searchMaterials(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Query('term') term?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('siteConditionId') siteConditionId?: string,
+    @Query(new ZodValidationPipe(searchMaterialsQuerySchema))
+    filters: SearchMaterialsRequest,
   ): Promise<MaterialSearchResult[]> {
     return await this.recipeBuilderService.searchMaterials({
       clerkId,
       companyId,
-      filters: { term, categoryId, siteConditionId },
+      filters,
     });
   }
 
   // Creates a recipe with its ingredients and the classes it suits
-  //   body: { name, categoryId, unit, description, siteConditionId,
-  //           ingredients, buildingClassIds, siteClassIds }
+  //   body: { name, categoryId, unit, description, ingredients,
+  //           buildingClassIds, siteClassIds }
   @Post()
   async createNewRecipe(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() recipe: CreateRecipeRequest,
+    @Body(new ZodValidationPipe(createRecipeSchema)) recipe: CreateRecipeRequest,
   ): Promise<CreateRecipeResponse> {
     return await this.recipeBuilderService.createNewRecipe({
       clerkId,

@@ -1,16 +1,66 @@
 import { useState } from "react";
 import { MdClose } from "react-icons/md";
+import PhoneInput from "react-phone-number-input";
+import flags from "react-phone-number-input/flags";
 import { postNewWorkspace } from "@/modules/workspaceSwitcher/api/api";
 import { CreatingWorkspaceModal } from "@/modules/workspaceSwitcher/components/creatingWorkspace.modal";
+import {
+  validateCompanyWorkspace,
+  type CompanyWorkspaceField,
+} from "@/modules/workspaceSwitcher/contracts/createCompanyWorkspace.schema";
 
 // Shared look for every field in this form
-const labelClass = "mb-1.5 block text-xs font-medium text-[#57534E]";
-const inputClass =
-  "h-10 w-full rounded-lg border border-[#DEDAD4] bg-white px-3 text-sm text-[#1C1917] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#A8A29E] focus:border-[#FF6B35] focus:ring-[3px] focus:ring-[#FFF4EE]";
+const labelClass = "mb-1.5 block text-sm font-medium text-[#57534E]";
+function inputClass(hasError: boolean) {
+  return `h-12 w-full rounded-lg border bg-white px-3.5 text-[15px] text-[#1C1917] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#A8A29E] focus:ring-[3px] ${
+    hasError
+      ? "border-red-500 focus:border-red-500 focus:ring-red-50"
+      : "border-[#DEDAD4] focus:border-[#FF6B35] focus:ring-[#FFF4EE]"
+  }`;
+}
 
-// TODO :: create modal component showing the creating workspace
-// TODO  :: create modal component showing success in creating workspace
+// The phone fields use react-phone-number-input's own PhoneInput: a flag
+// dropdown plus the number. Its stylesheet isn't imported, so it is styled here
+// with Tailwind, reaching its parts by their class names:
+//   .PhoneInputCountry        the flag and arrow, with the real <select> laid
+//   .PhoneInputCountrySelect  invisibly over them so a click opens it
+//   .PhoneInputCountryIcon    the flag
+//   .PhoneInputCountrySelectArrow  the small chevron
+//   .PhoneInputInput          the number box
+// It matches the other inputs, and its border turns red when the number is wrong.
+function phoneInputClass(hasError: boolean) {
+  return [
+    "flex h-12 w-full items-center gap-2.5 rounded-lg border bg-white px-3.5 transition-[border-color,box-shadow] duration-150 focus-within:ring-[3px]",
+    hasError
+      ? "border-red-500 focus-within:border-red-500 focus-within:ring-red-50"
+      : "border-[#DEDAD4] focus-within:border-[#FF6B35] focus-within:ring-[#FFF4EE]",
+    "[&_.PhoneInputCountry]:relative [&_.PhoneInputCountry]:flex [&_.PhoneInputCountry]:shrink-0 [&_.PhoneInputCountry]:items-center [&_.PhoneInputCountry]:gap-1.5",
+    "[&_.PhoneInputCountrySelect]:absolute [&_.PhoneInputCountrySelect]:inset-0 [&_.PhoneInputCountrySelect]:z-10 [&_.PhoneInputCountrySelect]:cursor-pointer [&_.PhoneInputCountrySelect]:opacity-0",
+    "[&_.PhoneInputCountryIcon]:h-4 [&_.PhoneInputCountryIcon]:w-6 [&_.PhoneInputCountryIcon]:overflow-hidden [&_.PhoneInputCountryIcon]:rounded-[2px] [&_.PhoneInputCountryIcon]:shadow-[0_0_0_1px_rgba(0,0,0,0.12)]",
+    "[&_.PhoneInputCountryIcon_svg]:block [&_.PhoneInputCountryIcon_svg]:h-full [&_.PhoneInputCountryIcon_svg]:w-full",
+    "[&_.PhoneInputCountrySelectArrow]:-mt-0.5 [&_.PhoneInputCountrySelectArrow]:size-1.5 [&_.PhoneInputCountrySelectArrow]:rotate-45 [&_.PhoneInputCountrySelectArrow]:border-b-[1.5px] [&_.PhoneInputCountrySelectArrow]:border-r-[1.5px] [&_.PhoneInputCountrySelectArrow]:border-[#78716C]",
+    "[&_.PhoneInputInput]:h-full [&_.PhoneInputInput]:w-full [&_.PhoneInputInput]:min-w-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:text-[15px] [&_.PhoneInputInput]:text-[#1C1917] [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:placeholder:text-[#A8A29E]",
+  ].join(" ");
+}
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+}
+
+// TODO :: create modal component showing success in creating workspace
+
+type CompanyForm = Record<CompanyWorkspaceField, string>;
+
+/**
+ * The form for a new company workspace. Every field is checked by the Zod
+ * schema in createCompanyWorkspace.schema.ts (the same rules the backend can
+ * check again).
+ *
+ * A field's error shows once the user has left it, or for every field once they
+ * try to submit, so nothing flashes red while they are still typing. The errors
+ * then update as they type.
+ */
 export function CreateCompanyWorkspaceForm({
   onClose,
   addToList,
@@ -18,7 +68,7 @@ export function CreateCompanyWorkspaceForm({
   onClose: () => void;
   addToList: (newCompany: any) => void;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<CompanyForm>({
     name: "",
     address: "",
     city: "",
@@ -33,25 +83,110 @@ export function CreateCompanyWorkspaceForm({
     companyType: "",
   });
 
+  const [touched, setTouched] = useState<
+    Partial<Record<CompanyWorkspaceField, boolean>>
+  >({});
+  const [triedToSubmit, setTriedToSubmit] = useState<boolean>(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showCreatingWorkspaceModal, setShowCreatingWorkspaceModal] =
     useState<boolean>(false);
 
-  function updateField(field: keyof typeof form, value: string) {
+  // Checked on every render, so the messages follow what the user types
+  const { errors } = validateCompanyWorkspace(form);
+  const errorFor = (field: CompanyWorkspaceField) =>
+    triedToSubmit || touched[field] ? errors[field] : undefined;
+
+  function updateField(field: CompanyWorkspaceField, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function submitForm() {
-    setShowCreatingWorkspaceModal(true);
+  function touch(field: CompanyWorkspaceField) {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  }
 
-    const response = await postNewWorkspace(form);
-    if (!response) {
-      console.log("something is up");
+  async function submitForm() {
+    setTriedToSubmit(true);
+    const { data } = validateCompanyWorkspace(form);
+    if (!data) return;
+
+    setSubmitError(null);
+    setShowCreatingWorkspaceModal(true);
+    try {
+      // Send the checked values: trimmed, with the phones in +61 form
+      const response = await postNewWorkspace(data);
+      if (!response) {
+        setSubmitError("Couldn't create the workspace. Please try again.");
+        return;
+      }
+      addToList(response);
+      onClose();
+    } catch {
+      setSubmitError("Couldn't create the workspace. Please try again.");
+    } finally {
       setShowCreatingWorkspaceModal(false);
-      return;
     }
-    addToList(response);
-    setShowCreatingWorkspaceModal(false);
-    onClose();
+  }
+
+  // One labelled text input, with its error underneath
+  function textField(
+    field: CompanyWorkspaceField,
+    label: string,
+    title: string,
+    options: { type?: "text" | "email"; required?: boolean } = {},
+  ) {
+    const { type = "text", required = true } = options;
+    const error = errorFor(field);
+    return (
+      <div>
+        <label htmlFor={title} className={labelClass}>
+          {label}
+          {required ? <span className="ml-0.5 text-red-600">*</span> : null}
+        </label>
+        <input
+          id={title}
+          title={title}
+          type={type}
+          value={form[field]}
+          onChange={(e) => updateField(field, e.target.value)}
+          onBlur={() => touch(field)}
+          aria-invalid={error !== undefined}
+          className={inputClass(error !== undefined)}
+        />
+        <FieldError message={error} />
+      </div>
+    );
+  }
+
+  // One labelled phone input, with its error underneath
+  function phoneField(
+    field: "phone" | "contactPhone",
+    label: string,
+    title: string,
+    required: boolean,
+  ) {
+    const error = errorFor(field);
+    return (
+      <div>
+        <label htmlFor={title} className={labelClass}>
+          {label}
+          {required ? <span className="ml-0.5 text-red-600">*</span> : null}
+        </label>
+        <PhoneInput
+          id={title}
+          title={title}
+          defaultCountry="AU"
+          flags={flags}
+          placeholder="0412 345 678"
+          value={form[field]}
+          // PhoneInput gives undefined for an empty box; the form keeps ""
+          onChange={(value) => updateField(field, value ?? "")}
+          onBlur={() => touch(field)}
+          aria-invalid={error !== undefined}
+          className={phoneInputClass(error !== undefined)}
+        />
+        <FieldError message={error} />
+      </div>
+    );
   }
 
   return (
@@ -64,10 +199,10 @@ export function CreateCompanyWorkspaceForm({
         <div
           title="create-workspace-form"
           onClick={(e) => e.stopPropagation()}
-          className="flex max-h-[90vh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-2xl border border-[#F0EDE8] bg-white p-6 text-[#1C1917]"
+          className="flex max-h-[92vh] w-full max-w-5xl flex-col gap-6 overflow-y-auto rounded-2xl border border-[#F0EDE8] bg-white p-8 text-[#1C1917]"
         >
           <div className="flex items-center justify-between border-b border-[#F0EDE8] pb-4">
-            <h1 className="text-xl font-semibold tracking-[-0.025em] text-[#1C1917]">
+            <h1 className="text-2xl font-semibold tracking-[-0.025em] text-[#1C1917]">
               Create Company Workspace
             </h1>
             <button
@@ -78,194 +213,61 @@ export function CreateCompanyWorkspaceForm({
             </button>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className={labelClass}>
-                Company Name
-              </label>
-              <input
-                title="company-name"
-                type="text"
-                required
-                value={form.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                className={inputClass}
-              />
+          <div className="flex flex-col gap-5">
+            {textField("name", "Company Name", "company-name")}
+            {textField("address", "Address", "company-address")}
+
+            <div className="grid grid-cols-3 gap-4">
+              {textField("city", "City", "company-city")}
+              {textField("state", "State", "company-state")}
+              {textField("postcode", "Postcode", "company-postcode")}
             </div>
 
-            <div>
-              <label className={labelClass}>
-                Address
-              </label>
-              <input
-                title="company-address"
-                type="text"
-                required
-                value={form.address}
-                onChange={(e) => updateField("address", e.target.value)}
-                className={inputClass}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              {textField("country", "Country", "company-country")}
+              {textField("companyType", "Company Type", "company-type")}
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className={labelClass}>
-                  City
-                </label>
-                <input
-                  title="company-city"
-                  type="text"
-                  required
-                  value={form.city}
-                  onChange={(e) => updateField("city", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>
-                  State
-                </label>
-                <input
-                  title="company-state"
-                  type="text"
-                  required
-                  value={form.state}
-                  onChange={(e) => updateField("state", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>
-                  Postcode
-                </label>
-                <input
-                  title="company-postcode"
-                  type="text"
-                  required
-                  value={form.postcode}
-                  onChange={(e) => updateField("postcode", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              {phoneField("phone", "Phone Number", "company-phone-number", true)}
+              {textField("email", "Email", "company-email", { type: "email" })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>
-                  Country
-                </label>
-                <input
-                  title="company-country"
-                  type="text"
-                  value={form.country}
-                  onChange={(e) => updateField("country", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>
-                  Company Type
-                </label>
-                <input
-                  title="company-type"
-                  type="text"
-                  required
-                  value={form.companyType}
-                  onChange={(e) => updateField("companyType", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelClass}>
-                  Phone Number
-                </label>
-                <input
-                  title="company-phone-number"
-                  type="tel"
-                  required
-                  value={form.phone}
-                  onChange={(e) => updateField("phone", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>
-                  Email
-                </label>
-                <input
-                  title="company-email"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => updateField("email", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t border-[#F0EDE8] pt-5">
-              <p className="text-xs font-medium text-[#78716C]">
-                Primary Contact
-              </p>
-              <div>
-                <label className={labelClass}>
-                  Contact Name
-                </label>
-                <input
-                  title="company-contact-name"
-                  type="text"
-                  required
-                  value={form.contactName}
-                  onChange={(e) => updateField("contactName", e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelClass}>
-                    Contact Phone
-                  </label>
-                  <input
-                    title="company-contact-phone"
-                    type="tel"
-                    value={form.contactPhone}
-                    onChange={(e) =>
-                      updateField("contactPhone", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>
-                    Contact Email
-                  </label>
-                  <input
-                    title="company-contact-email"
-                    type="email"
-                    value={form.contactEmail}
-                    onChange={(e) =>
-                      updateField("contactEmail", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
+            <div className="flex flex-col gap-4 border-t border-[#F0EDE8] pt-6">
+              <p className="text-sm font-medium text-[#78716C]">Primary Contact</p>
+              {textField("contactName", "Contact Name", "company-contact-name")}
+              <div className="grid grid-cols-2 gap-4">
+                {phoneField(
+                  "contactPhone",
+                  "Contact Phone",
+                  "company-contact-phone",
+                  false,
+                )}
+                {textField("contactEmail", "Contact Email", "company-contact-email", {
+                  type: "email",
+                  required: false,
+                })}
               </div>
             </div>
           </div>
 
+          {submitError ? (
+            <p className="text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          ) : null}
+
           <div className="flex justify-end gap-2 border-t border-[#F0EDE8] pt-5">
             <button
               onClick={onClose}
-              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#57534E] transition-colors hover:border-[#DEDAD4] hover:bg-[#FAFAF9]"
+              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#57534E] transition-colors hover:border-[#DEDAD4] hover:bg-[#FAFAF9]"
             >
               Cancel
             </button>
             <button
               onClick={() => submitForm()}
-              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-[#FF6B35] bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:border-[#E85A26] hover:bg-[#E85A26] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
+              disabled={showCreatingWorkspaceModal}
+              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-[#FF6B35] bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:border-[#E85A26] hover:bg-[#E85A26] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Create Workspace
             </button>

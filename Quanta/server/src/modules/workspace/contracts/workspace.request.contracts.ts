@@ -1,20 +1,16 @@
-// The body of POST /workspaces/create. The user comes from the Clerk token, so
-// no userId is accepted. Only the name is required; any detail left blank is
-// stored as empty.
-export type CreateWorkspaceRequest = {
-  name: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postcode?: string;
-  country?: string;
-  phone?: string;
-  email?: string;
-  contactName?: string;
-  contactPhone?: string;
-  contactEmail?: string;
-  companyType?: string;
-};
+import type { z } from 'zod';
+import type { createWorkspaceSchema } from '@/modules/workspace/contracts/workspace.schema';
+
+// The body of POST /workspaces/create, as the route receives it once
+// ZodValidationPipe has checked it against createWorkspaceSchema. The user
+// comes from the Clerk token, so no userId is accepted.
+//
+// Only the name is required. Every other field is undefined when it was left
+// out or blank. Text is trimmed with single spaces inside, emails are trimmed,
+// and phone numbers are in international form (+61412345678).
+//
+// The type comes from the schema, so the rules and the type can't drift apart.
+export type CreateWorkspaceRequest = z.output<typeof createWorkspaceSchema>;
 
 // What the repository stores once everything has been checked
 export type NewCompanyRecord = {

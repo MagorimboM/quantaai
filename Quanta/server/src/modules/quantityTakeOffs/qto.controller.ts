@@ -10,6 +10,16 @@ import {
 } from '@nestjs/common';
 import { QuantityTakeOffsService } from '@/modules/quantityTakeOffs/qto.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
+import {
+  addLineItemSchema,
+  createCatalogueItemSchema,
+  createCategorySchema,
+  createRecipeSchema,
+  deleteLineItemsSchema,
+  updateLineItemsSchema,
+  updateProjectStatusSchema,
+} from '@/modules/quantityTakeOffs/contracts/qto.schema';
 import type {
   LineItemInput,
   AddLineItemInput,
@@ -33,6 +43,9 @@ import type {
 // The takeoff (bill of quantities) of one project. Every route runs behind the
 // global ClerkAuthGuard, so @ClerkUserId() is the verified caller; the service
 // checks the company and project in the URL are really theirs.
+//
+// Every body is checked and tidied by the schemas in qto.schema.ts first: a bad
+// one gets a 400 and never reaches the service.
 @Controller(':companyId/projects/:projectId/bill-of-quantities')
 export class QuantityTakeOffsController {
   constructor(private readonly quantityTakeOffsService: QuantityTakeOffsService) {}
@@ -90,7 +103,8 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() body: CreateCatalogueItemInput,
+    @Body(new ZodValidationPipe(createCatalogueItemSchema))
+    body: CreateCatalogueItemInput,
   ): Promise<CreateCatalogueItemResponse> {
     return await this.quantityTakeOffsService.createCatalogueItem({
       clerkId,
@@ -106,7 +120,7 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() body: CreateCategoryInput,
+    @Body(new ZodValidationPipe(createCategorySchema)) body: CreateCategoryInput,
   ): Promise<CreateCategoryResponse> {
     return await this.quantityTakeOffsService.createCategory({
       clerkId,
@@ -117,14 +131,15 @@ export class QuantityTakeOffsController {
   }
 
   // POST .../bill-of-quantities/recipes
-  //   body: { name, categoryId, unit, description, materials, labour, overheads }
+  //   body: { name, categoryId, unit, description, materials, labour, overheads,
+  //           buildingClassIds?, siteClassIds? }
   // Creates a recipe with its components and returns it as the picker lists it.
   @Post('recipes')
   async createRecipe(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() body: CreateRecipeInput,
+    @Body(new ZodValidationPipe(createRecipeSchema)) body: CreateRecipeInput,
   ): Promise<CreateRecipeResponse> {
     return await this.quantityTakeOffsService.createRecipe({
       clerkId,
@@ -142,7 +157,7 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() body: AddLineItemInput,
+    @Body(new ZodValidationPipe(addLineItemSchema)) body: AddLineItemInput,
   ): Promise<GetBillOfQuantsResponse> {
     return await this.quantityTakeOffsService.addLineItem({
       clerkId,
@@ -159,7 +174,7 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body() lineItems: LineItemInput[],
+    @Body(new ZodValidationPipe(updateLineItemsSchema)) lineItems: LineItemInput[],
   ): Promise<UpdateLineItemsResponse> {
     return await this.quantityTakeOffsService.updateProjectLineItems({
       clerkId,
@@ -176,13 +191,14 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body('completed') completed: boolean,
+    @Body(new ZodValidationPipe(updateProjectStatusSchema))
+    body: { completed: boolean },
   ): Promise<UpdateProjectStatusResponse> {
     return await this.quantityTakeOffsService.updateProjectStatus({
       clerkId,
       companyId,
       projectId,
-      completed,
+      completed: body.completed,
     });
   }
 
@@ -193,13 +209,14 @@ export class QuantityTakeOffsController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('projectId') projectId: string,
-    @Body('lineItemIds') lineItemIds: string[],
+    @Body(new ZodValidationPipe(deleteLineItemsSchema))
+    body: { lineItemIds: string[] },
   ): Promise<DeletedLineItemsResponse> {
     return await this.quantityTakeOffsService.deleteProjectLineItems({
       clerkId,
       companyId,
       projectId,
-      lineItemIds,
+      lineItemIds: body.lineItemIds,
     });
   }
 

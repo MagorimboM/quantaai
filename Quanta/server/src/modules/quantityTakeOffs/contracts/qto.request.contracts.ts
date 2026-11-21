@@ -1,3 +1,17 @@
+import type { z } from 'zod';
+import type {
+  addLineItemSchema,
+  createCatalogueItemSchema,
+  createCategorySchema,
+  createRecipeSchema,
+  updateLineItemsSchema,
+} from '@/modules/quantityTakeOffs/contracts/qto.schema';
+
+// The bodies the routes accept come from the Zod schemas in qto.schema.ts, so
+// the rules and the types can't drift apart. Each is what the route receives
+// once ZodValidationPipe has checked it: text tidied, ids present, numbers real
+// and above zero, blank notes null.
+
 // Which project's takeoff a repository call is about. By the time a repository
 // method runs, the caller has been checked to own both (see AccessService).
 export type BillOfQuantsScope = {
@@ -7,12 +21,7 @@ export type BillOfQuantsScope = {
 
 // The three fields a user can edit on a line item. The location is stored in
 // `description`. Everything else on the line (recipe, unit) is fixed once created.
-export type LineItemInput = {
-  id: string;
-  description: string;
-  measurement: number;
-  notes: string | null;
-};
+export type LineItemInput = z.output<typeof updateLineItemsSchema>[number];
 
 export type UpdateProjectLineItemsRequest = BillOfQuantsScope & {
   lineItems: LineItemInput[];
@@ -34,12 +43,7 @@ export type GetRecipeOptionsRequest = {
 
 // What the browser sends to add a line: the recipe, the one measurement it is
 // multiplied by, and where it is (stored in `description`).
-export type AddLineItemInput = {
-  recipeId: string;
-  measurement: number;
-  description: string;
-  notes: string | null;
-};
+export type AddLineItemInput = z.output<typeof addLineItemSchema>;
 
 // The same, once the caller is known. `userId` comes from the Clerk token and
 // is never sent by the browser.
@@ -47,7 +51,6 @@ export type AddLineItemRequest = BillOfQuantsScope &
   AddLineItemInput & {
     userId: string;
   };
-
 
 // ---- Create recipe ----
 
@@ -62,13 +65,7 @@ export type GetRecipeCatalogueRequest = {
 
 // What the browser sends to add a material, labour or overhead to the
 // catalogue. `labourType` only applies to labour and is null for the others.
-export type CreateCatalogueItemInput = {
-  kind: CatalogueKind;
-  name: string;
-  unit: string;
-  categoryId: string;
-  labourType: string | null;
-};
+export type CreateCatalogueItemInput = z.output<typeof createCatalogueItemSchema>;
 
 // The same, once the caller is known. `userId` comes from the Clerk token and
 // is never sent by the browser.
@@ -77,32 +74,21 @@ export type CreateCatalogueItemRequest = CreateCatalogueItemInput & {
   companyId: string;
 };
 
-export type CreateCategoryInput = {
-  name: string;
-};
+export type CreateCategoryInput = z.output<typeof createCategorySchema>;
 
 export type CreateCategoryRequest = CreateCategoryInput & {
   userId: string;
   companyId: string;
 };
 
+// A recipe created from the takeoff. The same rules as the recipe library's,
+// including the optional buildingClassIds / siteClassIds (no repeats).
+// `description` is null when blank.
+export type CreateRecipeInput = z.output<typeof createRecipeSchema>;
+
 // One component of a recipe: the catalogue item and how much of it 1 unit of
 // the recipe needs. The component's unit is not sent: it is the item's own unit.
-export type RecipeComponentInput = {
-  itemId: string;
-  quantity: number;
-};
-
-export type CreateRecipeInput = {
-  name: string;
-  categoryId: string;
-  // What the recipe is priced per, for example m² for a wall
-  unit: string;
-  description: string | null;
-  materials: RecipeComponentInput[];
-  labour: RecipeComponentInput[];
-  overheads: RecipeComponentInput[];
-};
+export type RecipeComponentInput = CreateRecipeInput['materials'][number];
 
 export type CreateRecipeRequest = CreateRecipeInput & {
   userId: string;

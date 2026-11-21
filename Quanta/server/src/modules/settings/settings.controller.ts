@@ -1,6 +1,11 @@
 import { Controller, Get, Put, Post, Delete, Body, Param } from '@nestjs/common';
 import { SettingsService } from '@/modules/settings/settings.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
+import {
+  addTeamMemberSchema,
+  updateCompanyProfileSchema,
+} from '@/modules/settings/contracts/settings.schema';
 import type {
   UpdateCompanyProfileRequest,
   AddTeamMemberRequest,
@@ -15,6 +20,9 @@ import type {
 // The company's settings. Every route runs behind the global ClerkAuthGuard, so
 // @ClerkUserId() is the verified caller; the service checks the company in the
 // URL is really theirs.
+//
+// The two bodies are checked and tidied by the schemas in settings.schema.ts
+// first: a bad body gets a 400 and never reaches the service.
 @Controller(':companyId/settings')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
@@ -33,7 +41,8 @@ export class SettingsController {
   async updateCompanyProfile(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: UpdateCompanyProfileRequest,
+    @Body(new ZodValidationPipe(updateCompanyProfileSchema))
+    body: UpdateCompanyProfileRequest,
   ): Promise<CompanyProfileDetails> {
     return await this.settingsService.updateCompanyProfile({
       clerkId,
@@ -56,7 +65,7 @@ export class SettingsController {
   async addTeamMember(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: AddTeamMemberRequest,
+    @Body(new ZodValidationPipe(addTeamMemberSchema)) body: AddTeamMemberRequest,
   ): Promise<TeamMember> {
     return await this.settingsService.addTeamMember({
       clerkId,

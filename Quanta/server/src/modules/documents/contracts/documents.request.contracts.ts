@@ -1,20 +1,27 @@
-export type UploadFilesRequest = {
+import type { z } from 'zod';
+import type {
+  deleteFilesParamsSchema,
+  getFilesParamsSchema,
+  uploadFilesBodySchema,
+} from '@/modules/documents/contracts/documents.schema';
+
+// The form fields of POST /:companyId/files/upload, once checked. The user and
+// company are NOT accepted from the body: the user comes from the Clerk token
+// and the company from the URL.
+export type UploadFilesBody = z.output<typeof uploadFilesBodySchema>;
+
+// What the service needs to save an upload. `userId` is the verified caller's
+// id (from the Clerk token, checked by AccessService to own the company).
+export type UploadFilesRequest = UploadFilesBody & {
   userId: string;
   companyId: string;
-  projectId: string;
-  documentType?: string;
 };
 
-export type GetFilesRequest = {
-  projectId: string;
-  companyId: string;
-};
+// The URL of GET /:companyId/files/:projectId, once checked
+export type GetFilesRequest = z.output<typeof getFilesParamsSchema>;
 
-export type DeleteFilesRequest = {
-  projectId: string;
-  companyId: string;
-  documentId: string;
-};
+// The URL of DELETE /:companyId/files/:projectId/:documentId, once checked
+export type DeleteFilesRequest = z.output<typeof deleteFilesParamsSchema>;
 
 export type SaveNewFileRequest = {
   s3Url: string;
@@ -25,6 +32,7 @@ export type SaveNewFileRequest = {
   projectId: string;
   userId: string;
 };
+
 export type File = {
   buffer: Buffer;
   originalName: string;

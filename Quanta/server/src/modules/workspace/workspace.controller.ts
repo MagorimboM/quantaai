@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { WorkspaceService } from '@/modules/workspace/workspace.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator'
+import { createWorkspaceSchema } from '@/modules/workspace/contracts/workspace.schema';
 import type { CreateWorkspaceRequest } from '@/modules/workspace/contracts/workspace.request.contracts';
 import type {
   CompanyWorkspace,
@@ -39,14 +41,14 @@ export class WorkspaceController {
     return await this.workspaceService.getWorkspaceProjects(clerkId);
   }
 
-  // Creates a company and its workspace
+  // Creates a company and its workspace. The body is checked and tidied by
+  // createWorkspaceSchema first (see workspace.schema.ts): a bad body gets a 400
+  // and never reaches the service.
   @Post('create')
   async createNewWorkspace(
     @ClerkUserId() clerkId: string,
-    @Body() body: CreateWorkspaceRequest,
+    @Body(new ZodValidationPipe(createWorkspaceSchema)) body: CreateWorkspaceRequest,
   ): Promise<CompanyWorkspace> {
-    // TODO:: sanitize the body, remove any spaces inbetween words, start and end.
-
     return await this.workspaceService.createNewWorkspace(clerkId, body);
   }
 }

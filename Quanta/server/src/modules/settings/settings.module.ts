@@ -4,6 +4,7 @@ import { SettingsService } from '@/modules/settings/settings.service';
 import { SettingsRepository } from '@/modules/settings/settings.repository';
 import { AuthModule } from '@/auth/auth.module';
 
+
 // AuthModule provides AccessService, the "is this company the caller's?" check
 @Module({
   imports: [AuthModule],

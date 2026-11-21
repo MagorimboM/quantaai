@@ -32,6 +32,12 @@ export type UploadFilesRequest = {
   files: File[];
 };
 
+// A new project, as the form sends it.
+//
+// projectPostCode is text, not a number: Australian postcodes can start with 0
+// (Darwin is "0800"), which a number would drop, and the database stores it as
+// text. null until the user types one.
+// Phone numbers are in international form, e.g. "+61412345678".
 export type CreateNewProjectRequest = {
   projectNumber: string;
   projectName: string;
@@ -40,10 +46,11 @@ export type CreateNewProjectRequest = {
   projectPhoneNumber: string;
   projectAddress: string;
   projectCity: string;
-  projectPostCode: number | null;
-  projectState:string; 
-  projectCountry:string; 
+  projectPostCode: string | null;
+  projectState: string;
+  projectCountry: string;
   projectType: string;
+  // TODO :: nothing on the form sets this. Remove it, or say what it holds.
   projectContact: number | null;
   clientName: string;
   clientEmail: string;

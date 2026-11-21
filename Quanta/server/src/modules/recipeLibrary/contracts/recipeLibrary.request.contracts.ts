@@ -1,3 +1,28 @@
+import type { z } from 'zod';
+import type {
+  archiveRecipeSchema,
+  createBuildingClassSchema,
+  createCatalogueItemSchema,
+  createCategorySchema,
+  createRecipeSchema,
+  createSiteClassSchema,
+  getRecipesQuerySchema,
+  recipeCategoriesQuerySchema,
+  updateRecipeSchema,
+} from '@/modules/recipeLibrary/contracts/recipeLibrary.schema';
+
+// The bodies and queries the routes accept come from the Zod schemas in
+// recipeLibrary.schema.ts, so the rules and the types can't drift apart. Each
+// is what the route receives once ZodValidationPipe has checked it: text
+// tidied, ids present, quantities real numbers above zero.
+
+// The query of GET .../categories: each class is an id, or "all"
+export type RecipeCategoriesQuery = z.output<typeof recipeCategoriesQuerySchema>;
+
+// The query of GET .../recipes: filters default to "all", the term is undefined
+// when blank, and page / limit are whole numbers kept in range
+export type GetRecipesQuery = z.output<typeof getRecipesQuerySchema>;
+
 // The body of PATCH /:companyId/recipe-library/recipes/:recipeId. The company
 // and recipe come from the URL and the user from the Clerk token.
 //
@@ -5,17 +30,10 @@
 // 1 unit of the recipe. Any existing line left out is removed. Materials can't
 // be added here, and a recipe's unit never changes, because that would change
 // what every quantity means.
-export type UpdateRecipeRequest = {
-  name: string;
-  description?: string;
-  categoryId: string;
-  ingredients: { id: string; quantity: number }[];
-};
+export type UpdateRecipeRequest = z.output<typeof updateRecipeSchema>;
 
 // The body of PATCH .../recipes/:recipeId/archive
-export type ArchiveRecipeBody = {
-  archived: boolean;
-};
+export type ArchiveRecipeBody = z.output<typeof archiveRecipeSchema>;
 
 // What the repository needs. By the time it runs, the caller has been checked to
 // own the company (see AccessService) and the paging has been kept in range.
@@ -72,13 +90,7 @@ export type GetRecipeCatalogueRequest = {
 
 // The body of POST .../recipe-library/catalogue-items. `labourType` only
 // applies to labour and is null for the others.
-export type CreateCatalogueItemInput = {
-  kind: CatalogueKind;
-  name: string;
-  unit: string;
-  categoryId: string;
-  labourType: string | null;
-};
+export type CreateCatalogueItemInput = z.output<typeof createCatalogueItemSchema>;
 
 export type CreateCatalogueItemRecord = CreateCatalogueItemInput & {
   companyId: string;
@@ -88,13 +100,9 @@ export type CreateCatalogueItemRecord = CreateCatalogueItemInput & {
 // The body of POST .../recipe-library/site-classes and .../building-classes.
 // The description is shown after the name or on hover in the library, so it is
 // kept short.
-export type CreateClassInput = {
-  name: string;
-  description: string;
-};
-
-export type CreateSiteClassInput = CreateClassInput;
-export type CreateBuildingClassInput = CreateClassInput;
+export type CreateSiteClassInput = z.output<typeof createSiteClassSchema>;
+export type CreateBuildingClassInput = z.output<typeof createBuildingClassSchema>;
+export type CreateClassInput = CreateSiteClassInput;
 
 // What the repository stores once the name has been checked as new for the user
 export type CreateClassRecord = CreateClassInput & {
@@ -105,9 +113,7 @@ export type CreateSiteClassRecord = CreateClassRecord;
 export type CreateBuildingClassRecord = CreateClassRecord;
 
 // The body of POST .../recipe-library/categories
-export type CreateCategoryInput = {
-  name: string;
-};
+export type CreateCategoryInput = z.output<typeof createCategorySchema>;
 
 export type CreateCategoryRecord = CreateCategoryInput & {
   companyId: string;
@@ -116,27 +122,14 @@ export type CreateCategoryRecord = CreateCategoryInput & {
 
 // One component of a new recipe: the catalogue item and how much of it 1 unit
 // of the recipe needs. The component's unit is not sent: it is the item's own unit.
-export type RecipeComponentInput = {
-  itemId: string;
-  quantity: number;
-};
+export type RecipeComponentInput = CreateRecipeInput['materials'][number];
 
 // The body of POST .../recipe-library/recipes
 //
 // buildingClassIds / siteClassIds: the classes the recipe suits. Optional; a
 // recipe with none only shows when the library is set to "all" for that class.
-export type CreateRecipeInput = {
-  name: string;
-  categoryId: string;
-  // What the recipe is priced per, for example m² for a wall
-  unit: string;
-  description: string | null;
-  materials: RecipeComponentInput[];
-  labour: RecipeComponentInput[];
-  overheads: RecipeComponentInput[];
-  buildingClassIds?: string[];
-  siteClassIds?: string[];
-};
+// Repeated ids have already been dropped. `description` is null when blank.
+export type CreateRecipeInput = z.output<typeof createRecipeSchema>;
 
 // The repository picks the recipe's form itself (the Rate-based one, for now),
 // so callers send no formId.

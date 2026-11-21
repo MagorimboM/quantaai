@@ -12,32 +12,20 @@ import type {
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
 import type {
   Category,
-  SiteCondition,
   SiteClassOption,
   BuildingClassOption,
   MaterialSearchResult,
   CreateRecipeResponse,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts';
 
-// The longest a site class name may be. It is shown on a small pill.
-const MAX_SITE_CLASS_NAME = 40;
-
-function isNonEmptyText(value: unknown): value is string {
-  return typeof value === 'string' && value.trim() !== '';
-}
-
-// The building or site classes a recipe suits, as a list of distinct ids.
-// Missing means none; anything else that isn't a list of ids is refused.
-function toClassIds(ids: unknown, label: string): string[] {
-  if (ids === undefined || ids === null) return [];
-  if (!Array.isArray(ids) || !ids.every(isNonEmptyText)) {
-    throw new BadRequestException(`Expected a list of ${label} ids`);
-  }
-  return [...new Set(ids)];
-}
-
 // Every method first checks the company really belongs to the caller. The
 // company id comes from the URL, so on its own it proves nothing.
+//
+// The shape of every request (names present and tidied, quantities above zero,
+// no repeated ingredients or classes, at least one building class) has already
+// been checked by the Zod schemas in recipeBuilder.schema.ts before a method
+// runs. What's left here are the checks that need the database: that
+// everything a request points at is really the caller's, and that names are new.
 @Injectable()
 export class RecipeBuilderService {
   constructor(
@@ -57,17 +45,6 @@ export class RecipeBuilderService {
       request.companyId,
       userId,
     );
-  }
-
-  async getListOfSiteConditions(request: {
-    clerkId: string;
-    companyId: string;
-  }): Promise<SiteCondition[]> {
-    await this.accessService.requireCompanyAccess(
-      request.clerkId,
-      request.companyId,
-    );
-    return await this.recipeBuilderRepository.getListOfSiteConditions();
   }
 
   // The building classes a recipe can be marked as suiting
@@ -94,43 +71,27 @@ export class RecipeBuilderService {
     return await this.recipeBuilderRepository.getListOfSiteClasses(userId);
   }
 
-  // Adds a site class the user was missing. It needs a short name that none of
-  // their site classes already uses (ignoring case), and a description, which
-  // the library shows after the name.
+  // Adds a site class the user was missing. Its name must be new among their
+  // site classes (ignoring case).
   async createSiteClass(request: {
     clerkId: string;
     companyId: string;
     siteClass: CreateSiteClassRequest;
   }): Promise<SiteClassOption> {
-    const name = request.siteClass?.name;
-    const description = request.siteClass?.description;
-    if (!isNonEmptyText(name)) {
-      throw new BadRequestException('Give the site class a name');
-    }
-    if (name.trim().length > MAX_SITE_CLASS_NAME) {
-      throw new BadRequestException(
-        `Keep the name to ${MAX_SITE_CLASS_NAME} characters or fewer`,
-      );
-    }
-    if (!isNonEmptyText(description)) {
-      throw new BadRequestException('Describe the site class');
-    }
-
     const userId = await this.accessService.requireCompanyAccess(
       request.clerkId,
       request.companyId,
     );
+    const { name, description } = request.siteClass;
 
-    if (
-      await this.recipeBuilderRepository.siteClassNameExists(userId, name.trim())
-    ) {
+    if (await this.recipeBuilderRepository.siteClassNameExists(userId, name)) {
       throw new ConflictException('A site class with this name already exists');
     }
 
     return await this.recipeBuilderRepository.createSiteClass({
       userId,
-      name: name.trim(),
-      description: description.trim(),
+      name,
+      description,
     });
   }
 
@@ -146,22 +107,16 @@ export class RecipeBuilderService {
     return await this.recipeBuilderRepository.searchMaterials({
       companyId: request.companyId,
       userId,
-      term: request.filters.term?.trim() || undefined,
-      categoryId: request.filters.categoryId || undefined,
-      siteConditionId: request.filters.siteConditionId || undefined,
+      term: request.filters.term,
+      categoryId: request.filters.categoryId,
     });
   }
 
   /**
-   * Checks a new recipe, then saves it.
-   *
-   * A recipe is a name, a type (category), the unit its quantities are per, and
-   * at least one ingredient with a quantity above zero, and at least one
-   * building class it suits (the library is always narrowed to a building
-   * class, so a recipe with none would never show). Site classes are optional.
-   * Everything it points at must really be the caller's: the category, every
-   * material and every class. The recipe name must be new for the company,
-   * ignoring case.
+   * Saves a new recipe once everything it points at has been checked as the
+   * caller's: the category, every material and every class. The recipe name must
+   * be new for the company, ignoring case. Each ingredient's unit is taken from
+   * its material, not from the client.
    */
   async createNewRecipe(request: {
     clerkId: string;
@@ -174,43 +129,6 @@ export class RecipeBuilderService {
     );
     const { recipe, companyId } = request;
 
-    const name = recipe.name?.trim();
-    const unit = recipe.unit?.trim();
-    if (!name) throw new BadRequestException('Give the recipe a name');
-    if (!unit) throw new BadRequestException('Say what the quantities are per');
-    if (typeof recipe.categoryId !== 'string' || !recipe.categoryId) {
-      throw new BadRequestException('Choose a recipe type');
-    }
-    if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
-      throw new BadRequestException('A recipe needs at least one ingredient');
-    }
-
-    // Each ingredient needs a real quantity above zero, and may appear only once
-    const materialIds = new Set<string>();
-    for (const ingredient of recipe.ingredients) {
-      if (
-        typeof ingredient?.materialId !== 'string' ||
-        !Number.isFinite(ingredient.quantity) ||
-        ingredient.quantity <= 0
-      ) {
-        throw new BadRequestException(
-          'Every ingredient needs a quantity above zero',
-        );
-      }
-      if (materialIds.has(ingredient.materialId)) {
-        throw new BadRequestException('Each ingredient can only be added once');
-      }
-      materialIds.add(ingredient.materialId);
-    }
-
-    const buildingClassIds = toClassIds(recipe.buildingClassIds, 'building class');
-    const siteClassIds = toClassIds(recipe.siteClassIds, 'site class');
-    if (buildingClassIds.length === 0) {
-      throw new BadRequestException(
-        'Choose at least one building class the recipe suits',
-      );
-    }
-
     const categoryOk = await this.recipeBuilderRepository.categoryExists(
       companyId,
       userId,
@@ -218,38 +136,30 @@ export class RecipeBuilderService {
     );
     if (!categoryOk) throw new BadRequestException('Unknown recipe type');
 
-    const siteConditionId = recipe.siteConditionId || null;
-    if (
-      siteConditionId &&
-      !(await this.recipeBuilderRepository.siteConditionExists(siteConditionId))
-    ) {
-      throw new BadRequestException('Unknown site condition');
-    }
-
     const ownBuildingClasses =
       await this.recipeBuilderRepository.countOwnedBuildingClasses(
         userId,
-        buildingClassIds,
+        recipe.buildingClassIds,
       );
-    if (ownBuildingClasses !== buildingClassIds.length) {
+    if (ownBuildingClasses !== recipe.buildingClassIds.length) {
       throw new BadRequestException('Unknown building class');
     }
     const ownSiteClasses = await this.recipeBuilderRepository.countOwnedSiteClasses(
       userId,
-      siteClassIds,
+      recipe.siteClassIds,
     );
-    if (ownSiteClasses !== siteClassIds.length) {
+    if (ownSiteClasses !== recipe.siteClassIds.length) {
       throw new BadRequestException('Unknown site class');
     }
 
-    // Every ingredient must be one of the caller's own materials. Each line's
-    // unit is taken from its material, not from the client.
+    // Every ingredient must be one of the caller's own materials
+    const materialIds = recipe.ingredients.map((ingredient) => ingredient.materialId);
     const materials = await this.recipeBuilderRepository.findOwnedMaterials(
       companyId,
       userId,
-      [...materialIds],
+      materialIds,
     );
-    if (materials.length !== materialIds.size) {
+    if (materials.length !== materialIds.length) {
       throw new BadRequestException(
         'One or more ingredients are not in your materials',
       );
@@ -262,7 +172,7 @@ export class RecipeBuilderService {
       await this.recipeBuilderRepository.recipeNameExists(
         companyId,
         userId,
-        name,
+        recipe.name,
       )
     ) {
       throw new ConflictException('A recipe with this name already exists');
@@ -272,21 +182,20 @@ export class RecipeBuilderService {
       companyId,
       userId,
       categoryId: recipe.categoryId,
-      siteConditionId,
-      name,
-      description: recipe.description?.trim() || null,
-      unit,
+      name: recipe.name,
+      description: recipe.description ?? null,
+      unit: recipe.unit,
       ingredients: recipe.ingredients.map((ingredient) => ({
         materialId: ingredient.materialId,
         quantity: ingredient.quantity,
         unit: unitByMaterialId.get(ingredient.materialId) as string,
       })),
-      buildingClassIds,
-      siteClassIds,
+      buildingClassIds: recipe.buildingClassIds,
+      siteClassIds: recipe.siteClassIds,
     });
   }
 
-  async searchRecipeCategory(term: string, clerkId:string) {
+  async searchRecipeCategory(term: string, clerkId: string) {
     return await this.recipeBuilderRepository.searchRecipeCategory(term, clerkId);
   }
 }

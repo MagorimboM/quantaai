@@ -7,11 +7,21 @@ import {
   Body,
   Param,
   Query,
-  ParseIntPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
 import { RecipeLibraryService } from '@/modules/recipeLibrary/recipeLibrary.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
+import {
+  archiveRecipeSchema,
+  createBuildingClassSchema,
+  createCatalogueItemSchema,
+  createCategorySchema,
+  createRecipeSchema,
+  createSiteClassSchema,
+  getRecipesQuerySchema,
+  recipeCategoriesQuerySchema,
+  updateRecipeSchema,
+} from '@/modules/recipeLibrary/contracts/recipeLibrary.schema';
 import type {
   UpdateRecipeRequest,
   ArchiveRecipeBody,
@@ -20,6 +30,8 @@ import type {
   CreateCatalogueItemInput,
   CreateSiteClassInput,
   CreateBuildingClassInput,
+  RecipeCategoriesQuery,
+  GetRecipesQuery,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
   Recipe,
@@ -35,12 +47,13 @@ import type {
   CreateBuildingClassResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
-// The id that means "every category / building class / site class"
-const ALL_ID = 'all';
-
 // The company's recipe library. Every route runs behind the global
 // ClerkAuthGuard, so @ClerkUserId() is the verified caller; the service checks
 // the company in the URL is really theirs.
+//
+// Every body and query is checked and tidied by the schemas in
+// recipeLibrary.schema.ts first: a bad one gets a 400 and never reaches the
+// service.
 @Controller(':companyId/recipe-library')
 export class RecipeLibraryController {
   constructor(private readonly recipeLibraryService: RecipeLibraryService) {}
@@ -64,7 +77,7 @@ export class RecipeLibraryController {
   async createSiteClass(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: CreateSiteClassInput,
+    @Body(new ZodValidationPipe(createSiteClassSchema)) body: CreateSiteClassInput,
   ): Promise<CreateSiteClassResponse> {
     return await this.recipeLibraryService.createSiteClass({
       clerkId,
@@ -79,7 +92,8 @@ export class RecipeLibraryController {
   async createBuildingClass(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: CreateBuildingClassInput,
+    @Body(new ZodValidationPipe(createBuildingClassSchema))
+    body: CreateBuildingClassInput,
   ): Promise<CreateBuildingClassResponse> {
     return await this.recipeLibraryService.createBuildingClass({
       clerkId,
@@ -95,14 +109,14 @@ export class RecipeLibraryController {
   async getUserRecipeCategories(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Query('buildingClassId') buildingClassId: string = ALL_ID,
-    @Query('siteClassId') siteClassId: string = ALL_ID,
+    @Query(new ZodValidationPipe(recipeCategoriesQuerySchema))
+    query: RecipeCategoriesQuery,
   ): Promise<UserRecipeCategoriesResponse> {
     return await this.recipeLibraryService.getUserRecipeCategories({
       clerkId,
       companyId,
-      buildingClassId,
-      siteClassId,
+      buildingClassId: query.buildingClassId,
+      siteClassId: query.siteClassId,
     });
   }
 
@@ -113,24 +127,18 @@ export class RecipeLibraryController {
   async getRecipes(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Query('categoryId') categoryId: string = ALL_ID,
-    @Query('buildingClassId') buildingClassId: string = ALL_ID,
-    @Query('siteClassId') siteClassId: string = ALL_ID,
-    @Query('term') term?: string,
-    @Query('archived') archived?: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    @Query(new ZodValidationPipe(getRecipesQuerySchema)) query: GetRecipesQuery,
   ): Promise<GetRecipesResponse> {
     return await this.recipeLibraryService.getRecipes({
       clerkId,
       companyId,
-      categoryId,
-      buildingClassId,
-      siteClassId,
-      term,
-      archived: archived === 'true',
-      page,
-      limit,
+      categoryId: query.categoryId,
+      buildingClassId: query.buildingClassId,
+      siteClassId: query.siteClassId,
+      term: query.term,
+      archived: query.archived,
+      page: query.page,
+      limit: query.limit,
     });
   }
 
@@ -140,7 +148,7 @@ export class RecipeLibraryController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('recipeId') recipeId: string,
-    @Body() body: UpdateRecipeRequest,
+    @Body(new ZodValidationPipe(updateRecipeSchema)) body: UpdateRecipeRequest,
   ): Promise<Recipe> {
     return await this.recipeLibraryService.updateRecipe({
       clerkId,
@@ -156,7 +164,7 @@ export class RecipeLibraryController {
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Param('recipeId') recipeId: string,
-    @Body() body: ArchiveRecipeBody,
+    @Body(new ZodValidationPipe(archiveRecipeSchema)) body: ArchiveRecipeBody,
   ): Promise<ArchiveRecipeResponse> {
     return await this.recipeLibraryService.archiveRecipe({
       clerkId,
@@ -197,7 +205,8 @@ export class RecipeLibraryController {
   async createCatalogueItem(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: CreateCatalogueItemInput,
+    @Body(new ZodValidationPipe(createCatalogueItemSchema))
+    body: CreateCatalogueItemInput,
   ): Promise<CreateCatalogueItemResponse> {
     return await this.recipeLibraryService.createCatalogueItem({
       clerkId,
@@ -211,7 +220,7 @@ export class RecipeLibraryController {
   async createCategory(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: CreateCategoryInput,
+    @Body(new ZodValidationPipe(createCategorySchema)) body: CreateCategoryInput,
   ): Promise<CreateCategoryResponse> {
     return await this.recipeLibraryService.createCategory({
       clerkId,
@@ -227,7 +236,7 @@ export class RecipeLibraryController {
   async createRecipe(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Body() body: CreateRecipeInput,
+    @Body(new ZodValidationPipe(createRecipeSchema)) body: CreateRecipeInput,
   ): Promise<Recipe> {
     return await this.recipeLibraryService.createRecipe({
       clerkId,
