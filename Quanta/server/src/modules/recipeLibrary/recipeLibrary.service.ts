@@ -17,6 +17,7 @@ import type {
   Recipe,
   UserRecipeCategoriesResponse,
   GetRecipesResponse,
+  GetRecipeClassificationsResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
   GetRecipeCatalogueResponse,
@@ -27,8 +28,25 @@ import type {
 // The most recipes one request may return, however large a limit is asked for
 const MAX_PAGE_SIZE = 50;
 
+// The id that means "every building class / site class"
+const ALL_CLASSES_ID = 'all';
+
 function isNonEmptyText(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== '';
+}
+
+// A class filter from the URL: a class id, or "all" when none was given
+function classIdOrAll(value: string | undefined): string {
+  return isNonEmptyText(value) ? value.trim() : ALL_CLASSES_ID;
+}
+
+// The building or site classes a new recipe suits: optional, but if sent it
+// must be a list of ids. The repository checks they are the user's own.
+function assertValidClassIds(ids: unknown, label: string) {
+  if (ids === undefined) return;
+  if (!Array.isArray(ids) || !ids.every(isNonEmptyText)) {
+    throw new BadRequestException(`Expected a list of ${label} ids`);
+  }
 }
 
 // TODO :: [backend] The checks below (and the matching ones in
@@ -100,6 +118,8 @@ function assertValidNewRecipe(recipe: CreateRecipeInput) {
   ) {
     throw new BadRequestException('A recipe needs at least one component');
   }
+  assertValidClassIds(recipe.buildingClassIds, 'building class');
+  assertValidClassIds(recipe.siteClassIds, 'site class');
 }
 
 // Every method first checks the company really belongs to the caller. The
@@ -111,9 +131,27 @@ export class RecipeLibraryService {
     private readonly accessService: AccessService,
   ) {}
 
+  // The options for the building class and site class selectors
+  async getRecipeClassifications(request: {
+    clerkId: string;
+    companyId: string;
+  }): Promise<GetRecipeClassificationsResponse> {
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+    return await this.recipeLibraryRepository.getRecipeClassifications({
+      companyId: request.companyId,
+      userId,
+    });
+  }
+
+  // The category counts follow the building class and site class being viewed
   async getUserRecipeCategories(request: {
     clerkId: string;
     companyId: string;
+    buildingClassId?: string;
+    siteClassId?: string;
   }): Promise<UserRecipeCategoriesResponse> {
     const userId = await this.accessService.requireCompanyAccess(
       request.clerkId,
@@ -122,6 +160,8 @@ export class RecipeLibraryService {
     return await this.recipeLibraryRepository.getUserRecipeCategories({
       companyId: request.companyId,
       userId,
+      buildingClassId: classIdOrAll(request.buildingClassId),
+      siteClassId: classIdOrAll(request.siteClassId),
     });
   }
 
@@ -240,6 +280,8 @@ export class RecipeLibraryService {
       materials: recipe.materials,
       labour: recipe.labour,
       overheads: recipe.overheads,
+      buildingClassIds: recipe.buildingClassIds ?? [],
+      siteClassIds: recipe.siteClassIds ?? [],
     });
   }
 
@@ -247,6 +289,8 @@ export class RecipeLibraryService {
     clerkId: string;
     companyId: string;
     categoryId: string;
+    buildingClassId?: string;
+    siteClassId?: string;
     term?: string;
     archived: boolean;
     page: number;
@@ -266,6 +310,8 @@ export class RecipeLibraryService {
       companyId: request.companyId,
       userId,
       categoryId: request.categoryId,
+      buildingClassId: classIdOrAll(request.buildingClassId),
+      siteClassId: classIdOrAll(request.siteClassId),
       term: request.term?.trim() || undefined,
       archived: request.archived,
       page,

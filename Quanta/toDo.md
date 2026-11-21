@@ -23,6 +23,3 @@ rounding rule)
 [ x] Check permissions on the back end too, not just in the UI
 [ x] Handle invalid or nonexistent IDs in URLs the same way (redirect to workspace)
 I can also break these into smaller tickets with priorities or estimates if that would help.
-
-
-25 c * 1100mm

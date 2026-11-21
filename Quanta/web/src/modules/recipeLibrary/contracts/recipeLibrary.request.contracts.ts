@@ -1,8 +1,20 @@
 // None of these carry a userId: the backend identifies the user from the Clerk
 // token and checks the company belongs to them.
+//
+// buildingClassId / siteClassId: a class's id, or "all" (or left out) for
+// every class.
 
+// The site classes and building classes for the two selectors at the top of
+// the library
+export type GetRecipeClassificationsRequest = {
+  companyId: string;
+};
+
+// The category counts follow the building class and site class being viewed
 export type UserRecipeCategoriesRequest = {
   companyId: string;
+  buildingClassId?: string;
+  siteClassId?: string;
 };
 
 // One page of recipes. `categoryId` is a real category's id, or "all". `term`
@@ -11,6 +23,8 @@ export type UserRecipeCategoriesRequest = {
 export type GetRecipesRequest = {
   companyId: string;
   categoryId: string;
+  buildingClassId?: string;
+  siteClassId?: string;
   term?: string;
   archived: boolean;
   page: number;
@@ -68,6 +82,9 @@ export type RecipeComponentRequest = {
   quantity: number;
 };
 
+// buildingClassIds / siteClassIds: the classes the recipe suits. The library
+// page fills these with the classes being viewed, so the new recipe shows up
+// straight away.
 export type CreateRecipeRequest = {
   companyId: string;
   name: string;
@@ -78,4 +95,6 @@ export type CreateRecipeRequest = {
   materials: RecipeComponentRequest[];
   labour: RecipeComponentRequest[];
   overheads: RecipeComponentRequest[];
+  buildingClassIds?: string[];
+  siteClassIds?: string[];
 };

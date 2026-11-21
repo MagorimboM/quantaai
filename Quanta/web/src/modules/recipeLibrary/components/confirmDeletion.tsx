@@ -61,7 +61,7 @@ export function ConfirmDeletionModal({
           if (!open) onClose();
         }}
       >
-        <AlertDialogContent className="gap-5 rounded-2xl border border-[#F0EDE8] bg-white p-6 shadow-xl">
+        <AlertDialogContent className="gap-5 rounded-2xl border border-[#EFECE6] bg-white p-6 shadow-[0_25px_70px_rgba(40,29,23,0.25)]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-semibold tracking-tight text-[#1C1917]">
               {header}
@@ -75,7 +75,7 @@ export function ConfirmDeletionModal({
           ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel
-              className="cursor-pointer rounded-lg border border-[#F0EDE8] bg-white text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
+              className="cursor-pointer rounded-lg border border-[#E7E2DC] bg-white text-[#746C66] transition-colors hover:border-[#FFC6B5] hover:bg-[#FFF6F1]"
               onClick={onClose}
             >
               Cancel

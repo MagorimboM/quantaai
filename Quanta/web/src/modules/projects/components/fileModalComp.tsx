@@ -73,8 +73,8 @@ export function FileModalComp({
 
   return (
     <div className="fixed inset-0 z-999 flex items-center justify-center bg-[#1C1917]/30 backdrop-blur-sm">
-      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-[#F0EDE8] bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
+      <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-2xl border border-[#EFECE6] bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-[#EFECE6] px-6 py-4">
           <h2 className="text-lg font-semibold tracking-tight text-[#1C1917]">Project Documents</h2>
           <Button
             variant="ghost"
@@ -101,7 +101,7 @@ export function FileModalComp({
 
                 return (
                   <div key={group.type} className="flex flex-col gap-4">
-                    {index > 0 ? <Separator className="bg-[#F0EDE8]" /> : null}
+                    {index > 0 ? <Separator className="bg-[#EFECE6]" /> : null}
                     <div className="flex flex-col gap-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#78716C]">
                         {group.title}

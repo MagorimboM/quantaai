@@ -19,7 +19,7 @@ const UNITS: Record<CatalogueKind, string[]> = {
 };
 
 const inputClass =
-  "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
+  "h-9 w-full rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B4A] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 
 type CreateFormState = {
   name: string;
@@ -112,9 +112,9 @@ export function CreateCatalogueItemDialog({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-105 rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
+        className="w-full max-w-105 rounded-2xl border border-[#EFECE6] bg-white text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-[#F0EDE8] px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-[#EFECE6] px-5 py-4">
           <div className="flex flex-col gap-0.5">
             <h2 className="text-[15px] font-semibold text-[#1C1917]">
               Create new {kind}
@@ -129,7 +129,7 @@ export function CreateCatalogueItemDialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#F0EDE8] text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#EFECE6] text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
           >
             <MdClose size={14} />
           </button>
@@ -195,11 +195,11 @@ export function CreateCatalogueItemDialog({
           ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-[#F0EDE8] px-5 py-3.5">
+        <div className="flex justify-end gap-2 border-t border-[#EFECE6] px-5 py-3.5">
           <button
             type="button"
             onClick={onClose}
-            className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
+            className="h-9 cursor-pointer rounded-lg border border-[#EFECE6] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
           >
             Cancel
           </button>
@@ -207,7 +207,7 @@ export function CreateCatalogueItemDialog({
             type="button"
             onClick={save}
             disabled={!canSave}
-            className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-9 cursor-pointer rounded-lg bg-[#FF6B4A] px-4 text-sm font-medium text-white transition-colors hover:bg-[#F25C3C] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isCategory ? "Create category" : "Create and add"}
           </button>

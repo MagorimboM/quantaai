@@ -48,21 +48,25 @@ export function SideBarComp() {
       className={`
         h-screen
         border-r
-        border-sidebar-border
-        bg-sidebar
-        text-sidebar-foreground
+        border-[#F0EDE8]
+        bg-white
+        text-[#1C1917]
         transition-all
         duration-300
         ${isCollapsed ? "w-20" : "w-64"}
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-sidebar-border p-3">
-        {!isCollapsed && <div className="font-semibold text-lg">Quanta</div>}
+      <div className="flex items-center justify-between border-b border-[#F0EDE8] p-3">
+        {!isCollapsed && (
+          <div className="pl-2 text-lg font-semibold tracking-tight">
+            Quanta
+          </div>
+        )}
 
         <button
           onClick={() => toggleSidebar()}
-          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
+          className="rounded-lg p-2 text-[#A8A29E] transition-colors hover:bg-[#FFF4EE] hover:text-[#FF6B35] cursor-pointer"
         >
           {isCollapsed ? (
             <MdOutlineChevronRight size={20} />
@@ -76,33 +80,31 @@ export function SideBarComp() {
       <div className="relative p-2">
         <button
           onClick={() => toggleDropdown()}
-          className="flex w-full items-center gap-3 rounded-md p-2 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl p-2 transition-colors hover:bg-[#FFF4EE] cursor-pointer"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF6B35] font-semibold text-white">
             Q
           </div>
 
           {!isCollapsed && (
             <div className="text-left">
-              <div className="font-medium">Quanta</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm font-medium text-[#1C1917]">Quanta</div>
+              <div className="text-xs text-[#78716C]">
                 Main Workspace
               </div>
             </div>
           )}
         </button>
         {dropDownListModal && !isCollapsed && (
-          <div className="absolute mt-2 w-full rounded-md border border-border bg-popover p-2 shadow-md z-10">
-            <div className="mt-2 border-t border-border pt-2">
-              <button
-                onClick={() => {
-                  gotToWorkSpaces();
-                }}
-                className="w-full rounded-md p-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer"
-              >
-                View all workspaces
-              </button>
-            </div>
+          <div className="absolute z-10 mt-2 w-full rounded-xl border border-[#F0EDE8] bg-white p-2 shadow-lg">
+            <button
+              onClick={() => {
+                gotToWorkSpaces();
+              }}
+              className="w-full rounded-lg p-2 text-left text-sm text-[#1C1917] transition-colors hover:bg-[#FFF4EE] hover:text-[#FF6B35] cursor-pointer"
+            >
+              View all workspaces
+            </button>
           </div>
         )}
       </div>
@@ -115,12 +117,12 @@ export function SideBarComp() {
             to={option.url}
             className={({ isActive }) =>
               `
-                flex items-center gap-3 rounded-md p-3
+                flex items-center gap-3 rounded-xl p-3 text-sm font-medium
                 transition-colors
                 ${
                   isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-[#FFF4EE] text-[#FF6B35]"
+                    : "text-[#78716C] hover:bg-[#FAFAF9] hover:text-[#1C1917]"
                 }
               `
             }

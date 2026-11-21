@@ -1,5 +1,4 @@
-import { MdOutlineArrowRightAlt } from "react-icons/md";
-import { HiOutlineClock } from "react-icons/hi2";
+import { MdChevronRight } from "react-icons/md";
 import { useNavigate } from "react-router";
 import type { RecentProject } from "@/modules/dashboard/contracts/dashboard.response.contract";
 import { setActiveProject } from "@/common/storage/activeScope";
@@ -11,41 +10,59 @@ function humanise(value: string): string {
   return value.replace(/_/g, " ");
 }
 
-// One project on the dashboard. Clicking it opens that project's takeoff.
-export function ProjectCard({ project }: { project: RecentProject }) {
+// Completed is mint, in progress is amber, anything else (drafts) is rose
+function statusClass(status: string): string {
+  if (status === "completed") return "bg-[#ECFDF5] text-[#059669]";
+  if (status === "in_progress") return "bg-[#FEF3C7] text-[#B45309]";
+  return "bg-[#FFF1F2] text-[#BE123C]";
+}
+
+// Records the project as active and opens its takeoff. The company is already
+// the active one (everything on the dashboard belongs to it).
+export function useOpenProjectTakeoff() {
   const navigate = useNavigate();
 
-  function openProjectTakeoff() {
-    // The company is already the active one (this card is on its dashboard);
-    // only the project needs to be recorded before opening the takeoff.
-    setActiveProject(project.id);
+  return function openProjectTakeoff(projectId: string) {
+    setActiveProject(projectId);
     navigate("/projects/bill-of-quants");
-  }
+  };
+}
+
+// One project on the dashboard. Clicking it opens that project's takeoff.
+//
+// TODO :: [backend] The design also shows a project number ("PRJ-204"), the
+// client name and a "128 line items" pill. The recent projects contract
+// doesn't have them, so the type is shown in the chip and the rest is left out.
+export function ProjectCard({ project }: { project: RecentProject }) {
+  const openProjectTakeoff = useOpenProjectTakeoff();
 
   return (
     <button
-      onClick={openProjectTakeoff}
-      className="group flex w-full flex-row justify-between rounded-xl border border-[#F0EDE8] bg-white text-left cursor-pointer transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]/40"
+      onClick={() => openProjectTakeoff(project.id)}
+      className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-[#EFECE6] bg-white p-3.5 text-left transition-all hover:border-[#FFC2B1] hover:bg-[#FFF7ED]"
     >
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <h1 className="text-sm font-semibold text-[#1C1917]">{project.name}</h1>
-        <p className="text-sm text-[#78716C] capitalize">
-          {humanise(project.type)}
-        </p>
-        <p className="flex flex-row items-center gap-1.5 text-xs text-[#A8A29E]">
-          <HiOutlineClock size={14} /> Updated {timeAgo(project.updatedAt)}
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="shrink-0 rounded-md bg-[#F5F3EF] px-2 py-1 text-[10px] font-bold capitalize text-[#78716C]">
+            {humanise(project.type)}
+          </span>
+          <h3 className="min-w-0 flex-1 truncate text-[13px] font-bold text-[#1C1917]">
+            {project.name}
+          </h3>
+          <span
+            className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold capitalize ${statusClass(project.status)}`}
+          >
+            {humanise(project.status)}
+          </span>
+        </div>
+        <p className="text-[11px] text-[#A8A29E]">
+          Updated {timeAgo(project.updatedAt)}
         </p>
       </div>
-      <div className="flex flex-col items-end justify-between p-4">
-        <span className="inline-flex items-center rounded-full bg-[#FFF4EE] px-2.5 py-0.5 text-xs font-medium text-[#FF6B35] capitalize">
-          {humanise(project.status)}
-        </span>
-
-        <MdOutlineArrowRightAlt
-          className="text-[#A8A29E] transition-colors group-hover:text-[#FF6B35]"
-          size={20}
-        />
-      </div>
+      <MdChevronRight
+        size={20}
+        className="shrink-0 text-[#A8A29E] transition-colors group-hover:text-[#FF6B4A]"
+      />
     </button>
   );
 }

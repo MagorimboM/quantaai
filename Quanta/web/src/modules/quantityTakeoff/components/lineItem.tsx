@@ -11,6 +11,7 @@ import {
   formatQuantity,
   formatRate,
 } from "@/modules/quantityTakeoff/components/takeOff.utils";
+import { calculatedBadge } from "@/modules/quantityTakeoff/components/takeoff.styles";
 
 // NOTE :: "Location" in the UI is stored in the line item's existing
 // `description` column, so no migration is needed. Rename it later if the
@@ -23,7 +24,7 @@ export type LineItemPatch = Partial<
 type ComponentRow = { id: string; name: string; unit: string; quantity: number };
 
 const inlineField =
-  "h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-xs text-[#1C1917] placeholder:text-[#78716C] hover:border-[#FFD9C9] focus-visible:border-[#FF6B35] focus-visible:bg-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]";
+  "h-7 w-full rounded-lg border border-transparent bg-transparent px-1.5 text-xs text-[#1C1917] placeholder:text-[#A8A29E] hover:border-[#FFD1C4] focus-visible:border-[#FF9A81] focus-visible:bg-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FF6B4A]/10";
 
 function ComponentGroup({
   label,
@@ -41,7 +42,7 @@ function ComponentGroup({
       <tr>
         <td
           colSpan={4}
-          className="pt-3 pb-1 text-xs font-medium text-[#78716C]"
+          className="pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-[#FF6B4A]"
         >
           {label}
         </td>
@@ -53,8 +54,10 @@ function ComponentGroup({
           <td className="pr-2 text-right tabular-nums text-[#78716C]">
             {formatRate(row.quantity)}
           </td>
-          <td className="text-right font-medium tabular-nums text-[#1C1917]">
-            {formatQuantity(calculateTotal(row.quantity, measurement), row.unit)}
+          <td className="text-right">
+            <span className={calculatedBadge}>
+              {formatQuantity(calculateTotal(row.quantity, measurement), row.unit)}
+            </span>
           </td>
         </tr>
       ))}
@@ -62,12 +65,17 @@ function ComponentGroup({
   );
 }
 
+// One line of the takeoff sheet, laid out to fit the narrow right-hand column:
+// the name and the quantity share the top row, location and notes sit below.
+// `showCategory` is off when the sheet is already grouped by category.
 export function LineItem({
   takeOffLineItem,
+  showCategory = true,
   onUpdate,
   onDelete,
 }: {
   takeOffLineItem: GetBillOfQuantsResponse;
+  showCategory?: boolean;
   onUpdate: (id: string, patch: LineItemPatch) => void;
   onDelete: (id: string) => void;
 }) {
@@ -120,13 +128,14 @@ export function LineItem({
     })) ?? [];
 
   return (
-    <div className="border-b border-[#F0EDE8] last:border-b-0">
-      <div className="flex items-start gap-3 px-4 py-3">
+    <div className="border-b border-[#F0EDE9] last:border-b-0">
+      <div className="flex items-start gap-2 px-3 py-3">
         {recipe ? (
           <button
+            type="button"
             onClick={() => setShowComponents((prev) => !prev)}
             aria-label="Show or hide components"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917] cursor-pointer"
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
           >
             <MdOutlineExpandMore
               size={20}
@@ -134,25 +143,48 @@ export function LineItem({
             />
           </button>
         ) : (
-          <div className="h-8 w-8 shrink-0" />
+          <div className="size-7 shrink-0" />
         )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 pt-1 pl-1.5">
-            <h2 className="text-sm font-medium text-[#1C1917]">
-              {recipe?.name ?? "—"}
-            </h2>
-            {recipe?.category ? (
-              <span className="rounded-lg bg-[#F5F5F4] px-2 py-0.5 text-xs text-[#78716C]">
-                {recipe.category.name}
-              </span>
-            ) : null}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 pl-1.5">
+              <h3 className="truncate text-sm font-semibold text-[#1C1917]">
+                {recipe?.name ?? "—"}
+              </h3>
+              {showCategory && recipe?.category ? (
+                <span className="rounded-md bg-[#F5F2EE] px-1.5 py-0.5 text-[11px] text-[#78716C]">
+                  {recipe.category.name}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={measurementText}
+                onChange={(e) => handleMeasurementChange(e.target.value)}
+                aria-label="Quantity"
+                className="h-8 w-20 rounded-lg border border-[#E7E2DC] bg-[#FAF9F7] px-2 text-right text-sm font-medium tabular-nums text-[#1C1917] focus-visible:border-[#FF9A81] focus-visible:bg-white focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FF6B4A]/10"
+              />
+              <span className="w-8 text-xs text-[#78716C]">{unit}</span>
+              <button
+                type="button"
+                onClick={() => onDelete(id)}
+                aria-label="Delete line item"
+                className="cursor-pointer rounded-lg p-1.5 text-[#A8A29E] transition-colors hover:bg-red-50 hover:text-red-600"
+              >
+                <MdDeleteOutline size={18} />
+              </button>
+            </div>
           </div>
 
-          <div className="mt-1 flex items-center gap-1">
+          <div className="flex items-center gap-1">
             <MdOutlineLocationOn
               size={14}
-              className="ml-1.5 shrink-0 text-[#78716C]"
+              className="ml-1.5 shrink-0 text-[#A8A29E]"
             />
             <input
               value={description}
@@ -166,7 +198,7 @@ export function LineItem({
           <div className="flex items-center gap-1">
             <MdOutlineStickyNote2
               size={14}
-              className="ml-1.5 shrink-0 text-[#78716C]"
+              className="ml-1.5 shrink-0 text-[#A8A29E]"
             />
             <input
               value={notes ?? ""}
@@ -181,38 +213,17 @@ export function LineItem({
             />
           </div>
         </div>
-
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <input
-            type="number"
-            min="0"
-            step="any"
-            value={measurementText}
-            onChange={(e) => handleMeasurementChange(e.target.value)}
-            aria-label="Quantity"
-            className="h-9 w-24 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2 text-right text-sm tabular-nums text-[#1C1917] focus-visible:border-[#FF6B35] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFF4EE]"
-          />
-          <span className="text-sm text-[#78716C]">{unit}</span>
-        </div>
-
-        <button
-          onClick={() => onDelete(id)}
-          aria-label="Delete line item"
-          className="mt-0.5 rounded-lg p-2 text-[#78716C] transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
-        >
-          <MdDeleteOutline size={18} />
-        </button>
       </div>
 
       {recipe && showComponents ? (
-        <div className="px-4 pb-4 pl-[3.75rem]">
-          <table className="w-full text-sm">
+        <div className="px-3 pb-4 pl-12">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="text-xs text-[#78716C]">
-                <th className="py-1 text-left font-normal">Component</th>
-                <th className="w-16 text-left font-normal">Unit</th>
-                <th className="w-24 text-right font-normal">Per {recipe.unit}</th>
-                <th className="w-28 text-right font-normal">Total</th>
+              <tr className="text-[11px] text-[#9A938D]">
+                <th className="py-1 text-left font-medium">Component</th>
+                <th className="w-12 text-left font-medium">Unit</th>
+                <th className="w-16 text-right font-medium">Per {recipe.unit}</th>
+                <th className="w-24 text-right font-medium">Total</th>
               </tr>
             </thead>
             <tbody>

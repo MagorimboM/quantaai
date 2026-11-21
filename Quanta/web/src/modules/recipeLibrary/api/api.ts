@@ -5,15 +5,17 @@ import type {
   UpdateRecipeRequest,
   ArchiveRecipeRequest,
   DeleteRecipeRequest,
-  GetRecipeCatalogueRequest, 
+  GetRecipeCatalogueRequest,
+  GetRecipeClassificationsRequest,
   CreateCatalogueItemRequest,
   CreateCategoryRequest,
-  CreateRecipeRequest
+  CreateRecipeRequest,
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import type {
   Recipe,
   UserRecipeCategoriesResponse,
   GetRecipesResponse,
+  GetRecipeClassificationsResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
   CreateCatalogueItemResponse, 
@@ -24,27 +26,48 @@ import type {
 // The backend identifies the user from the Clerk token that apiClient attaches
 // to every request, and checks the company belongs to them.
 
-// The company's categories, with a leading "All" entry, each with its recipe count
+// The user's site classes and building classes, for the two selectors at the
+// top of the library, each with the company's live recipe count
+export async function getRecipeClassifications(
+  request: GetRecipeClassificationsRequest,
+): Promise<GetRecipeClassificationsResponse> {
+  const response = await apiClient.get(
+    `${request.companyId}/recipe-library/classifications`,
+  );
+  return response.data;
+}
+
+// The company's categories, with a leading "All" entry, each with its recipe
+// count for the chosen building class and site class ("all" or left out = every class)
 export async function getUserRecipeCategories(
   request: UserRecipeCategoriesRequest,
 ): Promise<UserRecipeCategoriesResponse> {
   const response = await apiClient.get(
     `${request.companyId}/recipe-library/categories`,
+    {
+      // axios leaves out a class that is undefined
+      params: {
+        buildingClassId: request.buildingClassId,
+        siteClassId: request.siteClassId,
+      },
+    },
   );
   return response.data;
 }
 
-// One page of recipes: live or archived, one category or all, optionally
-// matching a search term
+// One page of recipes: live or archived, one category or all, one building
+// class and site class or all, optionally matching a search term
 export async function getRecipes(
   request: GetRecipesRequest,
 ): Promise<GetRecipesResponse> {
   const response = await apiClient.get(
     `${request.companyId}/recipe-library/recipes`,
     {
-      // axios leaves out a term that is undefined
+      // axios leaves out a term or class that is undefined
       params: {
         categoryId: request.categoryId,
+        buildingClassId: request.buildingClassId,
+        siteClassId: request.siteClassId,
         term: request.term,
         archived: request.archived,
         page: request.page,
@@ -125,7 +148,8 @@ export async function createCategory(
   return response.data;
 }
 
-// Creates a recipe with its components and returns it as the library shows it
+// Creates a recipe with its components, linked to the building classes and
+// site classes it suits, and returns it as the library shows it
 export async function createRecipe(request: CreateRecipeRequest): Promise<Recipe> {
   const { companyId, ...recipe } = request;
   const response = await apiClient.post(

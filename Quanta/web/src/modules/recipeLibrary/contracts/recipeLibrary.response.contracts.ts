@@ -33,8 +33,11 @@ export type UserRecipeCategoriesResponse = {
   categories: Category[];
 };
 
+// archivedCount: how many archived recipes the same filters would find, for
+// the "Show Archived" button
 export type GetRecipesResponse = {
   totalCount: number;
+  archivedCount: number;
   page: number;
   limit: number;
   recipes: Recipe[];
@@ -48,6 +51,30 @@ export type ArchiveRecipeResponse = {
 export type DeleteRecipeResponse = {
   success: boolean;
   deletedRecipeId: string;
+};
+
+// A site class (soil reactivity, AS 2870), with how many of the company's live
+// recipes are linked to it
+export type SiteClassItem = {
+  siteClassId: string;
+  siteClassName: string;
+  siteClassDescription: string;
+  numberOfRecipes: number;
+};
+
+// A building class (NCC), with how many of the company's live recipes are
+// linked to it
+export type BuildingClassItem = {
+  buildingClassId: string;
+  buildingClassName: string;
+  buildingClassDescription: string;
+  numberOfRecipes: number;
+};
+
+// The options for the two selectors at the top of the library
+export type GetRecipeClassificationsResponse = {
+  siteClass: SiteClassItem[];
+  buildingClass: BuildingClassItem[];
 };
 
 export type CatalogueCategory = { id: string; name: string };

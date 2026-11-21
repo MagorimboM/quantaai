@@ -14,17 +14,24 @@ import {
 } from "@/modules/quantityTakeoff/components/lineItem";
 import { ConfirmDeletionModal } from "@/modules/quantityTakeoff/components/confirmDeletion";
 import { PreviewQuantitiesModal } from "@/modules/quantityTakeoff/components/previewQuantities.modal";
-import { AddLineItemModal } from "@/modules/quantityTakeoff/components/addLineItem.modal";
+import { AddLineItemWorkspace } from "@/modules/quantityTakeoff/components/addLineItemWorkspace";
+import {
+  kicker,
+  panelCard,
+} from "@/modules/quantityTakeoff/components/takeoff.styles";
 import { LoadingModal } from "@/common/components/loadingModal";
 import { getActiveScope } from "@/common/storage/activeScope";
 import {
-  MdOutlinePreview,
-  MdOutlineSave,
+  MdAutoAwesome,
   MdCheckCircleOutline,
+  MdClose,
+  MdOutlineCalculate,
+  MdOutlineExpandMore,
+  MdOutlinePreview,
   MdOutlineRestartAlt,
+  MdOutlineSave,
   MdOutlineSearch,
   MdOutlineUploadFile,
-  MdAdd,
 } from "react-icons/md";
 import { FiFolder } from "react-icons/fi";
 import { AiAssistant } from "@/modules/aiAssistant/AiAssistant";
@@ -33,20 +40,24 @@ import { FileModalComp } from "@/modules/projects/components/fileModalComp";
 
 // TODO :: [backend] The header shows no project name because the takeoff
 // endpoint doesn't return one. Add it to the response and show it under the title.
+// TODO :: [backend] Zones and pricing aren't in the takeoff data yet, so the
+// design's "Zone" selector and dollar totals aren't shown.
 
-const toolbarButton =
-  "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-all hover:border-[#FFD9C9] hover:bg-[#FFF4EE] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
+const NO_RECIPE_GROUP = "No recipe";
 
-// Secondary actions are icon-only (a 36px square) so the toolbar stays on one
-// line. Their meaning is carried by a hover tooltip (`title`) and `aria-label`.
 const iconButton =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#F0EDE8] bg-white text-[#78716C] transition-all hover:border-[#FFD9C9] hover:bg-[#FFF4EE] hover:text-[#FF6B35] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#EFECE6] bg-white text-[#78716C] transition-all hover:border-[#FFD1C4] hover:bg-[#FFF6F1] hover:text-[#FF6B4A] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
 
 const primaryButton =
-  "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#E85A26] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100";
+  "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#FF6B4A] px-4 text-sm font-semibold text-white shadow-[0_6px_14px_rgba(255,107,74,0.22)] transition-all hover:bg-[#F25C3C] active:scale-95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:active:scale-100";
+
+type SheetView = "category" | "all";
 
 /**
  * The quantity takeoff of one project: the heart of the product.
+ *
+ * Three columns: the recipe library and the calculator (both inside
+ * AddLineItemWorkspace) and, on the right, the takeoff sheet.
  *
  * Each line applies a recipe to ONE measurement (for example the brick wall
  * recipe to 114.2 m²) and shows every material, labour and overhead quantity
@@ -86,11 +97,17 @@ function TakeoffEditor({
   const [idsToDelete, setIdsToDelete] = useState<string[] | null>(null);
   const [showStartAfresh, setShowStartAfresh] = useState<boolean>(false);
   const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [showAddLineItem, setShowAddLineItem] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
   const [showDocuments, setShowDocuments] = useState<boolean>(false);
   // text of the "please wait" overlay while saving or completing (null = hidden)
   const [busyMessage, setBusyMessage] = useState<string | null>(null);
+
+  // Takeoff sheet display only: nothing here is saved
+  const [view, setView] = useState<SheetView>("category");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [tipDismissed, setTipDismissed] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadLineItems() {
@@ -121,6 +138,39 @@ function TakeoffEditor({
       ].some((text) => text.toLowerCase().includes(term)),
     );
   }, [lineItems, searchTerm]);
+
+  // The visible lines grouped by their recipe's category, A to Z
+  const groups = useMemo(() => {
+    const byName = new Map<string, GetBillOfQuantsResponse[]>();
+    for (const item of visibleItems) {
+      const name = item.recipe?.category.name ?? NO_RECIPE_GROUP;
+      byName.set(name, [...(byName.get(name) ?? []), item]);
+    }
+    return [...byName.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [visibleItems]);
+
+  // The category with the most lines, for the tip card. Share of LINES, since
+  // the takeoff holds quantities, not prices.
+  const tip = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of lineItems) {
+      if (!item.recipe) continue;
+      const name = item.recipe.category.name;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    if (lineItems.length < 3 || counts.size < 2) return null;
+    const [name, count] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    return { name, percent: Math.round((count / lineItems.length) * 100) };
+  }, [lineItems]);
+
+  function toggleGroup(name: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
 
   function updateLineItemFields(id: string, patch: LineItemPatch) {
     setLineItems((prev) =>
@@ -183,8 +233,8 @@ function TakeoffEditor({
     setLineItems((prev) => prev.filter((item) => !deletedIds.has(item.id)));
   }
 
-  // The modal has already saved the new line on the server, so it is shown as
-  // it is and doesn't count as an unsaved change.
+  // The workspace has already saved the new line on the server, so it is shown
+  // as it is and doesn't count as an unsaved change.
   function appendLineItem(lineItem: GetBillOfQuantsResponse) {
     setLineItems((prev) => [...prev, lineItem]);
   }
@@ -200,84 +250,165 @@ function TakeoffEditor({
     setHasUnsavedChanges(false);
   }
 
+  function renderSheet() {
+    const message = "py-10 text-center text-sm text-[#78716C]";
+    if (isLoading) return <p className={message}>Loading line items…</p>;
+    if (lineItems.length === 0) {
+      return (
+        <p className={message}>
+          No line items yet. Pick a recipe, enter a measurement and add it.
+        </p>
+      );
+    }
+    if (visibleItems.length === 0) {
+      return <p className={message}>No line items match "{searchTerm}".</p>;
+    }
+
+    if (view === "all") {
+      return (
+        <div className="overflow-hidden rounded-xl border border-[#EEEAE5] bg-white">
+          {visibleItems.map((item) => (
+            <LineItem
+              key={item.id}
+              takeOffLineItem={item}
+              onUpdate={updateLineItemFields}
+              onDelete={(id) => setIdsToDelete([id])}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-2.5">
+        {groups.map(([name, items]) => {
+          const isOpen = !collapsedGroups.has(name);
+          return (
+            <section
+              key={name}
+              className="overflow-hidden rounded-xl border border-[#EBE7E2] bg-white"
+            >
+              <button
+                type="button"
+                onClick={() => toggleGroup(name)}
+                aria-expanded={isOpen}
+                className="flex w-full cursor-pointer items-center gap-2.5 bg-[#FAF9F7] px-3 py-2.5 text-left"
+              >
+                <span className="flex size-6 items-center justify-center rounded-lg border border-[#E6E1DC] bg-white text-[#817A74]">
+                  <MdOutlineExpandMore
+                    size={18}
+                    className={`transition-transform ${isOpen ? "" : "-rotate-90"}`}
+                  />
+                </span>
+                <span className="flex-1 text-sm font-semibold text-[#1C1917]">
+                  {name}
+                </span>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-[#78716C] ring-1 ring-[#EBE7E2]">
+                  {items.length}
+                </span>
+              </button>
+              {isOpen
+                ? items.map((item) => (
+                    <LineItem
+                      key={item.id}
+                      takeOffLineItem={item}
+                      showCategory={false}
+                      onUpdate={updateLineItemFields}
+                      onDelete={(id) => setIdsToDelete([id])}
+                    />
+                  ))
+                : null}
+            </section>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full w-full flex-col bg-[#FAFAF9] text-[#1C1917]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0EDE8] bg-white px-4 py-3 shrink-0">
-        <div className="flex flex-col">
-          <h1 className="text-base font-semibold tracking-tight text-[#1C1917]">
-            Quantity takeoff
-          </h1>
-          <p className="text-sm text-[#78716C]">
-            {lineItems.length} line item{lineItems.length === 1 ? "" : "s"}
-          </p>
+    <div className="flex h-full w-full flex-col bg-[#FAF8F5] text-[#1C1917]">
+      {/* Top bar */}
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#EBE7E1] bg-white/85 px-6 py-3 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-[#26221F] text-white shadow-[0_5px_14px_rgba(28,25,23,0.15)]">
+            <MdOutlineCalculate size={20} />
+          </span>
+          <div className="flex flex-col gap-1">
+            <span className={kicker}>Project workspace</span>
+            <h1 className="text-sm font-bold tracking-tight text-[#1C1917]">
+              Quantity takeoff
+            </h1>
+          </div>
+          <span className="rounded-full border border-[#FFD8C8] bg-[#FFF1E9] px-2.5 py-1 text-[11px] font-semibold text-[#C44E31]">
+            Takeoff Mode
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
           {hasUnsavedChanges ? (
-            <span className="text-xs text-[#78716C]">
-              Unsaved changes
-            </span>
+            <span className="text-xs text-[#78716C]">Unsaved changes</span>
           ) : null}
+          <span className="mr-1.5 text-sm text-[#78716C]">
+            <strong className="font-bold text-[#292524]">
+              {lineItems.length}
+            </strong>{" "}
+            item{lineItems.length === 1 ? "" : "s"}
+          </span>
+
           <button
-            title="Add a recipe to this takeoff"
-            onClick={() => setShowAddLineItem(true)}
-            className={toolbarButton}
+            type="button"
+            title="View project documents"
+            aria-label="View project documents"
+            onClick={() => setShowDocuments(true)}
+            className={iconButton}
           >
-            <MdAdd size={18} /> Add line item
+            <FiFolder size={18} />
+          </button>
+          <button
+            type="button"
+            title="Upload project files"
+            aria-label="Upload project files"
+            onClick={() => setShowUploadModal(true)}
+            className={iconButton}
+          >
+            <MdOutlineUploadFile size={18} />
+          </button>
+          <button
+            type="button"
+            title="Preview quantities"
+            aria-label="Preview quantities"
+            disabled={lineItems.length === 0}
+            onClick={() => setShowPreview(true)}
+            className={iconButton}
+          >
+            <MdOutlinePreview size={18} />
           </button>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              title="View project documents"
-              aria-label="View project documents"
-              onClick={() => setShowDocuments(true)}
-              className={iconButton}
-            >
-              <FiFolder size={18} />
-            </button>
-            <button
-              title="Upload project files"
-              aria-label="Upload project files"
-              onClick={() => setShowUploadModal(true)}
-              className={iconButton}
-            >
-              <MdOutlineUploadFile size={18} />
-            </button>
-            <button
-              title="Preview quantities"
-              aria-label="Preview quantities"
-              disabled={lineItems.length === 0}
-              onClick={() => setShowPreview(true)}
-              className={iconButton}
-            >
-              <MdOutlinePreview size={18} />
-            </button>
-          </div>
-
-          <span className="h-6 w-px bg-[#F0EDE8]" aria-hidden="true" />
-
-          <div className="flex items-center gap-1.5">
-            <button
-              title="Start afresh"
-              aria-label="Start afresh"
-              disabled={lineItems.length === 0}
-              onClick={() => setShowStartAfresh(true)}
-              className={`${iconButton} text-red-600`}
-            >
-              <MdOutlineRestartAlt size={18} />
-            </button>
-            <button
-              title="Save"
-              aria-label="Save"
-              disabled={lineItems.length === 0}
-              onClick={() => saveBillOfQuants()}
-              className={iconButton}
-            >
-              <MdOutlineSave size={18} />
-            </button>
-          </div>
+          <span className="h-6 w-px bg-[#EFECE6]" aria-hidden="true" />
 
           <button
+            type="button"
+            title="Start afresh"
+            aria-label="Start afresh"
+            disabled={lineItems.length === 0}
+            onClick={() => setShowStartAfresh(true)}
+            className={`${iconButton} text-red-600`}
+          >
+            <MdOutlineRestartAlt size={18} />
+          </button>
+          <button
+            type="button"
+            title="Save"
+            aria-label="Save"
+            disabled={lineItems.length === 0}
+            onClick={() => saveBillOfQuants()}
+            className={iconButton}
+          >
+            <MdOutlineSave size={18} />
+          </button>
+
+          <button
+            type="button"
             disabled={lineItems.length === 0}
             onClick={() => completeTakeOff()}
             className={primaryButton}
@@ -285,46 +416,88 @@ function TakeoffEditor({
             <MdCheckCircleOutline size={18} /> Complete takeoff
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex flex-row justify-start border-b border-[#F0EDE8] bg-white p-2 shrink-0">
-        <div className="flex flex-row items-center gap-2 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2 py-1.5">
-          <MdOutlineSearch size={20} className="text-[#78716C]" />
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-0 bg-transparent text-sm focus-visible:outline-none placeholder:text-[#78716C]"
-            type="text"
-            placeholder="Search line items…"
-          />
-        </div>
-      </div>
+      {/* Three columns: 25% recipes, 40% calculator, 35% takeoff sheet */}
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,25fr)_minmax(0,40fr)_minmax(0,35fr)] gap-3 p-4">
+        <AddLineItemWorkspace
+          companyId={companyId}
+          projectId={projectId}
+          onAdded={appendLineItem}
+        />
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-4">
-        {isLoading ? (
-          <p className="py-10 text-center text-sm text-[#78716C]">
-            Loading line items…
-          </p>
-        ) : lineItems.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[#78716C]">
-            No line items yet.
-          </p>
-        ) : visibleItems.length === 0 ? (
-          <p className="py-10 text-center text-sm text-[#78716C]">
-            No line items match "{searchTerm}".
-          </p>
-        ) : (
-          <div className="rounded-xl border border-[#F0EDE8] bg-white text-[#1C1917]">
-            {visibleItems.map((item) => (
-              <LineItem
-                key={item.id}
-                takeOffLineItem={item}
-                onUpdate={updateLineItemFields}
-                onDelete={(id) => setIdsToDelete([id])}
-              />
+        <aside className={`${panelCard} p-5`}>
+          <div className="flex items-start justify-between">
+            <div>
+              <span className={kicker}>Estimate summary</span>
+              <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-[#1C1917]">
+                Takeoff Sheet
+              </h2>
+            </div>
+          </div>
+
+          <div className="mt-4 grid h-9 shrink-0 grid-cols-2 gap-1 rounded-[10px] bg-[#F3F0EC] p-[3px]">
+            {(
+              [
+                ["category", "By Category"],
+                ["all", "All items"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setView(key)}
+                className={`cursor-pointer rounded-lg text-xs font-semibold transition-colors ${
+                  view === key
+                    ? "bg-white text-[#292524] shadow-[0_2px_7px_rgba(57,45,37,0.09)]"
+                    : "text-[#8E8780]"
+                }`}
+              >
+                {label}
+              </button>
             ))}
           </div>
-        )}
+
+          <div className="mt-3 flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[#EFECE6] bg-[#FAF9F7] px-2.5 focus-within:border-[#FF9A81] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FF6B4A]/10">
+            <MdOutlineSearch size={18} className="text-[#78716C]" />
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#A8A29E]"
+              type="text"
+              aria-label="Search line items"
+              placeholder="Search line items…"
+            />
+          </div>
+
+          {tip && !tipDismissed ? (
+            <div className="relative mt-3 flex shrink-0 items-start gap-2.5 rounded-xl border border-[#F8DFAA] bg-[#FFFBEB] p-3 pr-9 bg-[radial-gradient(circle_at_90%_0%,rgba(236,72,153,0.08),transparent_38%)]">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-[#FFE7A3] to-[#FFD8DD] text-[#C25B40]">
+                <MdAutoAwesome size={16} />
+              </span>
+              <div>
+                <p className="text-xs font-semibold text-[#1C1917]">
+                  {tip.name} is {tip.percent}% of your line items
+                </p>
+                <p className="mt-0.5 text-xs text-[#91836D]">
+                  Your biggest category so far.
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="Dismiss tip"
+                onClick={() => setTipDismissed(true)}
+                className="absolute top-2 right-2 cursor-pointer rounded-md p-1 text-[#B2A48D] hover:text-[#1C1917]"
+              >
+                <MdClose size={14} />
+              </button>
+            </div>
+          ) : null}
+
+          <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-0.5">
+            {renderSheet()}
+          </div>
+        </aside>
       </div>
 
       {idsToDelete ? (
@@ -342,15 +515,6 @@ function TakeoffEditor({
           message="Are you sure you want to restart the project? All takeoff will be deleted and this action cannot be reversed."
           onConfirm={clearTakeoff}
           onClose={() => setShowStartAfresh(false)}
-        />
-      ) : null}
-
-      {showAddLineItem ? (
-        <AddLineItemModal
-          companyId={companyId}
-          projectId={projectId}
-          onAdded={appendLineItem}
-          onClose={() => setShowAddLineItem(false)}
         />
       ) : null}
 

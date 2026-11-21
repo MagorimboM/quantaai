@@ -5,10 +5,10 @@ import type { ProjectSummary } from "@/modules/projects/contracts/projects.respo
 
 // Shared classes so every input, label and section looks the same.
 const inputClass =
-  "w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-1.5 text-sm text-[#1C1917] placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]";
+  "w-full rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-3 py-1.5 text-sm text-[#1C1917] placeholder:text-[#78716C] focus:border-[#FF6B4A] focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]";
 const labelClass = "mb-1 block text-xs font-medium text-[#78716C]";
 const sectionClass =
-  "flex flex-col space-y-3 rounded-xl border border-[#F0EDE8] bg-white p-4 text-[#1C1917]";
+  "flex flex-col space-y-3 rounded-xl border border-[#EFECE6] bg-white p-4 text-[#1C1917]";
 const sectionTitleClass =
   "text-xs font-semibold uppercase tracking-wider text-[#A8A29E]";
 
@@ -50,7 +50,6 @@ export function NewProjectForm({
       return;
     }
 
-    console.log(newProjectForm);
     const response = await createNewProject(companyId!, newProjectForm);
     if (response) {
       addToProjectList(response);
@@ -69,7 +68,7 @@ export function NewProjectForm({
           e.preventDefault();
           submitNewProjectForm();
         }}
-        className="w-full max-w-4xl space-y-4 rounded-2xl border border-[#F0EDE8] bg-[#FAFAF9] p-5 shadow-xl"
+        className="w-full max-w-4xl space-y-4 rounded-2xl border border-[#EFECE6] bg-[#FAF8F5] p-5 shadow-xl"
       >
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold tracking-tight text-[#1C1917]">
@@ -233,7 +232,7 @@ export function NewProjectForm({
             </div>
           </div>
           <div title="project-owner-details" className={sectionClass}>
-            <label className={sectionTitleClass}>Client Details˝</label>
+            <label className={sectionTitleClass}>Client Details</label>
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className={labelClass}>
@@ -281,7 +280,7 @@ export function NewProjectForm({
         </div>
         <div className="flex justify-end">
           <button
-            className="rounded-lg cursor-pointer bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]"
+            className="rounded-lg cursor-pointer bg-[#FF6B4A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F25C3C] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE]"
             type="submit"
           >
             Create New Project

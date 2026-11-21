@@ -7,14 +7,34 @@ import { RecipeBuilderRepository } from '@/modules/recipeBuilder/recipe.builder.
 import { AccessService } from '@/auth/services/access.service';
 import type {
   CreateRecipeRequest,
+  CreateSiteClassRequest,
   SearchMaterialsRequest,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
 import type {
   Category,
   SiteCondition,
+  SiteClassOption,
+  BuildingClassOption,
   MaterialSearchResult,
   CreateRecipeResponse,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts';
+
+// The longest a site class name may be. It is shown on a small pill.
+const MAX_SITE_CLASS_NAME = 40;
+
+function isNonEmptyText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
+// The building or site classes a recipe suits, as a list of distinct ids.
+// Missing means none; anything else that isn't a list of ids is refused.
+function toClassIds(ids: unknown, label: string): string[] {
+  if (ids === undefined || ids === null) return [];
+  if (!Array.isArray(ids) || !ids.every(isNonEmptyText)) {
+    throw new BadRequestException(`Expected a list of ${label} ids`);
+  }
+  return [...new Set(ids)];
+}
 
 // Every method first checks the company really belongs to the caller. The
 // company id comes from the URL, so on its own it proves nothing.
@@ -50,6 +70,70 @@ export class RecipeBuilderService {
     return await this.recipeBuilderRepository.getListOfSiteConditions();
   }
 
+  // The building classes a recipe can be marked as suiting
+  async getListOfBuildingClasses(request: {
+    clerkId: string;
+    companyId: string;
+  }): Promise<BuildingClassOption[]> {
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+    return await this.recipeBuilderRepository.getListOfBuildingClasses(userId);
+  }
+
+  // The site classes a recipe can be marked as suiting
+  async getListOfSiteClasses(request: {
+    clerkId: string;
+    companyId: string;
+  }): Promise<SiteClassOption[]> {
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+    return await this.recipeBuilderRepository.getListOfSiteClasses(userId);
+  }
+
+  // Adds a site class the user was missing. It needs a short name that none of
+  // their site classes already uses (ignoring case), and a description, which
+  // the library shows after the name.
+  async createSiteClass(request: {
+    clerkId: string;
+    companyId: string;
+    siteClass: CreateSiteClassRequest;
+  }): Promise<SiteClassOption> {
+    const name = request.siteClass?.name;
+    const description = request.siteClass?.description;
+    if (!isNonEmptyText(name)) {
+      throw new BadRequestException('Give the site class a name');
+    }
+    if (name.trim().length > MAX_SITE_CLASS_NAME) {
+      throw new BadRequestException(
+        `Keep the name to ${MAX_SITE_CLASS_NAME} characters or fewer`,
+      );
+    }
+    if (!isNonEmptyText(description)) {
+      throw new BadRequestException('Describe the site class');
+    }
+
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+
+    if (
+      await this.recipeBuilderRepository.siteClassNameExists(userId, name.trim())
+    ) {
+      throw new ConflictException('A site class with this name already exists');
+    }
+
+    return await this.recipeBuilderRepository.createSiteClass({
+      userId,
+      name: name.trim(),
+      description: description.trim(),
+    });
+  }
+
   async searchMaterials(request: {
     clerkId: string;
     companyId: string;
@@ -72,9 +156,12 @@ export class RecipeBuilderService {
    * Checks a new recipe, then saves it.
    *
    * A recipe is a name, a type (category), the unit its quantities are per, and
-   * at least one ingredient with a quantity above zero. Everything it points at
-   * must really be the caller's: the category, and every material. The recipe
-   * name must be new for the company, ignoring case.
+   * at least one ingredient with a quantity above zero, and at least one
+   * building class it suits (the library is always narrowed to a building
+   * class, so a recipe with none would never show). Site classes are optional.
+   * Everything it points at must really be the caller's: the category, every
+   * material and every class. The recipe name must be new for the company,
+   * ignoring case.
    */
   async createNewRecipe(request: {
     clerkId: string;
@@ -116,6 +203,14 @@ export class RecipeBuilderService {
       materialIds.add(ingredient.materialId);
     }
 
+    const buildingClassIds = toClassIds(recipe.buildingClassIds, 'building class');
+    const siteClassIds = toClassIds(recipe.siteClassIds, 'site class');
+    if (buildingClassIds.length === 0) {
+      throw new BadRequestException(
+        'Choose at least one building class the recipe suits',
+      );
+    }
+
     const categoryOk = await this.recipeBuilderRepository.categoryExists(
       companyId,
       userId,
@@ -129,6 +224,22 @@ export class RecipeBuilderService {
       !(await this.recipeBuilderRepository.siteConditionExists(siteConditionId))
     ) {
       throw new BadRequestException('Unknown site condition');
+    }
+
+    const ownBuildingClasses =
+      await this.recipeBuilderRepository.countOwnedBuildingClasses(
+        userId,
+        buildingClassIds,
+      );
+    if (ownBuildingClasses !== buildingClassIds.length) {
+      throw new BadRequestException('Unknown building class');
+    }
+    const ownSiteClasses = await this.recipeBuilderRepository.countOwnedSiteClasses(
+      userId,
+      siteClassIds,
+    );
+    if (ownSiteClasses !== siteClassIds.length) {
+      throw new BadRequestException('Unknown site class');
     }
 
     // Every ingredient must be one of the caller's own materials. Each line's
@@ -170,6 +281,8 @@ export class RecipeBuilderService {
         quantity: ingredient.quantity,
         unit: unitByMaterialId.get(ingredient.materialId) as string,
       })),
+      buildingClassIds,
+      siteClassIds,
     });
   }
 

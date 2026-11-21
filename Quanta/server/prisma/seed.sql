@@ -9,6 +9,10 @@ TRUNCATE TABLE
   document_embeddings,
   documents,
   takeoff_items,
+  recipe_site_classes,
+  recipe_building_classes,
+  site_classes,
+  building_classes,
   recipe_overheads,
   recipe_labour,
   recipe_materials,
@@ -98,6 +102,37 @@ VALUES
   ('seed-site-003', 'Coastal', 'Near-shore, salt-exposed conditions',                           NOW());
 
 -- ============================================================
+-- SITE CLASSES
+-- Soil reactivity classes (AS 2870). Owned by the user (userId),
+-- so every user gets their own copy. Descriptions are kept short
+-- because the library's site class pills show them after the name.
+-- ============================================================
+
+INSERT INTO site_classes (id, "userId", name, description)
+VALUES
+  ('seed-sc-a',  'seed-user-001', 'Class A',  'Sand / rock'),
+  ('seed-sc-s',  'seed-user-001', 'Class S',  'Slightly reactive'),
+  ('seed-sc-m',  'seed-user-001', 'Class M',  'Moderately reactive'),
+  ('seed-sc-h1', 'seed-user-001', 'Class H1', 'Highly reactive'),
+  ('seed-sc-h2', 'seed-user-001', 'Class H2', 'Very highly reactive'),
+  ('seed-sc-e',  'seed-user-001', 'Class E',  'Extremely reactive'),
+  ('seed-sc-p',  'seed-user-001', 'Class P',  'Problem site');
+
+-- ============================================================
+-- BUILDING CLASSES
+-- Owned by the user (userId). The names must match the names in
+-- BUILDING_CLASSES (frontend recipeClassification) so the tiles
+-- keep their glyphs. The library opens on 'Residential'.
+-- ============================================================
+
+INSERT INTO building_classes (id, "userId", name, description)
+VALUES
+  ('seed-bc-res', 'seed-user-001', 'Residential', 'Houses, townhouses and apartments (NCC Class 1-4)'),
+  ('seed-bc-com', 'seed-user-001', 'Commercial',  'Offices, shops and public buildings (NCC Class 5, 6, 9)'),
+  ('seed-bc-ind', 'seed-user-001', 'Industrial',  'Warehouses, factories and car parks (NCC Class 7-8)'),
+  ('seed-bc-out', 'seed-user-001', 'Outbuildings', 'Garages, sheds and carports (NCC Class 10)');
+
+-- ============================================================
 -- CATEGORIES
 -- ============================================================
 
@@ -171,7 +206,9 @@ VALUES
 INSERT INTO recipes (id, "userId", "companyId", "categoryId", "formId", "siteConditionId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
   ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', NULL, '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'seed-form-rate', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW());
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'seed-form-rate', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
+  -- archived, so the "Show Archived" view and its count have something to show
+  ('seed-rec-003', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', NULL, '230mm Double Brick Wall', 'Double skin clay brick wall 230mm thick',     'm²', true,  NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 
@@ -179,7 +216,9 @@ INSERT INTO recipe_materials (id, "userId", "recipeId", "materialId", quantity, 
 VALUES
   (gen_random_uuid(), 'seed-user-001', 'seed-rec-001', 'seed-mat-001', 60,   'Nr'),
   (gen_random_uuid(), 'seed-user-001', 'seed-rec-001', 'seed-mat-002', 0.02, 'm³'),
-  (gen_random_uuid(), 'seed-user-001', 'seed-rec-002', 'seed-mat-003', 0.15, 'm³');
+  (gen_random_uuid(), 'seed-user-001', 'seed-rec-002', 'seed-mat-003', 0.15, 'm³'),
+  (gen_random_uuid(), 'seed-user-001', 'seed-rec-003', 'seed-mat-001', 120,  'Nr'),
+  (gen_random_uuid(), 'seed-user-001', 'seed-rec-003', 'seed-mat-002', 0.04, 'm³');
 
 -- ── RECIPE LABOUR ────────────────────────────────────────────
 
@@ -194,6 +233,37 @@ VALUES
 INSERT INTO recipe_overheads (id, "userId", "recipeId", "overheadId", quantity, unit)
 VALUES
   (gen_random_uuid(), 'seed-user-001', 'seed-rec-001', 'seed-ovh-001', 0.1,  'week');
+
+-- ── RECIPE BUILDING CLASSES ──────────────────────────────────
+-- Which building classes each recipe suits. A recipe with no row
+-- here won't show when the library is narrowed to a building class.
+--   Brick wall:    Residential, Commercial
+--   Slab:          Residential, Commercial, Industrial
+--   Double brick:  Residential (archived)
+
+INSERT INTO recipe_building_classes ("userId", "recipeId", "buildingClassId")
+VALUES
+  ('seed-user-001', 'seed-rec-001', 'seed-bc-res'),
+  ('seed-user-001', 'seed-rec-001', 'seed-bc-com'),
+  ('seed-user-001', 'seed-rec-002', 'seed-bc-res'),
+  ('seed-user-001', 'seed-rec-002', 'seed-bc-com'),
+  ('seed-user-001', 'seed-rec-002', 'seed-bc-ind'),
+  ('seed-user-001', 'seed-rec-003', 'seed-bc-res');
+
+-- ── RECIPE SITE CLASSES ──────────────────────────────────────
+-- Which site classes each recipe suits.
+--   Brick wall:    A, S, M
+--   Slab:          A, S
+--   Double brick:  A (archived)
+
+INSERT INTO recipe_site_classes ("userId", "recipeId", "siteClassId")
+VALUES
+  ('seed-user-001', 'seed-rec-001', 'seed-sc-a'),
+  ('seed-user-001', 'seed-rec-001', 'seed-sc-s'),
+  ('seed-user-001', 'seed-rec-001', 'seed-sc-m'),
+  ('seed-user-001', 'seed-rec-002', 'seed-sc-a'),
+  ('seed-user-001', 'seed-rec-002', 'seed-sc-s'),
+  ('seed-user-001', 'seed-rec-003', 'seed-sc-a');
 
 -- ============================================================
 -- PROJECTS

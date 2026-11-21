@@ -1,10 +1,15 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { RecipeBuilderService } from '@/modules/recipeBuilder/recipe.builder.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
-import type { CreateRecipeRequest } from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
+import type {
+  CreateRecipeRequest,
+  CreateSiteClassRequest,
+} from '@/modules/recipeBuilder/contracts/recipeBuilder.request.contracts';
 import type {
   Category,
   SiteCondition,
+  SiteClassOption,
+  BuildingClassOption,
   MaterialSearchResult,
   CreateRecipeResponse,
 } from '@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts';
@@ -40,6 +45,45 @@ export class RecipeBuilderController {
     });
   }
 
+  // The building classes a recipe can suit
+  @Get('building-classes')
+  async getListOfBuildingClasses(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+  ): Promise<BuildingClassOption[]> {
+    return await this.recipeBuilderService.getListOfBuildingClasses({
+      clerkId,
+      companyId,
+    });
+  }
+
+  // The site classes a recipe can suit, in AS 2870 order
+  @Get('site-classes')
+  async getListOfSiteClasses(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+  ): Promise<SiteClassOption[]> {
+    return await this.recipeBuilderService.getListOfSiteClasses({
+      clerkId,
+      companyId,
+    });
+  }
+
+  // Adds a site class   body: { name, description }
+  // Refused (409) if the user already has one with that name.
+  @Post('site-classes')
+  async createSiteClass(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() siteClass: CreateSiteClassRequest,
+  ): Promise<SiteClassOption> {
+    return await this.recipeBuilderService.createSiteClass({
+      clerkId,
+      companyId,
+      siteClass,
+    });
+  }
+
   // The company's materials, filtered: ?term=brick&categoryId=...&siteConditionId=...
   @Get('materials')
   async searchMaterials(
@@ -56,7 +100,9 @@ export class RecipeBuilderController {
     });
   }
 
-  // Creates a recipe with its ingredients
+  // Creates a recipe with its ingredients and the classes it suits
+  //   body: { name, categoryId, unit, description, siteConditionId,
+  //           ingredients, buildingClassIds, siteClassIds }
   @Post()
   async createNewRecipe(
     @ClerkUserId() clerkId: string,

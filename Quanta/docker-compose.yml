@@ -12,7 +12,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - ./server/prisma/migrations/20261116131429_init/migration.sql:/docker-entrypoint-initdb.d/01_migrate.sql
+      - ./server/prisma/migrations/20261121003002_add_site_and_building_classes/migration.sql:/docker-entrypoint-initdb.d/01_migrate.sql
       - ./server/prisma/seed.sql:/docker-entrypoint-initdb.d/04_seed.sql
       - ./server/prisma/vector.sql:/docker-entrypoint-initdb.d/03_vector.sql
    

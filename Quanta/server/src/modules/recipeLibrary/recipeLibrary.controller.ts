@@ -23,12 +23,16 @@ import type {
   Recipe,
   UserRecipeCategoriesResponse,
   GetRecipesResponse,
+  GetRecipeClassificationsResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
   GetRecipeCatalogueResponse,
   CreateCategoryResponse,
   CreateCatalogueItemResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
+
+// The id that means "every category / building class / site class"
+const ALL_ID = 'all';
 
 // The company's recipe library. Every route runs behind the global
 // ClerkAuthGuard, so @ClerkUserId() is the verified caller; the service checks
@@ -37,25 +41,47 @@ import type {
 export class RecipeLibraryController {
   constructor(private readonly recipeLibraryService: RecipeLibraryService) {}
 
-  // The company's categories, preceded by "All", each with its recipe count
-  @Get('categories')
-  async getUserRecipeCategories(
+  // The user's site classes and building classes, for the two selectors at the
+  // top of the library, each with the company's live recipe count
+  @Get('classifications')
+  async getRecipeClassifications(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-  ): Promise<UserRecipeCategoriesResponse> {
-    return await this.recipeLibraryService.getUserRecipeCategories({
+  ): Promise<GetRecipeClassificationsResponse> {
+    return await this.recipeLibraryService.getRecipeClassifications({
       clerkId,
       companyId,
     });
   }
 
+  // The company's categories, preceded by "All", each with its recipe count
+  // for the chosen classes.
+  // ?buildingClassId=<id or all>&siteClassId=<id or all>
+  @Get('categories')
+  async getUserRecipeCategories(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Query('buildingClassId') buildingClassId: string = ALL_ID,
+    @Query('siteClassId') siteClassId: string = ALL_ID,
+  ): Promise<UserRecipeCategoriesResponse> {
+    return await this.recipeLibraryService.getUserRecipeCategories({
+      clerkId,
+      companyId,
+      buildingClassId,
+      siteClassId,
+    });
+  }
+
   // One page of recipes.
-  // ?categoryId=<id or all>&term=brick&archived=true&page=1&limit=10
+  // ?categoryId=<id or all>&buildingClassId=<id or all>&siteClassId=<id or all>
+  //  &term=brick&archived=true&page=1&limit=10
   @Get('recipes')
   async getRecipes(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
-    @Query('categoryId') categoryId: string = 'all',
+    @Query('categoryId') categoryId: string = ALL_ID,
+    @Query('buildingClassId') buildingClassId: string = ALL_ID,
+    @Query('siteClassId') siteClassId: string = ALL_ID,
     @Query('term') term?: string,
     @Query('archived') archived?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
@@ -65,6 +91,8 @@ export class RecipeLibraryController {
       clerkId,
       companyId,
       categoryId,
+      buildingClassId,
+      siteClassId,
       term,
       archived: archived === 'true',
       page,
@@ -159,7 +187,8 @@ export class RecipeLibraryController {
   }
 
   // Creates a recipe with its components and returns it as the library shows it
-  //   body: { name, categoryId, unit, description, materials, labour, overheads }
+  //   body: { name, categoryId, unit, description, materials, labour, overheads,
+  //           buildingClassIds?, siteClassIds? }
   @Post('recipes')
   async createRecipe(
     @ClerkUserId() clerkId: string,

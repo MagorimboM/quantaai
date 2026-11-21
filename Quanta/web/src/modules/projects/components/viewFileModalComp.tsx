@@ -56,8 +56,8 @@ export function ViewFileModalComp({
   return (
     <>
       {showFile ? (
-        <div className="fixed inset-3 z-100 flex flex-col rounded-2xl border border-[#F0EDE8] bg-white shadow-2xl">
-          <div className="flex items-center justify-between border-b border-[#F0EDE8] px-4 py-2">
+        <div className="fixed inset-3 z-100 flex flex-col rounded-2xl border border-[#EFECE6] bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-[#EFECE6] px-4 py-2">
             <h1
               title="view-doc-modal-header"
               className="truncate text-sm font-medium text-[#1C1917]"
@@ -89,14 +89,14 @@ export function ViewFileModalComp({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between rounded-xl border border-[#F0EDE8] bg-white px-3 py-2 transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]/40">
+        <div className="flex items-center justify-between rounded-xl border border-[#EFECE6] bg-white px-3 py-2 transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]/40">
           <div className="flex items-center gap-2 text-sm text-[#1C1917]">
-            <AiOutlineFile className="text-[#FF6B35]" />
+            <AiOutlineFile className="text-[#FF6B4A]" />
             {file.name}
           </div>
           <div>
             <Button
-              className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-[#FFF4EE] hover:text-[#FF6B35]"
+              className="cursor-pointer rounded-lg text-[#A8A29E] hover:bg-[#FFF4EE] hover:text-[#FF6B4A]"
               variant="ghost"
               size="icon"
               onClick={() => setShowFile(true)}

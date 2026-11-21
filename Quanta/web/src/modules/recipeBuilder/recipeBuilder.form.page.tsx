@@ -3,15 +3,20 @@ import { X } from "lucide-react";
 import {
   getRecipeCategories,
   getSiteConditions,
+  getBuildingClasses,
+  getSiteClasses,
   searchMaterials,
   createNewRecipe,
 } from "@/modules/recipeBuilder/api/api";
 import type {
+  BuildingClassOption,
   Category,
   MaterialSearchResult,
+  SiteClassOption,
   SiteCondition,
 } from "@/modules/recipeBuilder/contracts/recipeBuilder.response.contracts";
 import { MaterialSearchResultsModal } from "@/modules/recipeBuilder/components/MaterialSearchResultsModal";
+import { RecipeClassPicker } from "@/modules/recipeBuilder/components/recipeSitePicker";
 import { RecipeSuccessModal } from "@/modules/recipeBuilder/components/RecipeSuccessModal";
 import { LoadingModal } from "@/common/components/loadingModal";
 import { getActiveScope } from "@/common/storage/activeScope";
@@ -60,7 +65,8 @@ type SelectedIngredient = {
  * example "110mm Brick Wall, per m²: 60 bricks, 0.02 m³ mortar".
  *
  * The user names it, picks a recipe type (its category) and what the
- * quantities are per, optionally tags the ground condition it is for, then
+ * quantities are per, chooses the building classes (at least one) and site
+ * classes it suits, optionally tags the ground condition it is for, then
  * searches the company's materials and sets each one's quantity. In a takeoff,
  * one measurement multiplies every line of the recipe.
  *
@@ -86,6 +92,14 @@ export function RecipeBuilderFormPage({
   const [siteConditions, setSiteConditions] = useState<SiteCondition[]>([]);
   const [siteConditionId, setSiteConditionId] = useState<string>("");
 
+  // Where the recipe applies: the building classes and site classes it suits
+  const [buildingClasses, setBuildingClasses] = useState<BuildingClassOption[]>(
+    [],
+  );
+  const [siteClasses, setSiteClasses] = useState<SiteClassOption[]>([]);
+  const [buildingClassIds, setBuildingClassIds] = useState<string[]>([]);
+  const [siteClassIds, setSiteClassIds] = useState<string[]>([]);
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   // narrows the material search to one category (empty = all categories)
   const [searchCategoryId, setSearchCategoryId] = useState<string>("");
@@ -104,12 +118,21 @@ export function RecipeBuilderFormPage({
 
     async function loadOptions() {
       try {
-        const [loadedCategories, loadedSiteConditions] = await Promise.all([
+        const [
+          loadedCategories,
+          loadedSiteConditions,
+          loadedBuildingClasses,
+          loadedSiteClasses,
+        ] = await Promise.all([
           getRecipeCategories({ companyId: activeCompanyId }),
           getSiteConditions({ companyId: activeCompanyId }),
+          getBuildingClasses({ companyId: activeCompanyId }),
+          getSiteClasses({ companyId: activeCompanyId }),
         ]);
         setCategories(loadedCategories);
         setSiteConditions(loadedSiteConditions);
+        setBuildingClasses(loadedBuildingClasses);
+        setSiteClasses(loadedSiteClasses);
       } catch {
         // apiClient already reports the failure; the choices stay empty
       }
@@ -183,11 +206,20 @@ export function RecipeBuilderFormPage({
     );
   }
 
+  // A site class was added from the picker: list it and choose it
+  function handleSiteClassCreated(created: SiteClassOption) {
+    setSiteClasses((prev) => [...prev, created]);
+    setSiteClassIds((prev) => [...prev, created.id]);
+  }
+
   // Returns what is missing, or null when the recipe is ready to save
   function validate(): string | null {
     if (!form.name.trim()) return "Give the recipe a name.";
     if (!form.categoryId) return "Choose a recipe type.";
     if (!form.unit.trim()) return "Say what the quantities are per, for example m².";
+    if (buildingClassIds.length === 0) {
+      return "Choose at least one building class the recipe suits.";
+    }
     if (ingredients.length === 0) return "Add at least one ingredient.";
     if (ingredients.some((item) => !(Number(item.quantity) > 0))) {
       return "Every ingredient needs a quantity above zero.";
@@ -219,6 +251,8 @@ export function RecipeBuilderFormPage({
           materialId: item.materialId,
           quantity: Number(item.quantity),
         })),
+        buildingClassIds,
+        siteClassIds,
       });
       setShowSuccess(true);
     } catch (error) {
@@ -329,6 +363,27 @@ export function RecipeBuilderFormPage({
               <span className="text-xs text-muted-foreground">of output</span>
             </div>
           </div>
+        </div>
+
+        {/* Where it applies: building classes and site classes */}
+        <div className={sectionClass}>
+          <h2 className={sectionTitleClass}>Where It Applies</h2>
+          <p className="text-xs text-muted-foreground">
+            Choose every type of building this recipe is used on, and the soil
+            classes it suits. Leave site classes empty if it suits any site. In
+            the library, the recipe only shows under the classes chosen here.
+          </p>
+
+          <RecipeClassPicker
+            companyId={companyId}
+            buildingClasses={buildingClasses}
+            siteClasses={siteClasses}
+            buildingClassIds={buildingClassIds}
+            siteClassIds={siteClassIds}
+            onChangeBuildingClassIds={setBuildingClassIds}
+            onChangeSiteClassIds={setSiteClassIds}
+            onSiteClassCreated={handleSiteClassCreated}
+          />
         </div>
 
         {/* Site conditions */}

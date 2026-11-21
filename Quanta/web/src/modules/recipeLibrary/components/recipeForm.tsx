@@ -12,7 +12,7 @@ import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 const ALL_CATEGORIES_ID = "all";
 
 const inputClass =
-  "w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-2 text-sm text-[#1C1917] placeholder:text-[#78716C] focus:outline-none focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
+  "w-full rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-3 py-2 text-sm text-[#1C1917] placeholder:text-[#78716C] focus:outline-none focus:border-[#FF6B4A] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 const labelClass = "mb-1 block text-xs font-medium text-[#78716C]";
 
 // An ingredient line being edited. The quantity stays text while the user types
@@ -123,9 +123,9 @@ export function RecipeForm({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/30 p-6">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-[#F0EDE8] bg-white p-6 text-[#1C1917] shadow-lg">
-        <div className="flex items-center justify-between border-b border-[#F0EDE8] pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1C1917]/30 p-6 backdrop-blur-sm">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#EFECE6] bg-white p-6 text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]">
+        <div className="flex items-center justify-between border-b border-[#EFECE6] pb-3">
           <h1 className="text-base font-semibold text-[#1C1917]">
             Edit Recipe
           </h1>
@@ -184,7 +184,7 @@ export function RecipeForm({
               {lines.map((line) => (
                 <li
                   key={line.id}
-                  className="flex items-center gap-2 rounded-lg border border-[#F0EDE8] p-2"
+                  className="flex items-center gap-2 rounded-lg border border-[#EFECE6] p-2"
                 >
                   <span className="flex-1 truncate text-sm text-[#1C1917]">
                     {line.name}
@@ -218,17 +218,17 @@ export function RecipeForm({
           ) : null}
         </div>
 
-        <div className="mt-6 flex justify-end gap-2 border-t border-[#F0EDE8] pt-4">
+        <div className="mt-6 flex justify-end gap-2 border-t border-[#EFECE6] pt-4">
           <button
             onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg border border-[#EFECE6] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={save}
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#FF6B4A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#F25C3C] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             Save Changes
           </button>

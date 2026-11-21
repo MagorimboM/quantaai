@@ -33,8 +33,11 @@ export type UserRecipeCategoriesResponse = {
   categories: Category[];
 };
 
+// archivedCount: how many archived recipes the same filters would find, for
+// the "Show Archived" button
 export type GetRecipesResponse = {
   totalCount: number;
+  archivedCount: number;
   page: number;
   limit: number;
   recipes: Recipe[];
@@ -50,7 +53,29 @@ export type DeleteRecipeResponse = {
   deletedRecipeId: string;
 };
 
-// ---- add to the end of recipeLibrary.response.contracts.ts (backend) ----
+// A site class (soil reactivity, AS 2870), with how many of the company's live
+// recipes are linked to it
+export type SiteClassItem = {
+  siteClassId: string;
+  siteClassName: string;
+  siteClassDescription: string;
+  numberOfRecipes: number;
+};
+
+// A building class (NCC), with how many of the company's live recipes are
+// linked to it
+export type BuildingClassItem = {
+  buildingClassId: string;
+  buildingClassName: string;
+  buildingClassDescription: string;
+  numberOfRecipes: number;
+};
+
+// The options for the two selectors at the top of the library
+export type GetRecipeClassificationsResponse = {
+  siteClass: SiteClassItem[];
+  buildingClass: BuildingClassItem[];
+};
 
 // A category as the recipe form lists it (the library's own `Category` also
 // carries the company and a recipe count, which the form doesn't need)

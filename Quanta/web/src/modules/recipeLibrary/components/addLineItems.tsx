@@ -14,7 +14,10 @@ import type {
 } from "@/modules/quantityTakeoff/contracts/quantityTakeOff.response";
 import { RecipeResultCard } from "@/modules/quantityTakeoff/components/rescipeResults.card";
 import { RecipePreview } from "@/modules/quantityTakeoff/components/recipePreview";
-import { AddToTakeoffForm } from "@/modules/quantityTakeoff/components/addToTakeOffForm";
+import {
+  AddToTakeoffBar,
+  AddToTakeoffForm,
+} from "@/modules/quantityTakeoff/components/addToTakeOffForm";
 import { CreateRecipeModal } from "@/modules/recipeLibrary/components/createRecipeModal";
 import type { CreateRecipeApi } from "@/modules/recipeLibrary/contracts/createRecipe.types";
 import { LoadingModal } from "@/common/components/loadingModal";
@@ -275,28 +278,35 @@ export function AddLineItemModal({
           {/* Right: preview of the chosen recipe, then the add form */}
           <div className="flex min-w-0 flex-1 flex-col">
             {selected ? (
-              <>
-                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              <form
+                className="flex min-h-0 flex-1 flex-col"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  addToTakeoff();
+                }}
+              >
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
                   <RecipePreview
                     recipe={selected}
                     measurement={validMeasurement}
                   />
+                  <AddToTakeoffForm
+                    unit={selected.unit}
+                    measurement={measurement}
+                    location={location}
+                    notes={notes}
+                    errorMessage={errorMessage}
+                    onMeasurementChange={setMeasurement}
+                    onLocationChange={setLocation}
+                    onNotesChange={setNotes}
+                  />
                 </div>
-                <AddToTakeoffForm
-                  unit={selected.unit}
-                  measurement={measurement}
-                  location={location}
-                  notes={notes}
+                <AddToTakeoffBar
                   summary={`Adds ${selected.recipeMaterials.length} materials · ${selected.recipeLabour.length} labour · ${selected.recipeOverheads.length} overheads`}
                   canAdd={validMeasurement !== null && !isAdding}
-                  errorMessage={errorMessage}
-                  onMeasurementChange={setMeasurement}
-                  onLocationChange={setLocation}
-                  onNotesChange={setNotes}
-                  onCancel={onClose}
-                  onAdd={addToTakeoff}
+                  justAdded={false}
                 />
-              </>
+              </form>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center gap-2 p-10 text-center">
                 <MdOutlineDescription size={32} className="text-[#78716C]" />

@@ -41,7 +41,7 @@ export function RecipeComponentList({
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-[#F0EDE8] bg-white">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-[#EFECE6] bg-white">
         {rows.length === 0 ? (
           <p className="flex h-full items-center justify-center p-4 text-center text-sm text-[#78716C]">
             Nothing added yet. Search above and press Add.
@@ -52,7 +52,7 @@ export function RecipeComponentList({
             if (sectionRows.length === 0) return null;
             return (
               <div key={section}>
-                <div className="px-3 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#FF6B35]">
+                <div className="px-3 pb-0.5 pt-3 text-[11px] font-semibold uppercase tracking-wide text-[#FF6B4A]">
                   {SECTION_LABEL[section]}
                 </div>
                 {sectionRows.map((row) => (
@@ -72,7 +72,7 @@ export function RecipeComponentList({
                       onChange={(e) =>
                         onQuantityChange(section, row.itemId, e.target.value)
                       }
-                      className="h-7.5 w-19 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2 text-right text-sm text-[#1C1917] outline-none transition-colors hover:border-[#FFD9C9] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
+                      className="h-7.5 w-19 rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2 text-right text-sm text-[#1C1917] outline-none transition-colors hover:border-[#FFD1C4] focus:border-[#FF9A81] focus:bg-white focus:ring-[3px] focus:ring-[#FF6B4A]/10"
                     />
                     <span className="w-11 text-xs text-[#78716C]">
                       {row.unit}
@@ -81,7 +81,7 @@ export function RecipeComponentList({
                       type="button"
                       onClick={() => onRemove(section, row.itemId)}
                       aria-label={`Remove ${row.name}`}
-                      className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-[#A8A29E] transition-colors hover:bg-[#FFF4EE] hover:text-red-600"
+                      className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-[#A8A29E] transition-colors hover:bg-[#FFF1E7] hover:text-red-600"
                     >
                       <MdClose size={14} />
                     </button>

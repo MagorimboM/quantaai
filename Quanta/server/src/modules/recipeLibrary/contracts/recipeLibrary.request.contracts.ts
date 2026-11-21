@@ -19,9 +19,14 @@ export type ArchiveRecipeBody = {
 
 // What the repository needs. By the time it runs, the caller has been checked to
 // own the company (see AccessService) and the paging has been kept in range.
+//
+// buildingClassId / siteClassId: a class's id, or "all" (or missing) for every
+// class. They narrow the recipes counted in each category.
 export type UserRecipeCategoriesRequest = {
   companyId: string;
   userId: string;
+  buildingClassId?: string;
+  siteClassId?: string;
 };
 
 export type GetRecipesRequest = {
@@ -29,10 +34,21 @@ export type GetRecipesRequest = {
   userId: string;
   // a category's id, or "all"
   categoryId: string;
+  // a building class's id, or "all"
+  buildingClassId?: string;
+  // a site class's id, or "all"
+  siteClassId?: string;
   term?: string;
   archived: boolean;
   page: number;
   limit: number;
+};
+
+// What the repository needs to list the user's site classes and building
+// classes, with the company's recipe count for each
+export type GetRecipeClassificationsRequest = {
+  companyId: string;
+  userId: string;
 };
 
 export type UpdateRecipeRecord = {
@@ -87,6 +103,9 @@ export type RecipeComponentInput = {
 };
 
 // The body of POST .../recipe-library/recipes
+//
+// buildingClassIds / siteClassIds: the classes the recipe suits. Optional; a
+// recipe with none only shows when the library is set to "all" for that class.
 export type CreateRecipeInput = {
   name: string;
   categoryId: string;
@@ -96,6 +115,8 @@ export type CreateRecipeInput = {
   materials: RecipeComponentInput[];
   labour: RecipeComponentInput[];
   overheads: RecipeComponentInput[];
+  buildingClassIds?: string[];
+  siteClassIds?: string[];
 };
 
 // The repository picks the recipe's form itself (the Rate-based one, for now),

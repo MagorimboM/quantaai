@@ -53,8 +53,8 @@ export function RecipeComponentPicker({
             onClick={() => onSectionChange(key)}
             className={`h-8 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors ${
               section === key
-                ? "border-[#FF6B35] bg-[#FF6B35] text-white"
-                : "border-[#F0EDE8] bg-white text-[#78716C] hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
+                ? "border-[#FF6B4A] bg-[#FF6B4A] text-white"
+                : "border-[#EFECE6] bg-white text-[#78716C] hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
             }`}
           >
             {SECTION_LABEL[key]}{" "}
@@ -65,7 +65,7 @@ export function RecipeComponentPicker({
         ))}
       </div>
 
-      <div className="flex h-9 items-center gap-2 rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 focus-within:border-[#FF6B35] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FFF4EE]">
+      <div className="flex h-9 items-center gap-2 rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2.5 focus-within:border-[#FF6B4A] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FFF4EE]">
         <MdOutlineSearch size={18} className="text-[#78716C]" />
         <input
           type="text"
@@ -77,7 +77,7 @@ export function RecipeComponentPicker({
         />
       </div>
 
-      <div className="flex h-47.5 shrink-0 flex-col overflow-hidden rounded-lg border border-[#F0EDE8] bg-white">
+      <div className="flex h-47.5 shrink-0 flex-col overflow-hidden rounded-lg border border-[#EFECE6] bg-white">
         <div className="min-h-0 flex-1 overflow-y-auto">
           {results.length > 0 ? (
             results.map((item) => {
@@ -85,7 +85,7 @@ export function RecipeComponentPicker({
               return (
                 <div
                   key={item.id}
-                  className="flex items-center gap-2.5 border-b border-[#F0EDE8] px-3 py-1.75"
+                  className="flex items-center gap-2.5 border-b border-[#EFECE6] px-3 py-1.75"
                 >
                   <span className="flex-1 text-sm text-[#1C1917]">
                     {item.name}
@@ -99,8 +99,8 @@ export function RecipeComponentPicker({
                     onClick={() => onAdd(item.id)}
                     className={`h-7 rounded-lg border px-3 text-xs font-medium transition-colors ${
                       isAdded
-                        ? "border-[#F0EDE8] bg-[#FAFAF9] text-[#78716C]"
-                        : "cursor-pointer border-[#FF6B35] bg-white text-[#FF6B35] hover:bg-[#FFF4EE]"
+                        ? "border-[#EFECE6] bg-[#FAF8F5] text-[#78716C]"
+                        : "cursor-pointer border-[#FF6B4A] bg-white text-[#FF6B4A] hover:bg-[#FFF4EE]"
                     }`}
                   >
                     {isAdded ? "Added" : "Add"}
@@ -118,7 +118,7 @@ export function RecipeComponentPicker({
               <button
                 type="button"
                 onClick={() => onCreate(typed)}
-                className="h-8.5 cursor-pointer rounded-lg bg-[#FF6B35] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#E85A26]"
+                className="h-8.5 cursor-pointer rounded-lg bg-[#FF6B4A] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#F25C3C]"
               >
                 {typed ? `Create “${typed}” as a new ${word}` : `Create new ${word}`}
               </button>
@@ -129,7 +129,7 @@ export function RecipeComponentPicker({
         <button
           type="button"
           onClick={() => onCreate(typed)}
-          className="flex h-9.5 shrink-0 cursor-pointer items-center gap-2 border-t border-[#F0EDE8] bg-[#FAFAF9] px-3 text-left text-sm font-medium text-[#FF6B35] transition-colors hover:bg-[#FFF4EE]"
+          className="flex h-9.5 shrink-0 cursor-pointer items-center gap-2 border-t border-[#EFECE6] bg-[#FAF8F5] px-3 text-left text-sm font-medium text-[#FF6B4A] transition-colors hover:bg-[#FFF4EE]"
         >
           <MdAdd size={16} />
           Create new {word}

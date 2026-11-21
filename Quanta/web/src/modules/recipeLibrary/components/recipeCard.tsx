@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MdMoreVert } from "react-icons/md";
+import { MdMoreVert, MdOutlineLayers } from "react-icons/md";
 import { FiEdit2, FiArchive, FiTrash2, FiRotateCcw } from "react-icons/fi";
 import { RecipeForm } from "@/modules/recipeLibrary/components/recipeForm";
 import { archiveRecipe, deleteRecipe } from "@/modules/recipeLibrary/api/api";
@@ -12,7 +12,7 @@ import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
 const menuItemClass =
-  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[#1C1917] transition-colors hover:bg-[#FFF4EE] cursor-pointer";
+  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-[#1C1917] transition-colors hover:bg-[#FFF1E7] cursor-pointer";
 
 /**
  * One recipe in the library, with its menu:
@@ -76,77 +76,92 @@ export function RecipeCard({
     onRemoved(recipe.recipeId);
   }
 
-  return (
-    <div className="relative rounded-xl border border-[#F0EDE8] bg-white p-4 text-[#1C1917] transition-colors hover:border-[#FFD9C9]">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-sm font-semibold text-[#1C1917]">
-            {recipe.recipeName}
-          </h1>
-          <h2 className="text-xs text-[#78716C]">
-            {recipe.categoryName}
-          </h2>
-        </div>
+  const materialCount = recipe.recipeMaterials.length;
 
-        <div className="relative">
-          <button
-            title="recipe-actions-toggle"
-            aria-label="Recipe actions"
-            onClick={() => setShowMenu((prev) => !prev)}
-            className="rounded-lg p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917] cursor-pointer"
-          >
-            <MdMoreVert size={18} />
-          </button>
-          {showMenu ? (
-            <div
-              title="recipe-action-option"
-              className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-[#F0EDE8] bg-white p-1 shadow-lg"
+  return (
+    <div className="relative flex flex-col rounded-2xl border border-[#EFECE6] bg-white p-4 text-[#1C1917] shadow-[0_5px_15px_rgba(49,38,24,0.04)] transition-all hover:-translate-y-0.5 hover:border-[#FFC2B1] hover:shadow-[0_8px_22px_rgba(112,66,43,0.08)]">
+      <div className="flex items-center justify-between gap-2">
+        <span className="max-w-[65%] truncate rounded-md bg-[#FFE9DF] px-2 py-1 text-[11px] font-bold tracking-wide text-[#BD4D32]">
+          {recipe.categoryName}
+        </span>
+
+        <div className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#78716C]">
+            <span className="text-[#A8A29E]">Unit</span>
+            <span className="rounded-md border border-[#E7E3DC] bg-white px-2 py-0.5 text-[#44403C]">
+              {recipe.recipeUnit}
+            </span>
+          </span>
+
+          <div className="relative">
+            <button
+              title="recipe-actions-toggle"
+              aria-label="Recipe actions"
+              onClick={() => setShowMenu((prev) => !prev)}
+              className="cursor-pointer rounded-lg p-1 text-[#A8A29E] transition-colors hover:bg-[#FFF1E7] hover:text-[#57534E]"
             >
-              {!isArchivedView ? (
+              <MdMoreVert size={18} />
+            </button>
+            {showMenu ? (
+              <div
+                title="recipe-action-option"
+                className="absolute right-0 top-full z-10 mt-1 w-40 rounded-xl border border-[#EFECE6] bg-white p-1 shadow-[0_12px_30px_rgba(49,38,24,0.12)]"
+              >
+                {!isArchivedView ? (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowEditForm(true);
+                    }}
+                    className={menuItemClass}
+                  >
+                    <FiEdit2 size={14} />
+                    Edit
+                  </button>
+                ) : null}
+                <button onClick={toggleArchived} className={menuItemClass}>
+                  {isArchivedView ? (
+                    <FiRotateCcw size={14} />
+                  ) : (
+                    <FiArchive size={14} />
+                  )}
+                  {isArchivedView ? "Restore" : "Archive"}
+                </button>
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    setShowEditForm(true);
+                    setShowDeleteConfirm(true);
                   }}
-                  className={menuItemClass}
+                  className={`${menuItemClass} text-red-600`}
                 >
-                  <FiEdit2 size={14} />
-                  Edit
+                  <FiTrash2 size={14} />
+                  Delete
                 </button>
-              ) : null}
-              <button onClick={toggleArchived} className={menuItemClass}>
-                {isArchivedView ? (
-                  <FiRotateCcw size={14} />
-                ) : (
-                  <FiArchive size={14} />
-                )}
-                {isArchivedView ? "Restore" : "Archive"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  setShowDeleteConfirm(true);
-                }}
-                className={`${menuItemClass} text-red-600`}
-              >
-                <FiTrash2 size={14} />
-                Delete
-              </button>
-            </div>
-          ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
+      <h3 className="mt-3 text-sm font-bold leading-snug tracking-tight text-[#292524]">
+        {recipe.recipeName}
+      </h3>
+
       {recipe.recipeDescription ? (
-        <p className="mt-2 text-sm text-[#78716C]">
+        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[#78716C]">
           {recipe.recipeDescription}
         </p>
       ) : null}
 
-      <p className="mt-3 text-xs text-[#78716C]">
-        Per {recipe.recipeUnit} · {recipe.recipeMaterials.length} material
-        {recipe.recipeMaterials.length === 1 ? "" : "s"}
-      </p>
+      <div className="mt-auto flex items-center justify-between border-t border-[#EDE8E1] pt-3 mt-4">
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#78716C]">
+          <MdOutlineLayers size={14} className="text-[#A8A29E]" />
+          {materialCount} material{materialCount === 1 ? "" : "s"}
+        </span>
+        <span className="text-[11px] font-medium text-[#A8A29E]">
+          Per {recipe.recipeUnit}
+        </span>
+      </div>
 
       {showEditForm ? (
         <RecipeForm

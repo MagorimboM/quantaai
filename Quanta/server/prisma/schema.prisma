@@ -68,8 +68,12 @@ model User {
   recipeMaterials    RecipeMaterial[]
   recipeLabour       RecipeLabour[]
   recipeOverheads    RecipeOverhead[]
-  formulas           Formula[]
-  projects           Project[]
+  formulas              Formula[]
+  siteClasses           SiteClass[]
+  buildingClasses       BuildingClass[]
+  recipeSiteClasses     RecipeSiteClass[]
+  recipeBuildingClasses RecipeBuildingClass[]
+  projects          Project[]
   takeoffItems       TakeoffItem[]
   documents          Document[]
   documentEmbeddings DocumentEmbedding[]
@@ -397,9 +401,11 @@ model Recipe {
   recipeMaterials RecipeMaterial[]
   recipeLabour    RecipeLabour[]
   recipeOverheads RecipeOverhead[]
-  formulas        Formula[]
-  takeoffItems    TakeoffItem[]
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  formulas              Formula[]
+  takeoffItems          TakeoffItem[]
+  recipeSiteClasses     RecipeSiteClass[]
+  recipeBuildingClasses RecipeBuildingClass[]
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([formId])
   @@map("recipes")
@@ -785,4 +791,89 @@ model Formula {
   @@unique([recipeId, materialId, position])
   @@index([materialId])
   @@map("formulas")
+}
+
+// ============================================================
+// SITE CLASSES
+// userId = owner
+// Soil reactivity classes (AS 2870): A, S, M, H1, H2, E, P.
+// name is unique per owner, so every user can have their own "Class A".
+// ============================================================
+
+model SiteClass {
+  id          String @id @default(uuid())
+  userId      String
+  name        String
+  description String
+
+  recipeSiteClasses RecipeSiteClass[]
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@map("site_classes")
+}
+
+// ============================================================
+// BUILDING CLASSES
+// userId = owner
+// NCC building classes: 1a, 1b, 2 ... 10c.
+// name is unique per owner, so every user can have their own "Class 1a".
+// ============================================================
+
+model BuildingClass {
+  id          String @id @default(uuid())
+  userId      String
+  name        String
+  description String
+
+  recipeBuildingClasses RecipeBuildingClass[]
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@map("building_classes")
+}
+
+// ============================================================
+// RECIPE SITE CLASSES (junction)
+// userId = owner — always follows recipe owner
+// Many-to-many: a recipe can suit many site classes, and a site
+// class can have many recipes. The pair is the primary key, so the
+// same link can't be added twice.
+// Deleting a recipe removes its links; a site class in use can't
+// be deleted.
+// ============================================================
+
+model RecipeSiteClass {
+  userId      String
+  recipeId    String
+  siteClassId String
+
+  recipe    Recipe    @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  siteClass SiteClass @relation(fields: [siteClassId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, siteClassId])
+  @@index([siteClassId])
+  @@map("recipe_site_classes")
+}
+
+// ============================================================
+// RECIPE BUILDING CLASSES (junction)
+// userId = owner — always follows recipe owner
+// Many-to-many: a recipe can suit many building classes, and a
+// building class can have many recipes. The pair is the primary key.
+// ============================================================
+
+model RecipeBuildingClass {
+  userId          String
+  recipeId        String
+  buildingClassId String
+
+  recipe        Recipe        @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  buildingClass BuildingClass @relation(fields: [buildingClassId], references: [id])
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, buildingClassId])
+  @@index([buildingClassId])
+  @@map("recipe_building_classes")
 }

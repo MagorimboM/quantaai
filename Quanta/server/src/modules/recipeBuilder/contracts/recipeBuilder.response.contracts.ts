@@ -10,6 +10,20 @@ export type SiteCondition = {
   name: string;
 };
 
+// A building class a recipe can suit (Residential, Commercial...)
+export type BuildingClassOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+// A site (soil reactivity) class a recipe can suit (Class A, Class S...)
+export type SiteClassOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 // A material found by the search, with the unit its quantities are measured in
 export type MaterialSearchResult = {
   id: string;

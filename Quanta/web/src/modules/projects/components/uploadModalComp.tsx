@@ -56,7 +56,7 @@ export function UploadModalComp({
       onClick={isUploading ? undefined : closeModal}
     >
       <div
-        className="w-150 rounded-2xl border border-[#F0EDE8] bg-white p-6 text-[#1C1917] shadow-xl"
+        className="w-150 rounded-2xl border border-[#EFECE6] bg-white p-6 text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-4 text-xl font-semibold tracking-tight">
@@ -68,19 +68,19 @@ export function UploadModalComp({
           type="file"
           multiple
           onChange={handleFileChange}
-          className="w-full rounded-xl border border-dashed border-[#FFD9C9] bg-[#FFF4EE]/40 p-3 text-sm text-[#78716C] file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#FF6B35] file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-[#E85A26]"
+          className="w-full rounded-xl border border-dashed border-[#FFD1C4] bg-[#FFF7ED]/60 p-3 text-sm text-[#78716C] file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[#FF6B4A] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-[#F25C3C]"
         />
 
         {files.length > 0 ? (
           <div className="mt-4">
-            <h3 className="mb-2 text-sm font-medium text-[#1C1917]">
+            <h3 className="mb-2 text-sm font-semibold text-[#1C1917]">
               Selected Files ({files.length})
             </h3>
-            <div className="max-h-48 overflow-y-auto rounded-xl border border-[#F0EDE8]">
+            <div className="max-h-48 overflow-y-auto rounded-xl border border-[#EFECE6]">
               {files.map((file) => (
                 <div
                   key={`${file.name}-${file.size}`}
-                  className="border-b border-[#F0EDE8] p-2.5 text-sm text-[#1C1917] last:border-b-0"
+                  className="border-b border-[#F0EDE9] p-2.5 text-sm text-[#1C1917] last:border-b-0"
                 >
                   {file.name}
                 </div>
@@ -91,11 +91,11 @@ export function UploadModalComp({
 
         {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2 border-t border-[#EEEAE5] pt-4">
           <button
             onClick={closeModal}
             disabled={isUploading}
-            className="rounded-lg border border-[#F0EDE8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="cursor-pointer rounded-lg border border-[#E7E2DC] bg-white px-4 py-2 text-sm font-semibold text-[#746C66] transition-colors hover:border-[#FFC6B5] hover:bg-[#FFF6F1] disabled:cursor-not-allowed disabled:opacity-40"
           >
             Cancel
           </button>
@@ -103,7 +103,7 @@ export function UploadModalComp({
           <button
             onClick={uploadSelectedFiles}
             disabled={files.length === 0 || isUploading}
-            className="rounded-lg bg-[#FF6B35] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="cursor-pointer rounded-lg bg-[#FF6B4A] px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_14px_rgba(255,107,74,0.22)] transition-colors hover:bg-[#F25C3C] focus:outline-none focus:ring-[3px] focus:ring-[#FF6B4A]/15 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {isUploading
               ? "Uploading..."

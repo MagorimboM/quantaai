@@ -25,7 +25,7 @@ import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
 const inputClass =
-  "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
+  "h-9 w-full rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2.5 text-sm text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B4A] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
 
 type RecipeFormState = {
   name: string;
@@ -266,9 +266,9 @@ export function CreateRecipeModal<TCreated>({
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-2xl border border-[#F0EDE8] bg-white text-[#1C1917] shadow-xl"
+          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-2xl border border-[#EFECE6] bg-white text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]"
         >
-          <div className="flex items-start justify-between border-b border-[#F0EDE8] px-5 py-4">
+          <div className="flex items-start justify-between border-b border-[#EFECE6] px-5 py-4">
             <div>
               <h1 className="text-base font-semibold text-[#1C1917]">
                 Create recipe
@@ -281,7 +281,7 @@ export function CreateRecipeModal<TCreated>({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="cursor-pointer rounded-lg border border-[#F0EDE8] p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
+              className="cursor-pointer rounded-lg border border-[#EFECE6] p-1.5 text-[#78716C] transition-colors hover:bg-[#FFF4EE] hover:text-[#1C1917]"
             >
               <MdClose size={18} />
             </button>
@@ -289,7 +289,7 @@ export function CreateRecipeModal<TCreated>({
 
           <div className="flex min-h-0 flex-1">
             {/* Left: the recipe's own details */}
-            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#F0EDE8] px-5 py-4">
+            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#EFECE6] px-5 py-4">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
                 Recipe details
               </span>
@@ -328,7 +328,7 @@ export function CreateRecipeModal<TCreated>({
                 <button
                   type="button"
                   onClick={openCreateCategory}
-                  className="flex cursor-pointer items-center gap-1 self-start py-0.5 text-xs font-medium text-[#FF6B35] hover:underline"
+                  className="flex cursor-pointer items-center gap-1 self-start py-0.5 text-xs font-medium text-[#FF6B4A] hover:underline"
                 >
                   <MdAdd size={12} />
                   Create new category
@@ -358,7 +358,7 @@ export function CreateRecipeModal<TCreated>({
                   placeholder="What this recipe covers and what it leaves out"
                   value={form.description}
                   onChange={(e) => updateField("description", e.target.value)}
-                  className="h-22 w-full resize-none rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-2.5 py-2 text-sm leading-relaxed text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
+                  className="h-22 w-full resize-none rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2.5 py-2 text-sm leading-relaxed text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B4A] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
                 />
               </div>
             </div>
@@ -390,7 +390,7 @@ export function CreateRecipeModal<TCreated>({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t border-[#F0EDE8] px-5 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-t border-[#EFECE6] px-5 py-3.5">
             <p
               className={`text-xs ${errorMessage ? "text-red-600" : "text-[#78716C]"}`}
             >
@@ -405,7 +405,7 @@ export function CreateRecipeModal<TCreated>({
               <button
                 type="button"
                 onClick={onClose}
-                className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
+                className="h-9 cursor-pointer rounded-lg border border-[#EFECE6] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#FFF4EE]"
               >
                 Cancel
               </button>
@@ -413,7 +413,7 @@ export function CreateRecipeModal<TCreated>({
                 type="button"
                 onClick={saveRecipe}
                 disabled={!canSave}
-                className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-9 cursor-pointer rounded-lg bg-[#FF6B4A] px-4 text-sm font-medium text-white transition-colors hover:bg-[#F25C3C] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Save recipe
               </button>

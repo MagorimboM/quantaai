@@ -1,67 +1,76 @@
-// The last step of adding a line: how much of it (required), where it is, and
-// any notes. "Location" is stored in the line item's `description` column.
-// Submitting is only possible once there is a measurement above zero, because
-// a line with no measurement would total nothing.
+import { MdAdd, MdAutoAwesome, MdCheck } from "react-icons/md";
+import {
+  fieldClass,
+  heroGlowBorder,
+} from "@/modules/quantityTakeoff/components/takeoff.styles";
+
+// The fields for the line being added: how much of it (required), where it is,
+// and any notes. "Location" is stored in the line item's `description` column.
+// This is only the fields; the <form> and the Add button (AddToTakeoffBar) are
+// in the workspace, so the button can stay pinned while this scrolls.
 export function AddToTakeoffForm({
   unit,
   measurement,
   location,
   notes,
-  summary,
-  canAdd,
   errorMessage,
   onMeasurementChange,
   onLocationChange,
   onNotesChange,
-  onCancel,
-  onAdd,
 }: {
   unit: string;
   measurement: string;
   location: string;
   notes: string;
-  summary: string;
-  canAdd: boolean;
   errorMessage: string | null;
   onMeasurementChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onNotesChange: (value: string) => void;
-  onCancel: () => void;
-  onAdd: () => void;
 }) {
-  const inputClass =
-    "h-9 w-full rounded-lg border border-[#F0EDE8] bg-[#FAFAF9] px-3 text-sm text-[#1C1917] placeholder:text-[#A8A29E] outline-none transition-colors hover:border-[#FFD9C9] focus:border-[#FF6B35] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]";
+  const parsed = parseFloat(measurement);
+  const isLive = !Number.isNaN(parsed) && parsed > 0;
   const labelClass = "text-xs font-medium text-[#78716C]";
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (canAdd) onAdd();
-      }}
-      className="flex flex-col gap-3 border-t border-[#F0EDE8] bg-white px-5 py-4"
+    <div
+      style={heroGlowBorder}
+      className="rounded-2xl p-4 shadow-[0_0_0_4px_rgba(244,145,86,0.055),0_9px_25px_rgba(165,96,57,0.08)]"
     >
-      <div className="flex items-end gap-3">
-        <div className="flex w-40 shrink-0 flex-col gap-1">
-          <label htmlFor="takeoff-measurement" className={labelClass}>
-            Measurement<span className="ml-0.5 text-red-600">*</span>
-          </label>
-          <div className="flex items-center gap-1.5">
-            <input
-              id="takeoff-measurement"
-              type="number"
-              min="0"
-              step="any"
-              placeholder="0"
-              value={measurement}
-              onChange={(e) => onMeasurementChange(e.target.value)}
-              className={`${inputClass} text-right tabular-nums`}
-            />
-            <span className="text-sm text-[#78716C]">{unit}</span>
-          </div>
-        </div>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#A25639]">
+          <MdAutoAwesome size={13} />
+          Measurement
+        </span>
+        {isLive ? (
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#16805B]">
+            <i className="size-1.5 rounded-full bg-[#22A773] shadow-[0_0_0_3px_#DAF5E9]" />
+            Live
+          </span>
+        ) : null}
+      </div>
 
-        <div className="flex flex-1 flex-col gap-1">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="takeoff-measurement" className={labelClass}>
+          How much of this recipe?
+          <span className="ml-0.5 text-red-600">*</span>
+        </label>
+        <div className="flex items-baseline gap-2">
+          <input
+            id="takeoff-measurement"
+            type="number"
+            min="0"
+            step="any"
+            placeholder="0"
+            value={measurement}
+            onChange={(e) => onMeasurementChange(e.target.value)}
+            className="w-40 bg-transparent text-[28px] font-semibold tracking-tight tabular-nums text-[#1C1917] outline-none placeholder:text-[#D6D0C9]"
+          />
+          <span className="text-sm font-semibold text-[#716964]">{unit}</span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
           <label htmlFor="takeoff-location" className={labelClass}>
             Location
           </label>
@@ -71,48 +80,58 @@ export function AddToTakeoffForm({
             placeholder="e.g. North elevation"
             value={location}
             onChange={(e) => onLocationChange(e.target.value)}
-            className={inputClass}
+            className={fieldClass}
           />
         </div>
-
-        <div className="flex flex-1 flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <label htmlFor="takeoff-notes" className={labelClass}>
             Notes
           </label>
           <input
             id="takeoff-notes"
             type="text"
-            placeholder="e.g. Window openings deducted"
+            placeholder="e.g. Openings deducted"
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}
-            className={inputClass}
+            className={fieldClass}
           />
         </div>
       </div>
 
       {errorMessage ? (
-        <p className="text-sm text-red-600">{errorMessage}</p>
+        <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
       ) : null}
+    </div>
+  );
+}
 
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-[#78716C]">{summary}</p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-9 cursor-pointer rounded-lg border border-[#F0EDE8] bg-white px-4 text-sm font-medium text-[#1C1917] transition-colors hover:border-[#FFD9C9] hover:bg-[#FFF4EE]"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!canAdd}
-            className="h-9 cursor-pointer rounded-lg bg-[#FF6B35] px-4 text-sm font-medium text-white transition-colors hover:bg-[#E85A26] focus:outline-none focus:ring-[3px] focus:ring-[#FFF4EE] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Add to takeoff
-          </button>
-        </div>
-      </div>
-    </form>
+// The pinned bar under the calculator. It is a submit button, so it must sit
+// inside the workspace's <form>. Submitting is only possible once there is a
+// measurement above zero, because a line with no measurement totals nothing.
+export function AddToTakeoffBar({
+  summary,
+  canAdd,
+  justAdded,
+}: {
+  summary: string;
+  canAdd: boolean;
+  justAdded: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-4 border-t border-[#E6E0D9]/80 bg-white/85 px-6 py-4 shadow-[0_-14px_30px_rgba(72,52,39,0.055)] backdrop-blur">
+      <p className="text-xs text-[#78716C]">{summary}</p>
+      <button
+        type="submit"
+        disabled={!canAdd}
+        className={`flex h-11 min-w-48 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all hover:-translate-y-px disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 ${
+          justAdded
+            ? "bg-[#13956B] shadow-[0_9px_22px_rgba(19,149,107,0.22)]"
+            : "bg-[#FF6B4A] shadow-[0_9px_22px_rgba(255,107,74,0.26)] hover:bg-[#F25C3C]"
+        }`}
+      >
+        {justAdded ? <MdCheck size={18} /> : <MdAdd size={18} />}
+        {justAdded ? "Added to line items" : "Add to line items"}
+      </button>
+    </div>
   );
 }

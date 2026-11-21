@@ -5,6 +5,7 @@ import type {
   GetRecipesRequest,
   UpdateRecipeRecord,
   GetRecipeCatalogueRequest,
+  GetRecipeClassificationsRequest,
   CreateCatalogueItemRecord,
   CreateCategoryRecord,
   CreateRecipeRecord,
@@ -13,14 +14,16 @@ import type {
   Recipe,
   UserRecipeCategoriesResponse,
   GetRecipesResponse,
+  GetRecipeClassificationsResponse,
   ArchiveRecipeResponse,
   GetRecipeCatalogueResponse,
   CreateCatalogueItemResponse,
   CreateCategoryResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
-// The pseudo-category that means "every category"
+// The pseudo-ids that mean "every category / site class / building class"
 const ALL_CATEGORIES_ID = 'all';
+const ALL_CLASSES_ID = 'all';
 
 // What a recipe card needs. Materials are listed alphabetically so the lines
 // never shuffle between loads.
@@ -55,6 +58,24 @@ const CATALOGUE_ITEM_SELECT = {
 // shared company-less rows to include.
 function catalogueScope(companyId: string, userId: string) {
   return { OR: [{ companyId, userId }] };
+}
+
+// Narrows recipes to one building class and/or one site class. A recipe is in a
+// class when it has a link row to it. Missing or 'all' means no narrowing.
+function classFilter(buildingClassId?: string, siteClassId?: string) {
+  return {
+    ...(buildingClassId && buildingClassId !== ALL_CLASSES_ID
+      ? { recipeBuildingClasses: { some: { buildingClassId } } }
+      : {}),
+    ...(siteClassId && siteClassId !== ALL_CLASSES_ID
+      ? { recipeSiteClasses: { some: { siteClassId } } }
+      : {}),
+  };
+}
+
+// The same ids once each, so a repeated id can't create a duplicate link
+function unique(ids: string[] | undefined): string[] {
+  return [...new Set(ids ?? [])];
 }
 
 type RecipeRow = {
@@ -96,18 +117,83 @@ function toRecipe(row: RecipeRow): Recipe {
 
 // OWNERSHIP MODEL: userId owns all data; companyId is a tag on it. Every query
 // is filtered by both, so a company's library only ever holds the caller's own
-// recipes.
+// recipes. Site classes and building classes belong to the user only (no
+// companyId), so they are filtered by userId.
 //
 // "Archived" recipes stay in the table but are hidden from the library and from
 // the category counts. Takeoff lines that use them keep working.
 @Injectable()
 export class RecipeLibraryRepository {
+  // The user's site classes and building classes, for the two selectors at the
+  // top of the library. Each carries the number of the company's live recipes
+  // linked to it.
+  async getRecipeClassifications(
+    request: GetRecipeClassificationsRequest,
+  ): Promise<GetRecipeClassificationsResponse> {
+    const liveRecipe = {
+      companyId: request.companyId,
+      userId: request.userId,
+      isArchived: false,
+    };
+    const orderBy = [{ name: 'asc' as const }, { id: 'asc' as const }];
+
+    const [siteClasses, buildingClasses] = await Promise.all([
+      prisma.siteClass.findMany({
+        where: { userId: request.userId },
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          _count: {
+            select: { recipeSiteClasses: { where: { recipe: liveRecipe } } },
+          },
+        },
+      }),
+      prisma.buildingClass.findMany({
+        where: { userId: request.userId },
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          _count: {
+            select: {
+              recipeBuildingClasses: { where: { recipe: liveRecipe } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      siteClass: siteClasses.map((siteClass) => ({
+        siteClassId: siteClass.id,
+        siteClassName: siteClass.name,
+        siteClassDescription: siteClass.description,
+        numberOfRecipes: siteClass._count.recipeSiteClasses,
+      })),
+      buildingClass: buildingClasses.map((buildingClass) => ({
+        buildingClassId: buildingClass.id,
+        buildingClassName: buildingClass.name,
+        buildingClassDescription: buildingClass.description,
+        numberOfRecipes: buildingClass._count.recipeBuildingClasses,
+      })),
+    };
+  }
+
   // The company's categories, preceded by an "All" entry. Each carries the
-  // number of live recipes in it; archived recipes aren't counted, so a count
-  // always matches what the list shows.
+  // number of live recipes in it for the chosen building class and site class;
+  // archived recipes aren't counted, so a count always matches what the list
+  // shows.
   async getUserRecipeCategories(
     request: UserRecipeCategoriesRequest,
   ): Promise<UserRecipeCategoriesResponse> {
+    const countedRecipes = {
+      isArchived: false,
+      ...classFilter(request.buildingClassId, request.siteClassId),
+    };
+
     const [company, categories] = await Promise.all([
       prisma.company.findFirst({
         where: { id: request.companyId, userId: request.userId },
@@ -119,7 +205,7 @@ export class RecipeLibraryRepository {
         select: {
           id: true,
           name: true,
-          _count: { select: { recipes: { where: { isArchived: false } } } },
+          _count: { select: { recipes: { where: countedRecipes } } },
         },
       }),
     ]);
@@ -152,22 +238,27 @@ export class RecipeLibraryRepository {
     };
   }
 
-  // One page of recipes: live or archived, one category or all, optionally
-  // matching a search term in the name or description (ignoring case).
+  // One page of recipes: live or archived, one category or all, one building
+  // class and one site class or all, optionally matching a search term in the
+  // name or description (ignoring case).
   // The order is alphabetical with id as the tie-breaker, so paging is stable
   // and each recipe appears on exactly one page.
+  // archivedCount is how many archived recipes the same filters would find, so
+  // the "Show Archived" button can say how many are there.
   async getRecipes(request: GetRecipesRequest): Promise<GetRecipesResponse> {
-    const where = {
+    const filters = {
       companyId: request.companyId,
       userId: request.userId,
-      isArchived: request.archived,
       ...(request.categoryId !== ALL_CATEGORIES_ID
         ? { categoryId: request.categoryId }
         : {}),
+      ...classFilter(request.buildingClassId, request.siteClassId),
       ...(request.term
         ? {
             OR: [
-              { name: { contains: request.term, mode: 'insensitive' as const } },
+              {
+                name: { contains: request.term, mode: 'insensitive' as const },
+              },
               {
                 description: {
                   contains: request.term,
@@ -178,8 +269,9 @@ export class RecipeLibraryRepository {
           }
         : {}),
     };
+    const where = { ...filters, isArchived: request.archived };
 
-    const [rows, totalCount] = await Promise.all([
+    const [rows, totalCount, archivedCount] = await Promise.all([
       prisma.recipe.findMany({
         where,
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
@@ -188,10 +280,12 @@ export class RecipeLibraryRepository {
         select: RECIPE_SELECT,
       }),
       prisma.recipe.count({ where }),
+      prisma.recipe.count({ where: { ...filters, isArchived: true } }),
     ]);
 
     return {
       totalCount,
+      archivedCount,
       page: request.page,
       limit: request.limit,
       recipes: rows.map(toRecipe),
@@ -352,9 +446,15 @@ export class RecipeLibraryRepository {
   // Every component must be a catalogue row this company can use, and each takes
   // its unit from its catalogue item (a brick is counted in Nr wherever it is
   // used), which is why the browser never sends one.
+  //
+  // The recipe is also linked to the building classes and site classes it suits.
+  // Each must be one of the user's own; without a link it won't show when the
+  // library is narrowed to that class.
   async createRecipe(record: CreateRecipeRecord): Promise<Recipe> {
     return await prisma.$transaction(async (tx) => {
       const scope = catalogueScope(record.companyId, record.userId);
+      const buildingClassIds = unique(record.buildingClassIds);
+      const siteClassIds = unique(record.siteClassIds);
 
       const materialUnits = await tx.material.findMany({
         where: { id: { in: record.materials.map((c) => c.itemId) }, ...scope },
@@ -369,12 +469,29 @@ export class RecipeLibraryRepository {
         select: { id: true, unit: true },
       });
 
+      const ownBuildingClasses = await tx.buildingClass.count({
+        where: { id: { in: buildingClassIds }, userId: record.userId },
+      });
+      if (ownBuildingClasses !== buildingClassIds.length) {
+        throw new NotFoundException(
+          'A building class in this recipe was not found',
+        );
+      }
+      const ownSiteClasses = await tx.siteClass.count({
+        where: { id: { in: siteClassIds }, userId: record.userId },
+      });
+      if (ownSiteClasses !== siteClassIds.length) {
+        throw new NotFoundException('A site class in this recipe was not found');
+      }
+
       const unitOf = (rows: { id: string; unit: string }[], label: string) => {
         const byId = new Map(rows.map((row) => [row.id, row.unit]));
         return (itemId: string) => {
           const unit = byId.get(itemId);
           if (unit === undefined) {
-            throw new NotFoundException(`A ${label} in this recipe was not found`);
+            throw new NotFoundException(
+              `A ${label} in this recipe was not found`,
+            );
           }
           return unit;
         };
@@ -421,6 +538,18 @@ export class RecipeLibraryRepository {
               overheadId: c.itemId,
               quantity: c.quantity,
               unit: overheadUnit(c.itemId),
+            })),
+          },
+          recipeBuildingClasses: {
+            create: buildingClassIds.map((buildingClassId) => ({
+              userId: record.userId,
+              buildingClassId,
+            })),
+          },
+          recipeSiteClasses: {
+            create: siteClassIds.map((siteClassId) => ({
+              userId: record.userId,
+              siteClassId,
             })),
           },
         },
@@ -484,7 +613,8 @@ export class RecipeLibraryRepository {
     return await prisma.takeoffItem.count({ where: { recipeId } });
   }
 
-  // Deletes the recipe. Its ingredient lines go with it. Only called once nothing uses it.
+  // Deletes the recipe. Its ingredient lines and class links go with it. Only
+  // called once nothing uses it.
   async deleteRecipe(
     companyId: string,
     userId: string,

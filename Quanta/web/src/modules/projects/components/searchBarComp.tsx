@@ -21,10 +21,12 @@ export function SearchBarComp({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[#F0EDE8] bg-[#FAFAF9] px-3 py-2 transition-colors hover:border-[#FFD9C9] focus-within:border-[#FF6B35] focus-within:bg-white focus-within:ring-[3px] focus-within:ring-[#FFF4EE]">
+    <div className="flex h-[54px] items-center gap-3 rounded-xl border border-[#E9E4DE] bg-white px-4 shadow-[0_8px_26px_rgba(67,50,38,0.04)] transition-all hover:border-[#FFC2B1] focus-within:border-[#FFB39E] focus-within:shadow-[0_0_0_4px_rgba(255,107,74,0.08),0_10px_28px_rgba(67,50,38,0.05)]">
+      <MdOutlineSearch size={20} className="shrink-0 text-[#99918A]" />
       <input
-        className="flex-1 bg-transparent text-sm text-[#1C1917] outline-none placeholder:text-[#A8A29E]"
+        className="min-w-0 flex-1 bg-transparent text-sm text-[#292524] outline-none placeholder:text-[#9E9690]"
         type="text"
+        aria-label="Search projects"
         placeholder="Search projects by name or description..."
         value={searchTerm}
         onChange={(e) => handleChange(e.target.value)}
@@ -34,11 +36,12 @@ export function SearchBarComp({
       />
 
       <button
+        type="button"
         title="submit-search-term"
         onClick={submitSearch}
-        className="flex cursor-pointer flex-row rounded-lg p-1 text-[#A8A29E] transition-colors hover:bg-[#FFF4EE] hover:text-[#FF6B35]"
+        className="cursor-pointer rounded-lg border border-[#EAE5DF] bg-[#FAF9F7] px-2.5 py-1 text-xs font-semibold text-[#A59D96] transition-colors hover:border-[#FFC6B5] hover:text-[#FF6B4A]"
       >
-        <MdOutlineSearch size={20} />
+        Search
       </button>
     </div>
   );
