@@ -11,6 +11,9 @@ import type {
   CreateCatalogueItemInput,
   CreateCategoryInput,
   CreateRecipeInput,
+  CreateSiteClassInput,
+  CreateBuildingClassInput,
+  CreateClassInput,
   RecipeComponentInput,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
@@ -23,16 +26,45 @@ import type {
   GetRecipeCatalogueResponse,
   CreateCatalogueItemResponse,
   CreateCategoryResponse,
+  CreateSiteClassResponse,
+  CreateBuildingClassResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
 // The most recipes one request may return, however large a limit is asked for
 const MAX_PAGE_SIZE = 50;
+
+// The longest a site class or building class name may be. It is shown on a
+// small chip.
+const MAX_CLASS_NAME = 40;
 
 // The id that means "every building class / site class"
 const ALL_CLASSES_ID = 'all';
 
 function isNonEmptyText(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== '';
+}
+
+// A new site class or building class needs a name of at most MAX_CLASS_NAME
+// characters and a description. Returns both trimmed. `label` is "site class"
+// or "building class", for the messages.
+function cleanClassInput(
+  input: CreateClassInput | undefined,
+  label: string,
+): { name: string; description: string } {
+  const name = input?.name;
+  const description = input?.description;
+  if (!isNonEmptyText(name)) {
+    throw new BadRequestException(`Give the ${label} a name`);
+  }
+  if (name.trim().length > MAX_CLASS_NAME) {
+    throw new BadRequestException(
+      `Keep the name to ${MAX_CLASS_NAME} characters or fewer`,
+    );
+  }
+  if (!isNonEmptyText(description)) {
+    throw new BadRequestException(`Describe the ${label}`);
+  }
+  return { name: name.trim(), description: description.trim() };
 }
 
 // A class filter from the URL: a class id, or "all" when none was given
@@ -207,6 +239,63 @@ export class RecipeLibraryService {
       categoryId: request.item.categoryId,
       labourType:
         request.item.kind === 'labour' ? request.item.labourType!.trim() : null,
+    });
+  }
+
+  // Adds a site class from the Create recipe form. It needs a short name that
+  // none of the user's site classes already uses (ignoring case), and a
+  // description, which the library shows after the name.
+  async createSiteClass(request: {
+    clerkId: string;
+    companyId: string;
+    siteClass: CreateSiteClassInput;
+  }): Promise<CreateSiteClassResponse> {
+    const { name, description } = cleanClassInput(request.siteClass, 'site class');
+
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+
+    if (await this.recipeLibraryRepository.siteClassNameExists(userId, name)) {
+      throw new ConflictException('A site class with this name already exists');
+    }
+
+    return await this.recipeLibraryRepository.createSiteClass({
+      userId,
+      name,
+      description,
+    });
+  }
+
+  // Adds a building class from the Create recipe form, the same way as a site
+  // class: a short name that none of the user's building classes already uses
+  // (ignoring case), and a description, which the library shows on hover.
+  async createBuildingClass(request: {
+    clerkId: string;
+    companyId: string;
+    buildingClass: CreateBuildingClassInput;
+  }): Promise<CreateBuildingClassResponse> {
+    const { name, description } = cleanClassInput(
+      request.buildingClass,
+      'building class',
+    );
+
+    const userId = await this.accessService.requireCompanyAccess(
+      request.clerkId,
+      request.companyId,
+    );
+
+    if (await this.recipeLibraryRepository.buildingClassNameExists(userId, name)) {
+      throw new ConflictException(
+        'A building class with this name already exists',
+      );
+    }
+
+    return await this.recipeLibraryRepository.createBuildingClass({
+      userId,
+      name,
+      description,
     });
   }
 

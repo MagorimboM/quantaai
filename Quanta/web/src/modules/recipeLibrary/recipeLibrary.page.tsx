@@ -8,6 +8,8 @@ import {
   createCatalogueItem,
   createCategory,
   createRecipe,
+  createBuildingClass,
+  createSiteClass,
 } from "@/modules/recipeLibrary/api/api";
 import { SearchBar } from "@/modules/recipeLibrary/components/searchBar";
 import { RecipeCategoryList } from "@/modules/recipeLibrary/components/recipeCategory";
@@ -136,8 +138,9 @@ export function RecipeLibraryPage() {
   );
 
   // The calls the shared "Create recipe" form makes, bound to this company.
-  // A new recipe is linked to the building class and site class being viewed,
-  // so it shows up in the list straight after it is saved.
+  // The form asks where the recipe applies, so it also gets the classes and a
+  // way to add a site class. It opens with the classes being viewed already
+  // chosen (see initialBuildingClassIds below).
   // null in a personal workspace, where there is no company to build for.
   const createRecipeApi = useMemo<CreateRecipeApi<Recipe> | null>(() => {
     if (!companyId) return null;
@@ -145,16 +148,44 @@ export function RecipeLibraryPage() {
       loadCatalogue: () => getRecipeCatalogue({ companyId }),
       createCatalogueItem: (item) => createCatalogueItem({ companyId, ...item }),
       createCategory: (name) => createCategory({ companyId, name }),
-      createRecipe: (recipe) =>
-        createRecipe({
-          companyId,
-          ...recipe,
-          buildingClassIds:
-            buildingClassId === ALL_CLASSES_ID ? [] : [buildingClassId],
-          siteClassIds: siteClassId === ALL_CLASSES_ID ? [] : [siteClassId],
-        }),
+      createRecipe: (recipe) => createRecipe({ companyId, ...recipe }),
+      loadClasses: async () => {
+        const response = await getRecipeClassifications({ companyId });
+        return {
+          buildingClasses: response.buildingClass.map((item) => ({
+            id: item.buildingClassId,
+            name: item.buildingClassName,
+            description: item.buildingClassDescription,
+          })),
+          siteClasses: response.siteClass.map((item) => ({
+            id: item.siteClassId,
+            name: item.siteClassName,
+            description: item.siteClassDescription,
+          })),
+        };
+      },
+      createBuildingClass: async (buildingClass) => {
+        const created = await createBuildingClass({ companyId, ...buildingClass });
+        // so the building class tiles at the top show it too
+        setBuildingClassList((prev) => [...prev, created]);
+        return {
+          id: created.buildingClassId,
+          name: created.buildingClassName,
+          description: created.buildingClassDescription,
+        };
+      },
+      createSiteClass: async (siteClass) => {
+        const created = await createSiteClass({ companyId, ...siteClass });
+        // so the site class strip at the top shows it too
+        setSiteClassList((prev) => [...prev, created]);
+        return {
+          id: created.siteClassId,
+          name: created.siteClassName,
+          description: created.siteClassDescription,
+        };
+      },
     };
-  }, [companyId, buildingClassId, siteClassId]);
+  }, [companyId]);
 
   // The selectors' options. Returns the building class to open on.
   async function loadClassifications(): Promise<string> {
@@ -470,6 +501,10 @@ export function RecipeLibraryPage() {
           api={createRecipeApi}
           onCreated={handleRecipeCreated}
           onClose={() => setShowRecipeBuilder(false)}
+          initialBuildingClassIds={
+            buildingClassId === ALL_CLASSES_ID ? [] : [buildingClassId]
+          }
+          initialSiteClassIds={siteClassId === ALL_CLASSES_ID ? [] : [siteClassId]}
         />
       ) : null}
     </div>

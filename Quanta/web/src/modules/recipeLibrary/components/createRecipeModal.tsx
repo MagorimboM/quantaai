@@ -6,6 +6,7 @@ import type {
   CatalogueKind,
   CreateRecipeApi,
   RecipeCatalogue,
+  RecipeClassOption,
 } from "@/modules/recipeLibrary/contracts/createRecipe.types";
 import {
   COMPONENT_SECTIONS,
@@ -21,6 +22,7 @@ import {
   type RecipeComponentRow,
 } from "@/modules/recipeLibrary/components/recipeComponentList";
 import { CreateCatalogueItemDialog } from "@/modules/recipeLibrary/components/createCatalogueItem.modal";
+import { RecipeClassFields } from "@/modules/recipeLibrary/components/recipeClassFields";
 import { LoadingModal } from "@/common/components/loadingModal";
 import { apiErrorMessage } from "@/common/utils/apiErrorMessage";
 
@@ -53,16 +55,27 @@ const SECTION_OF_KIND: Record<CatalogueKind, ComponentSection> = {
  *
  * `onCreated` receives the saved recipe exactly as the screen's own `api` returns
  * it, so the screen can show it straight away.
+ *
+ * When the `api` can load classes, the form also asks where the recipe applies:
+ * at least one building class, and any site classes. `initialBuildingClassIds`
+ * and `initialSiteClassIds` start those choices (the library passes the classes
+ * it is showing). Any that are no longer offered are dropped.
  */
 export function CreateRecipeModal<TCreated>({
   api,
   onCreated,
   onClose,
+  initialBuildingClassIds = [],
+  initialSiteClassIds = [],
 }: {
   api: CreateRecipeApi<TCreated>;
   onCreated: (recipe: TCreated) => void;
   onClose: () => void;
+  initialBuildingClassIds?: string[];
+  initialSiteClassIds?: string[];
 }) {
+  // The "Where it applies" section only shows when the screen supplies classes
+  const offersClasses = api.loadClasses !== undefined;
   const [catalogue, setCatalogue] = useState<RecipeCatalogue>({
     categories: [],
     materials: [],
@@ -82,6 +95,12 @@ export function CreateRecipeModal<TCreated>({
     labour: [],
     overheads: [],
   });
+
+  const [buildingClasses, setBuildingClasses] = useState<RecipeClassOption[]>([]);
+  const [siteClasses, setSiteClasses] = useState<RecipeClassOption[]>([]);
+  const [buildingClassIds, setBuildingClassIds] = useState<string[]>([]);
+  const [siteClassIds, setSiteClassIds] = useState<string[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(offersClasses);
 
   const [section, setSection] = useState<ComponentSection>("materials");
   const [query, setQuery] = useState<string>("");
@@ -103,6 +122,49 @@ export function CreateRecipeModal<TCreated>({
 
     loadCatalogue();
   }, [api]);
+
+  // The classes, with the screen's starting choices kept only if still offered.
+  // The starting ids are read once, when the form opens.
+  useEffect(() => {
+    if (!api.loadClasses) return;
+    const loadClasses = api.loadClasses;
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const classes = await loadClasses();
+        if (cancelled) return;
+        setBuildingClasses(classes.buildingClasses);
+        setSiteClasses(classes.siteClasses);
+        const buildingIds = new Set(classes.buildingClasses.map((c) => c.id));
+        const siteIds = new Set(classes.siteClasses.map((c) => c.id));
+        setBuildingClassIds(initialBuildingClassIds.filter((id) => buildingIds.has(id)));
+        setSiteClassIds(initialSiteClassIds.filter((id) => siteIds.has(id)));
+      } catch {
+        // apiClient already reports the failure; the class lists stay empty
+      } finally {
+        if (!cancelled) setIsLoadingClasses(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api]);
+
+  // A building class added from the form: list it and choose it
+  function buildingClassCreated(created: RecipeClassOption) {
+    setBuildingClasses((prev) => [...prev, created]);
+    setBuildingClassIds((prev) => [...prev, created.id]);
+  }
+
+  // A site class added from the form: list it and choose it
+  function siteClassCreated(created: RecipeClassOption) {
+    setSiteClasses((prev) => [...prev, created]);
+    setSiteClassIds((prev) => [...prev, created.id]);
+  }
 
   function updateField<K extends keyof RecipeFormState>(
     field: K,
@@ -213,10 +275,14 @@ export function CreateRecipeModal<TCreated>({
       return !Number.isNaN(quantity) && quantity > 0;
     }),
   );
+  // With classes on offer, the recipe needs at least one building class, or it
+  // would never show in the library (which is always narrowed to one)
+  const classesValid = !offersClasses || buildingClassIds.length > 0;
   const canSave =
     form.name.trim() !== "" &&
     form.categoryId !== "" &&
     form.unit.trim() !== "" &&
+    classesValid &&
     rows.length > 0 &&
     quantitiesValid &&
     !isSaving;
@@ -242,6 +308,8 @@ export function CreateRecipeModal<TCreated>({
         materials: toRequest("materials"),
         labour: toRequest("labour"),
         overheads: toRequest("overheads"),
+        buildingClassIds: offersClasses ? buildingClassIds : [],
+        siteClassIds: offersClasses ? siteClassIds : [],
       });
       onCreated(created);
       onClose();
@@ -260,13 +328,12 @@ export function CreateRecipeModal<TCreated>({
   return (
     <>
       <div
-        className="fixed inset-0 z-55 flex items-center justify-center bg-[#1C1917]/30 p-4 backdrop-blur-sm"
-        // A stray click must not close the modal while the recipe is saving
+        className="fixed inset-0 z-55 flex items-center justify-center bg-[#1C1917]/30 p-2 backdrop-blur-sm"
         onClick={isSaving ? undefined : onClose}
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className="flex h-170 max-h-full w-full max-w-235 flex-col overflow-hidden rounded-2xl border border-[#EFECE6] bg-white text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]"
+          className="flex h-[92vh] max-h-full w-[98vw] max-w-full flex-col overflow-hidden rounded-2xl border border-[#EFECE6] bg-white text-[#1C1917] shadow-[0_25px_70px_rgba(40,29,23,0.25)]"
         >
           <div className="flex items-start justify-between border-b border-[#EFECE6] px-5 py-4">
             <div>
@@ -289,7 +356,7 @@ export function CreateRecipeModal<TCreated>({
 
           <div className="flex min-h-0 flex-1">
             {/* Left: the recipe's own details */}
-            <div className="flex w-85 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#EFECE6] px-5 py-4">
+            <div className="flex w-120 shrink-0 flex-col gap-3.5 overflow-y-auto border-r border-[#EFECE6] px-5 py-4">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
                 Recipe details
               </span>
@@ -361,6 +428,27 @@ export function CreateRecipeModal<TCreated>({
                   className="h-22 w-full resize-none rounded-lg border border-[#EFECE6] bg-[#FAF8F5] px-2.5 py-2 text-sm leading-relaxed text-[#1C1917] outline-none placeholder:text-[#78716C] focus:border-[#FF6B4A] focus:bg-white focus:ring-[3px] focus:ring-[#FFF4EE]"
                 />
               </div>
+
+              {offersClasses ? (
+                <>
+                  <span className="mt-1 border-t border-[#EFECE6] pt-3.5 text-[11px] font-semibold uppercase tracking-wide text-[#78716C]">
+                    Where it applies
+                  </span>
+                  <RecipeClassFields
+                    buildingClasses={buildingClasses}
+                    siteClasses={siteClasses}
+                    buildingClassIds={buildingClassIds}
+                    siteClassIds={siteClassIds}
+                    isLoading={isLoadingClasses}
+                    onChangeBuildingClassIds={setBuildingClassIds}
+                    onChangeSiteClassIds={setSiteClassIds}
+                    onCreateBuildingClass={api.createBuildingClass}
+                    onBuildingClassCreated={buildingClassCreated}
+                    onCreateSiteClass={api.createSiteClass}
+                    onSiteClassCreated={siteClassCreated}
+                  />
+                </>
+              ) : null}
             </div>
 
             {/* Right: pick components from the catalogue, then set quantities */}
@@ -397,7 +485,9 @@ export function CreateRecipeModal<TCreated>({
               {errorMessage ??
                 (isLoading
                   ? "Loading your catalogue…"
-                  : COMPONENT_SECTIONS.map(
+                  : !classesValid && !isLoadingClasses
+                    ? "Choose at least one building class."
+                    : COMPONENT_SECTIONS.map(
                       (key) => `${addedCounts[key]} ${SECTION_LABEL[key].toLowerCase()}`,
                     ).join(" · "))}
             </p>

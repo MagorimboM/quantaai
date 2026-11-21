@@ -85,6 +85,25 @@ export type CreateCatalogueItemRecord = CreateCatalogueItemInput & {
   userId: string;
 };
 
+// The body of POST .../recipe-library/site-classes and .../building-classes.
+// The description is shown after the name or on hover in the library, so it is
+// kept short.
+export type CreateClassInput = {
+  name: string;
+  description: string;
+};
+
+export type CreateSiteClassInput = CreateClassInput;
+export type CreateBuildingClassInput = CreateClassInput;
+
+// What the repository stores once the name has been checked as new for the user
+export type CreateClassRecord = CreateClassInput & {
+  userId: string;
+};
+
+export type CreateSiteClassRecord = CreateClassRecord;
+export type CreateBuildingClassRecord = CreateClassRecord;
+
 // The body of POST .../recipe-library/categories
 export type CreateCategoryInput = {
   name: string;

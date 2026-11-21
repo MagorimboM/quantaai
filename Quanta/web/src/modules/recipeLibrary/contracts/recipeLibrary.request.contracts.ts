@@ -82,9 +82,24 @@ export type RecipeComponentRequest = {
   quantity: number;
 };
 
-// buildingClassIds / siteClassIds: the classes the recipe suits. The library
-// page fills these with the classes being viewed, so the new recipe shows up
-// straight away.
+// A building class the user is adding, for example "Residential". The
+// description is shown on hover, so keep it short.
+export type CreateBuildingClassRequest = {
+  companyId: string;
+  name: string;
+  description: string;
+};
+
+// A site class the user is adding, for example a local soil type. The
+// description is shown after the name, so keep it short.
+export type CreateSiteClassRequest = {
+  companyId: string;
+  name: string;
+  description: string;
+};
+
+// buildingClassIds / siteClassIds: the classes the recipe suits, chosen in the
+// Create recipe form.
 export type CreateRecipeRequest = {
   companyId: string;
   name: string;

@@ -71,6 +71,12 @@ export type BuildingClassItem = {
   numberOfRecipes: number;
 };
 
+// A newly added site class. It has no recipes yet.
+export type CreateSiteClassResponse = SiteClassItem;
+
+// A newly added building class. It has no recipes yet.
+export type CreateBuildingClassResponse = BuildingClassItem;
+
 // The options for the two selectors at the top of the library
 export type GetRecipeClassificationsResponse = {
   siteClass: SiteClassItem[];

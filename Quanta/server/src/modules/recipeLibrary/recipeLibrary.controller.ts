@@ -18,6 +18,8 @@ import type {
   CreateRecipeInput,
   CreateCategoryInput,
   CreateCatalogueItemInput,
+  CreateSiteClassInput,
+  CreateBuildingClassInput,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
   Recipe,
@@ -29,6 +31,8 @@ import type {
   GetRecipeCatalogueResponse,
   CreateCategoryResponse,
   CreateCatalogueItemResponse,
+  CreateSiteClassResponse,
+  CreateBuildingClassResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
 // The id that means "every category / building class / site class"
@@ -51,6 +55,36 @@ export class RecipeLibraryController {
     return await this.recipeLibraryService.getRecipeClassifications({
       clerkId,
       companyId,
+    });
+  }
+
+  // Adds a site class from the Create recipe form   body: { name, description }
+  // Refused (409) if the user already has one with that name.
+  @Post('site-classes')
+  async createSiteClass(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() body: CreateSiteClassInput,
+  ): Promise<CreateSiteClassResponse> {
+    return await this.recipeLibraryService.createSiteClass({
+      clerkId,
+      companyId,
+      siteClass: body,
+    });
+  }
+
+  // Adds a building class from the Create recipe form   body: { name, description }
+  // Refused (409) if the user already has one with that name.
+  @Post('building-classes')
+  async createBuildingClass(
+    @ClerkUserId() clerkId: string,
+    @Param('companyId') companyId: string,
+    @Body() body: CreateBuildingClassInput,
+  ): Promise<CreateBuildingClassResponse> {
+    return await this.recipeLibraryService.createBuildingClass({
+      clerkId,
+      companyId,
+      buildingClass: body,
     });
   }
 

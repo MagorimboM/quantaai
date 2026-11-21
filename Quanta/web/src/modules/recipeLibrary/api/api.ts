@@ -10,6 +10,8 @@ import type {
   CreateCatalogueItemRequest,
   CreateCategoryRequest,
   CreateRecipeRequest,
+  CreateBuildingClassRequest,
+  CreateSiteClassRequest,
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts";
 import type {
   Recipe,
@@ -18,9 +20,11 @@ import type {
   GetRecipeClassificationsResponse,
   ArchiveRecipeResponse,
   DeleteRecipeResponse,
-  CreateCatalogueItemResponse, 
+  CreateCatalogueItemResponse,
   GetRecipeCatalogueResponse,
-  CreateCategoryResponse
+  CreateCategoryResponse,
+  CreateSiteClassResponse,
+  CreateBuildingClassResponse,
 } from "@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts";
 
 // The backend identifies the user from the Clerk token that apiClient attaches
@@ -33,6 +37,31 @@ export async function getRecipeClassifications(
 ): Promise<GetRecipeClassificationsResponse> {
   const response = await apiClient.get(
     `${request.companyId}/recipe-library/classifications`,
+  );
+  return response.data;
+}
+
+// Adds a building class. Refused (409) if the user already has one with that
+// name.
+export async function createBuildingClass(
+  request: CreateBuildingClassRequest,
+): Promise<CreateBuildingClassResponse> {
+  const { companyId, ...buildingClass } = request;
+  const response = await apiClient.post(
+    `${companyId}/recipe-library/building-classes`,
+    buildingClass,
+  );
+  return response.data;
+}
+
+// Adds a site class. Refused (409) if the user already has one with that name.
+export async function createSiteClass(
+  request: CreateSiteClassRequest,
+): Promise<CreateSiteClassResponse> {
+  const { companyId, ...siteClass } = request;
+  const response = await apiClient.post(
+    `${companyId}/recipe-library/site-classes`,
+    siteClass,
   );
   return response.data;
 }

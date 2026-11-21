@@ -9,6 +9,8 @@ import type {
   CreateCatalogueItemRecord,
   CreateCategoryRecord,
   CreateRecipeRecord,
+  CreateSiteClassRecord,
+  CreateBuildingClassRecord,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.request.contracts';
 import type {
   Recipe,
@@ -19,6 +21,8 @@ import type {
   GetRecipeCatalogueResponse,
   CreateCatalogueItemResponse,
   CreateCategoryResponse,
+  CreateSiteClassResponse,
+  CreateBuildingClassResponse,
 } from '@/modules/recipeLibrary/contracts/recipeLibrary.response.contracts';
 
 // The pseudo-ids that mean "every category / site class / building class"
@@ -179,6 +183,64 @@ export class RecipeLibraryRepository {
         buildingClassDescription: buildingClass.description,
         numberOfRecipes: buildingClass._count.recipeBuildingClasses,
       })),
+    };
+  }
+
+  // True if the user already has a site class with this name (ignoring case)
+  async siteClassNameExists(userId: string, name: string): Promise<boolean> {
+    const count = await prisma.siteClass.count({
+      where: { userId, name: { equals: name, mode: 'insensitive' } },
+    });
+    return count > 0;
+  }
+
+  // Adds a site class the user was missing. The service has already checked
+  // the name is new for them. A new class has no recipes yet.
+  async createSiteClass(
+    record: CreateSiteClassRecord,
+  ): Promise<CreateSiteClassResponse> {
+    const created = await prisma.siteClass.create({
+      data: {
+        userId: record.userId,
+        name: record.name,
+        description: record.description,
+      },
+      select: { id: true, name: true, description: true },
+    });
+    return {
+      siteClassId: created.id,
+      siteClassName: created.name,
+      siteClassDescription: created.description,
+      numberOfRecipes: 0,
+    };
+  }
+
+  // True if the user already has a building class with this name (ignoring case)
+  async buildingClassNameExists(userId: string, name: string): Promise<boolean> {
+    const count = await prisma.buildingClass.count({
+      where: { userId, name: { equals: name, mode: 'insensitive' } },
+    });
+    return count > 0;
+  }
+
+  // Adds a building class the user was missing. The service has already
+  // checked the name is new for them. A new class has no recipes yet.
+  async createBuildingClass(
+    record: CreateBuildingClassRecord,
+  ): Promise<CreateBuildingClassResponse> {
+    const created = await prisma.buildingClass.create({
+      data: {
+        userId: record.userId,
+        name: record.name,
+        description: record.description,
+      },
+      select: { id: true, name: true, description: true },
+    });
+    return {
+      buildingClassId: created.id,
+      buildingClassName: created.name,
+      buildingClassDescription: created.description,
+      numberOfRecipes: 0,
     };
   }
 
