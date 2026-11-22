@@ -1,84 +1,100 @@
 import { z } from 'zod';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import {
+  MAX_NAME,
+  requiredText,
+  requiredEmail,
+  requiredPhone,
+  optionalEmail,
+  optionalPhone,
+} from '@/common/validations/global.input.fields';
+import { isPdf } from '@/common/validations/fileUploadValidators/files/pdfFile.validator';
 
 // The rules for POST /workspaces/create, checked by ZodValidationPipe before the
-// route runs. Only the name is required; any detail left blank arrives at the
-// service as undefined, the same as if it had been left out.
+// route runs. They match the form's rules (createCompanyWorkspace.schema.ts on
+// the frontend): every company detail and the contact's name are required; the
+// contact's phone and email may be left blank, and then arrive at the service
+// as undefined.
 //
-// Every piece of text is tidied first: spaces at the start and end are removed,
-// and runs of spaces inside become one ("ABC   Construction" -> "ABC Construction").
+// The field rules themselves (tidying, lengths, email and phone checks) come
+// from global.input.fields, so they work the same as on every other route.
+// Phones come out in international form (+61412345678), however they were typed.
+//
+// The request is multipart form data (so it can carry the policy PDF), which
+// means every field arrives as text. That suits these rules: they are all text.
+//
+// The PDF is checked by its own schema, companyPolicyFileSchema, at the end of
+// this file. It can't sit inside createWorkspaceSchema because Multer takes the
+// file out of the body and hands it to the route separately, as @UploadedFile().
+// So the route runs two pipes: one on @Body() and one on @UploadedFile().
+//
+// Settings uses the looser companyDetailsFields from the same shared file,
+// where only the name is required, so a company can be edited a field at a time.
 
-// Phone numbers are read as Australian when they have no country code, so
-// "0412 345 678" and "+61 412 345 678" are both accepted.
-const DEFAULT_PHONE_COUNTRY = 'AU';
-
-// The most a single field may hold, so nobody can store a novel in "city"
-const MAX_NAME = 120;
-const MAX_TEXT = 200;
-
-// Trims the text and squeezes repeated spaces (and tabs or line breaks) into one
-function tidy(text: string): string {
-  return text.trim().replace(/\s+/g, ' ');
-}
-
-// Tidied text, or undefined when it is missing or blank
-function optionalText(max: number) {
-  return z
-    .string()
-    .optional()
-    .transform((text) => (text === undefined ? '' : tidy(text)))
-    .pipe(z.string().max(max, `Keep this to ${max} characters or fewer.`))
-    .transform((text) => (text === '' ? undefined : text));
-}
-
-// An email address, or undefined when it is missing or blank
-function optionalEmail() {
-  return z
-    .string()
-    .optional()
-    .transform((text) => (text === undefined ? '' : text.trim()))
-    .pipe(z.union([z.literal(''), z.email('Enter a valid email address.')]))
-    .transform((text) => (text === '' ? undefined : text));
-}
-
-// A phone number, or undefined when it is missing or blank. A real number is
-// stored in international form (+61412345678), however it was typed.
-function optionalPhone() {
-  return z
-    .string()
-    .optional()
-    .transform((text, ctx) => {
-      const trimmed = text?.trim() ?? '';
-      if (trimmed === '') return undefined;
-
-      const phone = parsePhoneNumberFromString(trimmed, DEFAULT_PHONE_COUNTRY);
-      if (!phone || !phone.isValid()) {
-        ctx.addIssue({ code: 'custom', message: 'Enter a valid phone number.' });
-        return z.NEVER;
-      }
-      return phone.number;
-    });
-}
+// The most a postcode may hold (room for overseas formats)
+const MAX_POSTCODE = 20;
 
 export const createWorkspaceSchema = z.object({
-  name: z
-    .string({ error: 'Enter the company name.' })
-    .transform(tidy)
-    .pipe(
-      z
-        .string()
-        .min(1, 'Enter the company name.')
-        .max(MAX_NAME, `Keep the company name to ${MAX_NAME} characters or fewer.`),
-    ),
-  address: optionalText(MAX_TEXT),
-  city: optionalText(MAX_TEXT),
-  state: optionalText(MAX_TEXT),
-  postcode: optionalText(20),
-  country: optionalText(MAX_TEXT),
-  phone: optionalPhone(),
-  email: optionalEmail(),
-  contactName: optionalText(MAX_TEXT),
+  // The company
+  name: requiredText('Enter the company name.', MAX_NAME),
+  companyType: requiredText('Enter the company type.'),
+  address: requiredText('Enter the address.'),
+  city: requiredText('Enter the city.'),
+  state: requiredText('Enter the state.'),
+  postcode: requiredText('Enter the postcode.', MAX_POSTCODE),
+  country: requiredText('Enter the country.'),
+  phone: requiredPhone('Enter the company phone number.'),
+  email: requiredEmail('Enter the company email.'),
+
+  // The primary contact: a name is required, the phone and email are optional
+  contactName: requiredText("Enter the contact's name."),
   contactPhone: optionalPhone(),
   contactEmail: optionalEmail(),
-  companyType: optionalText(MAX_TEXT),
 });
+
+// The body as the service receives it: tidied, phones in international form,
+// and blank optional details as undefined
+export type CreateWorkspaceRequest = z.output<typeof createWorkspaceSchema>;
+
+// The most a policy PDF can weigh. The controller's Multer limit uses the same
+// number, so a bigger file is refused before it is even read into memory.
+export const MAX_POLICY_BYTES = 10 * 1024 * 1024;
+
+// The company's quants takeoff policy, as Multer hands it over. It's optional:
+// with no file the route gets undefined. A file that is sent must be a real PDF
+// (its first bytes are checked, not just its name or the type the browser
+// claimed) and no bigger than MAX_POLICY_BYTES. Whether it has readable text in
+// it is checked by the service when it reads it.
+//
+// Its problems are reported under the field "file", the same name the form
+// sends it with.
+export const companyPolicyFileSchema = z
+  .custom<Express.Multer.File>(
+    (value) =>
+      typeof value === 'object' &&
+      value !== null &&
+      Buffer.isBuffer((value as Express.Multer.File).buffer),
+    { message: 'Upload the policy as a file.', path: ['file'] },
+  )
+  .optional()
+  .superRefine((file, ctx) => {
+    if (!file) return;
+
+    if (file.size > MAX_POLICY_BYTES) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'The policy must be 10 MB or smaller.',
+        path: ['file'],
+      });
+      return;
+    }
+    if (!isPdf(file.buffer)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'The company policy must be a PDF.',
+        path: ['file'],
+      });
+    }
+  });
+
+// The policy file as the route receives it: a checked PDF, or undefined
+export type CompanyPolicyFile = z.output<typeof companyPolicyFileSchema>;

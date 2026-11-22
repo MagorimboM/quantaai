@@ -1,5 +1,9 @@
 // A company workspace as the switcher lists it. `name` is the company's name, so
 // renaming the company in Settings renames it here too.
+//
+// The company's policy text is not listed here: it can run to many pages and
+// the switcher doesn't need it. It is stored on the company for the assistant
+// to read.
 export type CompanyWorkspace = {
   id: string;
   name: string;

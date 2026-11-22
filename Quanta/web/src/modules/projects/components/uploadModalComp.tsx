@@ -6,6 +6,9 @@ import { uploadFiles } from "@/modules/projects/api/api";
  * as project documents: they belong to this project, and the AI assistant uses
  * them when answering questions inside it.
  */
+
+// TODO :: then concept now is to upload project document spec... 
+// TODO :: Atn the begining to upload company policy
 export function UploadModalComp({
   companyId,
   projectId,

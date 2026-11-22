@@ -28,8 +28,7 @@ export class S3StorageService {
         `S3 upload failed with status ${response.$metadata.httpStatusCode}`,
       );
     }
-
-    // Fix: ensure a / between base URL and filename
+    
     const baseUrl = process.env.AWS_S3_BUCKET_URL!.replace(/\/$/, '');
     const url = `${baseUrl}/${fileName}`;
 
@@ -63,9 +62,7 @@ export class S3StorageService {
       throw new Error(
         `S3 retrieve failed with status ${response.$metadata.httpStatusCode}`,
       );
-    }
-
-    // TODO :: get the data for postgres.
+    };
 
     return response;
   }

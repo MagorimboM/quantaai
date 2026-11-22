@@ -20,7 +20,6 @@ TRUNCATE TABLE
   overheads,
   labour,
   materials,
-  site_conditions,
   forms,
   form_types,
   categories,
@@ -45,15 +44,26 @@ VALUES
 
 -- ============================================================
 -- COMPANIES
+-- Phones are in international form (+61...), the way the API
+-- stores them once Zod has checked them.
 -- ============================================================
 
 INSERT INTO companies (
   id, "userId", name, address, city, state, postcode, country,
   phone, email, "contactName", "contactPhone", "contactEmail",
-  "companyType", "isArchived", "createdAt", "updatedAt"
+  "companyType", "companyPolicyDocument", "isArchived", "createdAt", "updatedAt"
 )
 VALUES
-  ('seed-company-001', 'seed-user-001', 'ABC Construction',   '123 Builder Street', 'Perth',    'WA', '6000', 'Australia', '08 9000 0000', 'info@abcconstruction.com.au', 'Jane Smith',  '0412 000 000', 'jane@abcconstruction.com.au', 'residential', false, NOW(), NOW());
+  ('seed-company-001', 'seed-user-001', 'ABC Construction',   '123 Builder Street', 'Perth',    'WA', '6000', 'Australia', '+61890000000', 'info@abcconstruction.com.au', 'Jane Smith',  '+61412000000', 'jane@abcconstruction.com.au', 'residential',
+   -- The text of the company's quants takeoff policy, as the service stores it
+   -- after reading the uploaded PDF (all pages joined together)
+   E'ABC Construction - Quants Takeoff Policy\n\n'
+   || E'1. Brickwork is measured in square metres on the centre line of the wall.\n'
+   || E'2. Deduct openings larger than 0.5 m2; leave smaller openings in.\n'
+   || E'3. Concrete slabs are measured in square metres to the outside face of the edge beam.\n'
+   || E'4. Add 5% waste to bricks and 10% to concrete unless the drawings say otherwise.\n'
+   || E'5. Round every measurement to one decimal place.',
+   false, NOW(), NOW());
 
 -- ============================================================
 -- WORKSPACES  (one workspace for this company -- Workspace
@@ -88,18 +98,6 @@ VALUES
   (gen_random_uuid(), '04110', '110mm Brick Wall', 'Masonry',    'item',     'm²', 'Single skin clay brick wall 110mm',   NOW()),
   (gen_random_uuid(), '06000', 'Roofing',          'Roofing',    'division', NULL, 'Roofing works',                       NOW()),
   (gen_random_uuid(), '06100', 'Metal Roof Sheet', 'Roofing',    'item',     'm²', 'Corrugated metal roof sheeting',      NOW());
-
--- ============================================================
--- SITE CONDITIONS
--- Global lookup -- shared across all companies. Null on a
--- material/labour/overhead/recipe means general purpose.
--- ============================================================
-
-INSERT INTO site_conditions (id, name, description, "createdAt")
-VALUES
-  ('seed-site-001', 'Muddy',   'Soft, waterlogged or unstable ground requiring stabilisation', NOW()),
-  ('seed-site-002', 'Sandy',   'Loose, free-draining sandy ground',                             NOW()),
-  ('seed-site-003', 'Coastal', 'Near-shore, salt-exposed conditions',                           NOW());
 
 -- ============================================================
 -- SITE CLASSES
@@ -144,31 +142,30 @@ VALUES
 
 -- ============================================================
 -- MATERIALS
--- All general-purpose (siteConditionId NULL).
 -- ============================================================
 
-INSERT INTO materials (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO materials (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
 VALUES
-  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
-  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
-  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-cat-002', NULL, 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW());
+  ('seed-mat-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Clay Brick',     'Standard clay brick 230x110x76mm', 'Nr', NOW(), NOW()),
+  ('seed-mat-002', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Cement Mix',     'General purpose mortar mix',       'm³', NOW(), NOW()),
+  ('seed-mat-003', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'Concrete 25MPa', 'Ready mix concrete 25MPa',         'm³', NOW(), NOW());
 
 -- ============================================================
 -- LABOUR
 -- ============================================================
 
-INSERT INTO labour (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, "labourType", unit, "createdAt", "updatedAt")
+INSERT INTO labour (id, "userId", "companyId", "categoryId", name, description, "labourType", unit, "createdAt", "updatedAt")
 VALUES
-  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', NULL, 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
-  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-cat-003', NULL, 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW());
+  ('seed-lab-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'Bricklayer', 'Qualified bricklayer', 'trade',    'hr', NOW(), NOW()),
+  ('seed-lab-002', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Labourer',   'General labourer',     'labourer', 'hr', NOW(), NOW());
 
 -- ============================================================
 -- OVERHEADS
 -- ============================================================
 
-INSERT INTO overheads (id, "userId", "companyId", "categoryId", "siteConditionId", name, description, unit, "createdAt", "updatedAt")
+INSERT INTO overheads (id, "userId", "companyId", "categoryId", name, description, unit, "createdAt", "updatedAt")
 VALUES
-  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', NULL, 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW());
+  ('seed-ovh-001', 'seed-user-001', 'seed-company-001', 'seed-cat-003', 'Scaffolding',   'External scaffolding hire', 'week', NOW(), NOW());
 
 -- ============================================================
 -- RECIPE FORMS  (system data: same for everyone, no userId/companyId)
@@ -203,12 +200,12 @@ VALUES
 -- RECIPES
 -- ============================================================
 
-INSERT INTO recipes (id, "userId", "companyId", "categoryId", "formId", "siteConditionId", name, description, unit, "isArchived", "createdAt", "updatedAt")
+INSERT INTO recipes (id, "userId", "companyId", "categoryId", "formId", name, description, unit, "isArchived", "createdAt", "updatedAt")
 VALUES
-  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', NULL, '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
-  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'seed-form-rate', NULL, 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
+  ('seed-rec-001', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', '110mm Brick Wall',    'Single skin clay brick wall 110mm thick',        'm²', false, NOW(), NOW()),
+  ('seed-rec-002', 'seed-user-001', 'seed-company-001', 'seed-cat-002', 'seed-form-rate', 'Concrete Slab 150mm', 'Reinforced concrete slab 150mm thick on ground', 'm²', false, NOW(), NOW()),
   -- archived, so the "Show Archived" view and its count have something to show
-  ('seed-rec-003', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', NULL, '230mm Double Brick Wall', 'Double skin clay brick wall 230mm thick',     'm²', true,  NOW(), NOW());
+  ('seed-rec-003', 'seed-user-001', 'seed-company-001', 'seed-cat-001', 'seed-form-rate', '230mm Double Brick Wall', 'Double skin clay brick wall 230mm thick',     'm²', true,  NOW(), NOW());
 
 -- ── RECIPE MATERIALS ─────────────────────────────────────────
 

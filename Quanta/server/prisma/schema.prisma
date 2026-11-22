@@ -609,6 +609,9 @@ model DocumentEmbedding {
   chunkText  String
   chunkTitle String?
   chunkIndex Int
+  // The PDF page this chunk was taken from, starting at 1 (pdf-parse's `num`).
+  // Empty for chunks saved before page numbers were kept.
+  pageNumber Int?
   isArchived Boolean   @default(false)
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
@@ -616,9 +619,9 @@ model DocumentEmbedding {
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([documentId, pageNumber])
   @@map("document_embeddings")
 }
-
 // ============================================================
 // CHAT MESSAGES
 // userId = owner

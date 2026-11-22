@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { MdClose } from "react-icons/md";
 import PhoneInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
@@ -9,6 +9,9 @@ import {
   type CompanyWorkspaceField,
 } from "@/modules/workspaceSwitcher/contracts/createCompanyWorkspace.schema";
 
+// The most a policy PDF can weigh (the backend has the same limit)
+const MAX_POLICY_BYTES = 10 * 1024 * 1024;
+
 // Shared look for every field in this form
 const labelClass = "mb-1.5 block text-sm font-medium text-[#57534E]";
 function inputClass(hasError: boolean) {
@@ -17,6 +20,18 @@ function inputClass(hasError: boolean) {
       ? "border-red-500 focus:border-red-500 focus:ring-red-50"
       : "border-[#DEDAD4] focus:border-[#FF6B35] focus:ring-[#FFF4EE]"
   }`;
+}
+
+// The file picker, styled to match the other inputs. The browser's own
+// "Choose file" button is reached with Tailwind's file: variant.
+function fileInputClass(hasError: boolean) {
+  return [
+    "block w-full cursor-pointer rounded-lg border bg-white text-sm text-[#57534E] transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-[3px]",
+    hasError
+      ? "border-red-500 focus:ring-red-50"
+      : "border-[#DEDAD4] focus:border-[#FF6B35] focus:ring-[#FFF4EE]",
+    "file:mr-3 file:h-12 file:cursor-pointer file:border-0 file:border-r file:border-[#DEDAD4] file:bg-[#FAFAF9] file:px-4 file:text-sm file:font-medium file:text-[#1C1917] hover:file:bg-[#F0EDE8]",
+  ].join(" ");
 }
 
 // The phone fields use react-phone-number-input's own PhoneInput: a flag
@@ -43,7 +58,7 @@ function phoneInputClass(hasError: boolean) {
   ].join(" ");
 }
 
-function FieldError({ message }: { message?: string }) {
+function FieldError({ message }: { message?: string | null }) {
   if (!message) return null;
   return <p className="mt-1 text-xs text-red-600">{message}</p>;
 }
@@ -53,13 +68,17 @@ function FieldError({ message }: { message?: string }) {
 type CompanyForm = Record<CompanyWorkspaceField, string>;
 
 /**
- * The form for a new company workspace. Every field is checked by the Zod
- * schema in createCompanyWorkspace.schema.ts (the same rules the backend can
- * check again).
+ * The form for a new company workspace. Every text field is checked by the Zod
+ * schema in createCompanyWorkspace.schema.ts (the same rules the backend
+ * checks again).
  *
  * A field's error shows once the user has left it, or for every field once they
  * try to submit, so nothing flashes red while they are still typing. The errors
  * then update as they type.
+ *
+ * The company's quants takeoff policy is an optional PDF. It is kept in its own
+ * state (it isn't text) and checked when it is chosen: it must be a PDF of
+ * 10 MB or less. The backend checks it again and reads its text.
  */
 export function CreateCompanyWorkspaceForm({
   onClose,
@@ -83,6 +102,9 @@ export function CreateCompanyWorkspaceForm({
     companyType: "",
   });
 
+  const [companyPolicyFile, setCompanyPolicyFile] = useState<File | null>(null);
+  const [policyFileError, setPolicyFileError] = useState<string | null>(null);
+
   const [touched, setTouched] = useState<
     Partial<Record<CompanyWorkspaceField, boolean>>
   >({});
@@ -90,6 +112,34 @@ export function CreateCompanyWorkspaceForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showCreatingWorkspaceModal, setShowCreatingWorkspaceModal] =
     useState<boolean>(false);
+
+  // Keeps the chosen file if it's a PDF under the size limit. Otherwise it
+  // shows why and keeps nothing.
+  function saveUploadedCompanyPolicy(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const uploadedFile = event.target.files?.[0];
+    if (!uploadedFile) {
+      setCompanyPolicyFile(null);
+      setPolicyFileError(null);
+      return;
+    }
+
+    const looksLikePdf =
+      uploadedFile.type === "application/pdf" ||
+      uploadedFile.name.toLowerCase().endsWith(".pdf");
+
+    if (!looksLikePdf) {
+      setCompanyPolicyFile(null);
+      setPolicyFileError("The policy must be a PDF.");
+    } else if (uploadedFile.size > MAX_POLICY_BYTES) {
+      setCompanyPolicyFile(null);
+      setPolicyFileError("The policy must be 10 MB or smaller.");
+    } else {
+      setCompanyPolicyFile(uploadedFile);
+      setPolicyFileError(null);
+    }
+  }
 
   // Checked on every render, so the messages follow what the user types
   const { errors } = validateCompanyWorkspace(form);
@@ -107,21 +157,32 @@ export function CreateCompanyWorkspaceForm({
   async function submitForm() {
     setTriedToSubmit(true);
     const { data } = validateCompanyWorkspace(form);
-    if (!data) return;
+    if (!data || policyFileError) return;
 
     setSubmitError(null);
     setShowCreatingWorkspaceModal(true);
     try {
-      // Send the checked values: trimmed, with the phones in +61 form
-      const response = await postNewWorkspace(data);
+      // Send the checked values (trimmed, with the phones in +61 form) and the
+      // policy file, if one was chosen
+      const response = await postNewWorkspace(
+        data,
+        companyPolicyFile ?? undefined,
+      );
       if (!response) {
         setSubmitError("Couldn't create the workspace. Please try again.");
         return;
       }
       addToList(response);
       onClose();
-    } catch {
-      setSubmitError("Couldn't create the workspace. Please try again.");
+    } catch (error: any) {
+      // Show the backend's reason when it gives one (a name already used, a
+      // PDF it couldn't read), otherwise a general message
+      const message = error?.response?.data?.message;
+      setSubmitError(
+        typeof message === "string"
+          ? message
+          : "Couldn't create the workspace. Please try again.",
+      );
     } finally {
       setShowCreatingWorkspaceModal(false);
     }
@@ -229,12 +290,41 @@ export function CreateCompanyWorkspaceForm({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {phoneField("phone", "Phone Number", "company-phone-number", true)}
+              {phoneField(
+                "phone",
+                "Phone Number",
+                "company-phone-number",
+                true,
+              )}
               {textField("email", "Email", "company-email", { type: "email" })}
             </div>
 
+            <div>
+              <label
+                htmlFor="company-policy-file-upload"
+                className={labelClass}
+              >
+                Company Quants Takeoff Policy
+              </label>
+              <input
+                id="company-policy-file-upload"
+                title="company-policy-file-upload"
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={saveUploadedCompanyPolicy}
+                aria-invalid={policyFileError !== null}
+                className={fileInputClass(policyFileError !== null)}
+              />
+              <p className="mt-1 text-xs text-[#78716C]">
+                Optional. A PDF up to 10 MB.
+              </p>
+              <FieldError message={policyFileError} />
+            </div>
+
             <div className="flex flex-col gap-4 border-t border-[#F0EDE8] pt-6">
-              <p className="text-sm font-medium text-[#78716C]">Primary Contact</p>
+              <p className="text-sm font-medium text-[#78716C]">
+                Primary Contact
+              </p>
               {textField("contactName", "Contact Name", "company-contact-name")}
               <div className="grid grid-cols-2 gap-4">
                 {phoneField(
@@ -243,10 +333,15 @@ export function CreateCompanyWorkspaceForm({
                   "company-contact-phone",
                   false,
                 )}
-                {textField("contactEmail", "Contact Email", "company-contact-email", {
-                  type: "email",
-                  required: false,
-                })}
+                {textField(
+                  "contactEmail",
+                  "Contact Email",
+                  "company-contact-email",
+                  {
+                    type: "email",
+                    required: false,
+                  },
+                )}
               </div>
             </div>
           </div>

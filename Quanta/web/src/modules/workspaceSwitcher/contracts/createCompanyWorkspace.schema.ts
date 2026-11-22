@@ -2,10 +2,13 @@ import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 // The rules for a new company workspace, in one place. The form checks them
-// before it sends anything, and the backend can check the same rules again (it
+// before it sends anything, and the backend checks the same rules again (it
 // must: anyone can call the API without the form).
 //
 // Text is trimmed before it is checked, so "   " counts as empty.
+//
+// The policy PDF is not part of this schema: it isn't text, so the form keeps
+// it in its own state and checks it there (PDF, 10 MB at most).
 
 function requiredText(message: string) {
   return z.string({ error: message }).trim().min(1, message);
@@ -30,7 +33,10 @@ function email(emptyMessage?: string) {
   const address = z.email("Enter a valid email address.");
   return emptyMessage
     ? z.string().trim().min(1, emptyMessage).pipe(address)
-    : z.string().trim().pipe(z.union([z.literal(""), address]));
+    : z
+        .string()
+        .trim()
+        .pipe(z.union([z.literal(""), address]));
 }
 
 export const createCompanyWorkspaceSchema = z.object({
@@ -52,12 +58,16 @@ export const createCompanyWorkspaceSchema = z.object({
 });
 
 // The form's fields, as Zod checks them
-export type CompanyWorkspaceFields = z.infer<typeof createCompanyWorkspaceSchema>;
+export type CompanyWorkspaceFields = z.infer<
+  typeof createCompanyWorkspaceSchema
+>;
 export type CompanyWorkspaceField = keyof CompanyWorkspaceFields;
 
 // One message per field that is wrong (the first problem found for it), or an
 // empty object when everything is fine
-export type CompanyWorkspaceErrors = Partial<Record<CompanyWorkspaceField, string>>;
+export type CompanyWorkspaceErrors = Partial<
+  Record<CompanyWorkspaceField, string>
+>;
 
 export function validateCompanyWorkspace(values: unknown): {
   data: CompanyWorkspaceFields | null;

@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { WorkspaceService } from '@/modules/workspace/workspace.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
-import { ZodValidationPipe } from '@/common/validations/global.input.validator'
-import { createWorkspaceSchema } from '@/modules/workspace/contracts/workspace.schema';
-import type { CreateWorkspaceRequest } from '@/modules/workspace/contracts/workspace.request.contracts';
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
+import {
+  createWorkspaceSchema,
+  companyPolicyFileSchema,
+  MAX_POLICY_BYTES,
+  type CreateWorkspaceRequest,
+  type CompanyPolicyFile,
+} from '@/modules/workspace/contracts/workspace.schema';
 import type {
   CompanyWorkspace,
   PersonalWorkspace,
@@ -41,14 +54,26 @@ export class WorkspaceController {
     return await this.workspaceService.getWorkspaceProjects(clerkId);
   }
 
-  // Creates a company and its workspace. The body is checked and tidied by
-  // createWorkspaceSchema first (see workspace.schema.ts): a bad body gets a 400
-  // and never reaches the service.
+  // Creates a company and its workspace. The request is multipart form data:
+  // the text fields, plus an optional policy PDF in the "file" field.
+  //
+  // Both are checked before the service runs (see workspace.schema.ts): the
+  // fields by createWorkspaceSchema, and the file by companyPolicyFileSchema
+  // (a real PDF, 10 MB at most). Anything wrong gets a 400. Multer's own limit
+  // turns away a file over 10 MB with a 413 before it is even read in.
   @Post('create')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_POLICY_BYTES, files: 1 },
+    }),
+  )
   async createNewWorkspace(
     @ClerkUserId() clerkId: string,
-    @Body(new ZodValidationPipe(createWorkspaceSchema)) body: CreateWorkspaceRequest,
+    @Body(new ZodValidationPipe(createWorkspaceSchema))
+    body: CreateWorkspaceRequest,
+    @UploadedFile(new ZodValidationPipe(companyPolicyFileSchema))
+    file: CompanyPolicyFile,
   ): Promise<CompanyWorkspace> {
-    return await this.workspaceService.createNewWorkspace(clerkId, body);
+    return await this.workspaceService.createNewWorkspace(clerkId, body, file);
   }
 }
