@@ -11,9 +11,9 @@
 // A personal workspace has no company, so companyId is null there.
 
 export type ActiveScope = {
-  workspaceId: string;
-  companyId: string;
-  projectId: string;
+  workspaceId: string | null;
+  companyId: string | null;
+  projectId: string | null; 
 };
 
 export function getActiveScope(): ActiveScope {
@@ -21,9 +21,7 @@ export function getActiveScope(): ActiveScope {
   const companyId = localStorage.getItem("companyId");
   const projectId = localStorage.getItem("projectId");
 
-  if (workspaceId == null || companyId == null || projectId == null) {
-    throw new Error("cannot find workspace or project or company information");
-  }
+
   return {
     workspaceId: workspaceId,
     companyId: companyId,

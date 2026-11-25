@@ -36,6 +36,9 @@ export function AiAssistant() {
     const activeCompanyId = companyId;
 
     async function fetchChatHistory() {
+      if (projectId == null) {
+        throw new Error("no projectId");
+      }
       try {
         const chatHistory = await getChatHistory({
           companyId: activeCompanyId,
@@ -64,7 +67,9 @@ export function AiAssistant() {
     setTypeIndicator(true);
     // Show the question straight away; the backend saves it as part of answering
     setChatMessages((prev) => [...prev, { role: "user", content: message }]);
-
+    if (projectId == null) {
+      throw new Error("no projectId");
+    }
     try {
       const reply = await sendUserMessage({
         companyId,
