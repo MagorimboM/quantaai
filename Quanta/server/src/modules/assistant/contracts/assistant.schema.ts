@@ -30,11 +30,15 @@ export const sendMessageSchema = z.object({
   // Set when the user is inside a project: the assistant then also reads that
   // project's documents and keeps a separate conversation for it. Undefined
   // when missing or blank.
-  projectId: optionalQueryText(),
+  projectId: z
+    .string({ error: 'Need a project Id, create project first' })
+    .trim(),
 });
 
 // GET /:companyId/assistant/chatHistory?projectId=...
 // Without a project, the company-level conversation.
 export const chatHistoryQuerySchema = z.object({
-  projectId: optionalQueryText(),
+  projectId: z
+    .string({ error: 'Need a project Id, create project first' })
+    .trim(),
 });

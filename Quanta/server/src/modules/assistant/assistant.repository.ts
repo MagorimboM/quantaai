@@ -1,192 +1,199 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { prisma } from '@/core/database/postgres';
+import { openAi } from '@/core/Ai/openAi';
+import { Reranker } from 'flashrank-js';
+import fs from 'fs';
+import path from 'path';
 
-// How many of the most recent messages are shown in the widget and sent to
-// the model as its memory of the conversation.
-
-//
-const CHAT_HISTORY_LIMIT = 20;
-
-// Which of the user's documents a piece of text came from.
-//  - projectDocument: uploaded against the project the user is in
-//  - companyDocument: uploaded against the company, not tied to a project
-//  - userDocument:    personal, not tied to any company or project
-export type AssistantDocument = {
-  nameOfDocument: string;
+// Represents a single message entry in a conversation history.
+export type ChatHistoryItem = {
+  id: string;
+  role: 'user' | 'assistant';
   content: string;
-  documentType: 'projectDocument' | 'companyDocument' | 'userDocument';
+  createdAt: Date;
 };
 
-// OWNERSHIP MODEL: userId owns all data; companyId and projectId are tags on
-// it. So every query below is filtered by userId first.
+// Handles retrieval-augmented assistant chat and chat history persistence.
 @Injectable()
 export class AssistantRepository {
-  // Clerk identifies the person; every other table points at our own users.id
-  async findUserByClerkId(clerkId: string) {
-    return await prisma.user.findUnique({
-      where: { clerkId },
-      select: { id: true },
-    });
-  }
-
-  // True only if the company (and project, when given) belong to this user.
-  // The company and project ids come from the URL/body, so they can't be trusted on their own.
-  async scopeBelongsToUser({
-    userId,
-    companyId,
+  // Embeds the user query, retrieves and reranks project document chunks, generates an AI reply, and persists messages.
+  async chatWithAssistant({
     projectId,
-  }: {
-    userId: string;
-    companyId: string;
-    projectId?: string;
-  }): Promise<boolean> {
-    const company = await prisma.company.findFirst({
-      where: { id: companyId, userId },
-      select: { id: true },
-    });
-    if (!company) return false;
-    if (!projectId) return true;
-
-    const project = await prisma.project.findFirst({
-      where: { id: projectId, companyId, userId },
-      select: { id: true },
-    });
-    return project !== null;
-  }
-
-  async saveMessage({
-    message,
-    role,
-    userId,
     companyId,
-    projectId,
+    clerkId,
+    userMessage,
   }: {
-    message: string;
-    role: 'user' | 'assistant';
-    userId: string;
+    projectId: string;
     companyId: string;
-    projectId?: string;
+    clerkId: string;
+    userMessage: string;
   }) {
-    return await prisma.chatMessage.create({
-      data: {
-        content: message,
-        role,
-        userId,
-        companyId,
-        projectId: projectId ?? null,
-      },
-    });
-  }
-
-  // The latest messages of one conversation, oldest first.
-  // A conversation is one user + one company + one project. With no project it
-  // is the company-level conversation (projectId null). Leaving projectId out of
-  // the filter instead would mix every project's messages together, because
-  // Prisma ignores an undefined filter.
-  async getChatHistory({
-    userId,
-    companyId,
-    projectId,
-  }: {
-    userId: string;
-    companyId: string;
-    projectId?: string;
-  }) {
-    // Newest 20 first (so a long conversation keeps its recent messages),
-    // then flipped back into reading order.
-    const latestMessages = await prisma.chatMessage.findMany({
-      where: { userId, companyId, projectId: projectId ?? null },
-      orderBy: { createdAt: 'desc' },
-      take: CHAT_HISTORY_LIMIT,
-    });
-
-    return latestMessages.reverse();
-  }
-
-  // The full text of every active document the assistant may read in this scope.
-  // Archived documents are skipped: archiving means "exclude from AI search".
-  // A document's text is stored as chunks (document_embeddings); they are
-  // joined back together in order here.
-  async getAssistantDocuments({
-    userId,
-    companyId,
-    projectId,
-  }: {
-    userId: string;
-    companyId: string;
-    projectId?: string;
-  }): Promise<AssistantDocument[]> {
-    // Project documents only when the user is inside a project. Without this
-    // guard an undefined projectId would match every document the user owns.
-    const projectDocs = projectId
-      ? await prisma.document.findMany({
-          where: {companyId, projectId, isArchived: false },
-          select: { id: true, name: true },
-        })
-      : [];
-
-    const companyDocs = await prisma.document.findMany({
-      where: { companyId, projectId: null, isArchived: false },
-      select: { id: true, name: true },
-    });
-
-    const userDocs = await prisma.document.findMany({
-      where: { companyId: companyId, projectId: projectId, isArchived: false },
-      select: { id: true, name: true },
-    });
-
-    const documents = [
-      ...projectDocs.map((doc) => ({
-        ...doc,
-        documentType: 'projectDocument' as const,
-      })),
-      ...companyDocs.map((doc) => ({
-        ...doc,
-        documentType: 'companyDocument' as const,
-      })),
-      ...userDocs.map((doc) => ({
-        ...doc,
-        documentType: 'userDocument' as const,
-      })),
-    ];
-    if (documents.length === 0) return [];
-
-    // One query for every document's chunks, instead of one query per document
-    const chunks = await prisma.documentEmbedding.findMany({
-      where: {
-        documentId: { in: documents.map((doc) => doc.id) },
-        isArchived: false,
-      },
-      orderBy: [{ documentId: 'asc' }, { chunkIndex: 'asc' }],
-      select: { documentId: true, chunkText: true },
-    });
-
-    const chunkTextByDocument = new Map<string, string[]>();
-    for (const chunk of chunks) {
-      const texts = chunkTextByDocument.get(chunk.documentId) ?? [];
-      texts.push(chunk.chunkText);
-      chunkTextByDocument.set(chunk.documentId, texts);
+    // Look up the user by Clerk ID and ensure they exist.
+    const user = await prisma.user.findUnique({ where: { clerkId: clerkId } });
+    if (user == undefined) {
+      throw new NotFoundException(
+        'User does not exist, login in again or signup',
+      );
     }
 
-    // A document with no chunks yet is still being processed, so it is skipped
-    const flattenedDocs = documents.flatMap((doc) => {
-      const texts = chunkTextByDocument.get(doc.id);
-      if (!texts) return [];
+    // Fetch a document belonging to the user and specified project.
+    const document = await prisma.document.findFirst({
+      where: { projectId: projectId, userId: user.id },
+    });
+    if (document == undefined || document == null) {
+      throw new NotFoundException(
+        'No documents are uploaded, upload documents so Ai can help you',
+      );
+    }
 
-      const joinedDocs = [
-        {
-          nameOfDocument: doc.name,
-          content: texts.join(''),
-          documentType: doc.documentType,
-        },
-      ];
-
-      console.log('docs in the repository:' + joinedDocs);
-
-      return joinedDocs;
+    // Generate a vector embedding for the incoming user message.
+    const embeddedResult = await openAi.embeddings.create({
+      model: 'text-embedding-3-large',
+      input: userMessage,
+      encoding_format: 'float',
     });
 
-    console.log('here is the flattened Docs:' + flattenedDocs);
-    return flattenedDocs;
+    if (!embeddedResult.data || embeddedResult.data.length == 0) {
+      throw new InternalServerErrorException('Failed to embed files');
+    }
+    const embedding = embeddedResult.data[0]?.embedding;
+
+    const embeddingString = JSON.stringify(embedding);
+
+    // Query top 5 closest document chunks by cosine distance using pgvector.
+    const relevantChunks = await prisma.$queryRaw<{ chunkText: string }[]>`
+  SELECT de."chunkText"
+  FROM document_embeddings de
+  WHERE de."userId" = ${user.id}
+    AND de."documentId" = ${document.id}
+  ORDER BY de."embedding" <=> ${embeddingString}::vector ASC
+  LIMIT 5
+`;
+
+    // Rerank candidate chunks against the user message.
+    const reRanker = await Reranker.create();
+
+    const ranked = reRanker.rerank({
+      query: userMessage,
+      documents: relevantChunks.map((eachChunk) => eachChunk.chunkText),
+      topN: 5,
+    });
+
+    // Filter reranked chunks to keep only those meeting the relevance threshold.
+    const mostSimilar = (await ranked).filter((eachChunk) => {
+      eachChunk.score >= 0.5;
+    });
+
+    // Format filtered chunks into a combined text block.
+    const chunkTexts = '';
+    const indexNumber = 0;
+    for (const eachChunk of mostSimilar) {
+      indexNumber;
+      chunkTexts +
+        `chunkNUmber:${indexNumber}\n
+      content : ${eachChunk.document}\n`;
+      indexNumber + 1;
+    }
+
+    // Persist the user's message in the chat history table.
+    const chatMessage = await prisma.chatMessage.create({
+      data: {
+        userId: user.id,
+        role: 'user',
+        content: userMessage,
+        companyId: companyId,
+        projectId:projectId
+      },
+    });
+
+    if (chatMessage == undefined) {
+      throw new InternalServerErrorException('couldn`t save user message');
+    }
+
+    // Load the base system prompt template from disk and inject query and retrieved chunks.
+    const file = fs.readFileSync(
+      path.join(__dirname, '../assistant/ai/systemPrompts', 'quantaAi.md'),
+      'utf-8',
+    );
+
+    const systemPrompt = file
+      .replace('{userMessage}', userMessage)
+      .replace('{retrievedChunks}', chunkTexts.trim());
+
+    console.log(systemPrompt);
+
+    // Retrieve recent conversation messages and format them for the chat completion API.
+    const chatHistory = await prisma.chatMessage.findMany({
+      where: { projectId, companyId, userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+    const llmChatHistory = chatHistory.reverse().map((chat) => ({
+      role: chat.role as 'user' | 'assistant',
+      content: chat.content,
+    }));
+
+    // Request a chat completion using the system prompt, recent history, and current user message.
+    const llmResponse = await openAi.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...llmChatHistory,
+        {
+          role: 'user',
+          content: userMessage,
+        },
+      ],
+    });
+
+    // Persist and return the assistant's response message.
+    const AiChatMessage = await prisma.chatMessage.create({
+      data: {
+        userId: user.id,
+        content: llmResponse.choices[0].message.content ?? '',
+        role: 'assistant',
+        companyId: companyId,
+        projectId:projectId
+      },
+    });
+
+    return {
+      content: AiChatMessage.content,
+      role: AiChatMessage.role,
+      companyId: AiChatMessage.companyId,
+      id: AiChatMessage.id,
+    };
+  }
+
+  // Retrieves up to 10 recent chat messages for a user within a project and company.
+  async getChatHistory({
+    projectId,
+    companyId,
+    clerkId,
+  }: {
+    projectId: string;
+    clerkId: string;
+    companyId: string;
+  }) {
+    const response = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({ where: { clerkId: clerkId } });
+      if (!user || user == null) {
+        throw new NotFoundException('user does not exist');
+      }
+
+      const chatHistory = await tx.chatMessage.findMany({
+        where: { userId: user.id, companyId: companyId, projectId: projectId },
+        take: 10,
+      });
+      return chatHistory;
+    });
+    return response;
   }
 }

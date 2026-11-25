@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Param, Query } from '@nestjs/common';
 import { AssistantService } from '@/modules/assistant/assistant.service';
 import { ClerkUserId } from '@/auth/services/currentUser.guard';
-import { ZodValidationPipe } from '@/common/validations/global.input.validator'
+import { ZodValidationPipe } from '@/common/validations/global.input.validator';
 import {
   chatHistoryQuerySchema,
   sendMessageSchema,
@@ -11,23 +11,20 @@ import type {
   SendMessageRequest,
 } from '@/modules/assistant/contracts/chat.requests.contracts';
 
-// Every route runs behind the global ClerkAuthGuard, so @ClerkUserId() is always the
-// verified caller. The user is never read from the URL or the body.
-//
-// The body and query are checked by the schemas in assistant.schema.ts first:
-// a bad one gets a 400 and never reaches the service (or the paid model).
+// Exposes endpoints for sending assistant chat messages and retrieving chat history under a company scope.
 @Controller(':companyId/assistant')
 export class AssistantController {
+  // Injects the assistant service handling chat and history operations.
   constructor(private readonly assistantService: AssistantService) {}
 
-  // Ask the assistant a question. Returns its reply.
+  // Validates a chat request payload and forwards the message to the assistant service.
   @Post('chat')
   async chat(
     @ClerkUserId() clerkId: string,
     @Param('companyId') companyId: string,
     @Body(new ZodValidationPipe(sendMessageSchema)) request: SendMessageRequest,
   ) {
-    return await this.assistantService.chat({
+    return await this.assistantService.chatWithAssistant({
       clerkId,
       companyId,
       projectId: request.projectId,
@@ -35,8 +32,7 @@ export class AssistantController {
     });
   }
 
-  // The caller's latest messages for this company (and project, if given), oldest first.
-  // projectId is optional, so it is a query parameter: ?projectId=...
+  // Validates query parameters and returns the chat history for the specified project and company.
   @Get('chatHistory')
   async getChatHistory(
     @ClerkUserId() clerkId: string,

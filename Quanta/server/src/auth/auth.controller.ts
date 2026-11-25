@@ -17,7 +17,6 @@ import { Public } from '@/auth/services/public.decorator';
 //    itself, since the webhook is authenticated by its own signature, not a
 //    user's session token.
 //
-// TODO :: [auth] Replace every hardcoded userId ('seed-user-001', 'seed-user-100')
 // in the other controllers with the logged-in user, via ClerkAuthGuard + the
 // ClerkUserId decorator, using AuthRepository.findByClerkId(...) for the
 // local user lookup.

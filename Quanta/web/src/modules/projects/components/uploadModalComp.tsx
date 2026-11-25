@@ -7,7 +7,7 @@ import { uploadFiles } from "@/modules/projects/api/api";
  * them when answering questions inside it.
  */
 
-// TODO :: then concept now is to upload project document spec... 
+// TODO :: then concept now is to upload project document spec...
 // TODO :: Atn the begining to upload company policy
 export function UploadModalComp({
   companyId,
@@ -28,6 +28,9 @@ export function UploadModalComp({
   }
 
   async function uploadSelectedFiles() {
+    //! TODO :: Reload the file upon success uploading confirmation;
+    //  - Upon success from loading a file fetch the newley uploaded file from the backend: then file information includes the id.
+
     if (files.length === 0 || isUploading) return;
     setError(null);
     setIsUploading(true);
