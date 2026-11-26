@@ -52,14 +52,16 @@ export class AssistantRepository {
 
     // Generate a vector embedding for the incoming user message.
     const embeddedResult = await openAi.embeddings.create({
-      model: 'text-embedding-3-large',
+      model: 'text-embedding-3-small',
       input: userMessage,
       encoding_format: 'float',
     });
 
+    // Ensure the embedding API returned at least one vector entry.
     if (!embeddedResult.data || embeddedResult.data.length == 0) {
       throw new InternalServerErrorException('Failed to embed files');
     }
+    // Extract the embedding float array and serialize it as a JSON string for pgvector.
     const embedding = embeddedResult.data[0]?.embedding;
 
     const embeddingString = JSON.stringify(embedding);
@@ -77,6 +79,7 @@ export class AssistantRepository {
     // Rerank candidate chunks against the user message.
     const reRanker = await Reranker.create();
 
+    // Score and order candidate chunks by relevance to userMessage.
     const ranked = reRanker.rerank({
       query: userMessage,
       documents: relevantChunks.map((eachChunk) => eachChunk.chunkText),
@@ -110,6 +113,7 @@ export class AssistantRepository {
       },
     });
 
+    // Verify user message persistence succeeded before building the prompt.
     if (chatMessage == undefined) {
       throw new InternalServerErrorException('couldn`t save user message');
     }
@@ -120,10 +124,12 @@ export class AssistantRepository {
       'utf-8',
     );
 
+    // Substitute placeholders in the prompt template with the current query and formatted chunks.
     const systemPrompt = file
       .replace('{userMessage}', userMessage)
       .replace('{retrievedChunks}', chunkTexts.trim());
 
+    // Log the assembled system prompt for debugging.
     console.log(systemPrompt);
 
     // Retrieve recent conversation messages and format them for the chat completion API.
@@ -132,6 +138,7 @@ export class AssistantRepository {
       orderBy: { createdAt: 'desc' },
       take: 10,
     });
+    // Reverse newest-first rows into chronological order and map to OpenAI message roles.
     const llmChatHistory = chatHistory.reverse().map((chat) => ({
       role: chat.role as 'user' | 'assistant',
       content: chat.content,
@@ -164,6 +171,7 @@ export class AssistantRepository {
       },
     });
 
+    // Return the saved assistant message payload to the caller.
     return {
       content: AiChatMessage.content,
       role: AiChatMessage.role,
@@ -182,12 +190,15 @@ export class AssistantRepository {
     clerkId: string;
     companyId: string;
   }) {
+    // Run user lookup and chat history query inside a transaction.
     const response = await prisma.$transaction(async (tx) => {
+      // Look up the user by Clerk ID and throw if not found.
       const user = await tx.user.findFirst({ where: { clerkId: clerkId } });
       if (!user || user == null) {
         throw new NotFoundException('user does not exist');
       }
 
+      // Query up to 10 chat messages matching user, company, and project.
       const chatHistory = await tx.chatMessage.findMany({
         where: { userId: user.id, companyId: companyId, projectId: projectId },
         take: 10,

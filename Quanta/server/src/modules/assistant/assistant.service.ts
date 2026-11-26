@@ -1,17 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AssistantRepository } from '@/modules/assistant/assistant.repository';
-import { openAi } from '@/core/Ai/openAi';
-import { Reranker } from 'flashrank-js';
 
-const SYSTEM_PROMPT =
-  'Answer using ONLY the provided excerpts and chat history. If unsure, say you do not know.';
-
+// Service layer delegating assistant chat and history operations to AssistantRepository.
 @Injectable()
 export class AssistantService {
-  private readonly reranker = Reranker.create();
-
+  // Inject AssistantRepository for database and retrieval-augmented generation queries.
   constructor(private readonly assistantRepository: AssistantRepository) {}
 
+  // Send a user message to the assistant and return the persisted reply.
   async chatWithAssistant({
     clerkId,
     companyId,
@@ -23,6 +19,7 @@ export class AssistantService {
     projectId: string;
     userMessage: string;
   }) {
+    // Delegate chat processing to the repository.
     return this.assistantRepository.chatWithAssistant({
       projectId,
       companyId,
@@ -31,6 +28,7 @@ export class AssistantService {
     });
   }
 
+  // Fetch recent chat history for the given user, company, and project.
   async getChatHistory({
     projectId,
     companyId,
@@ -40,6 +38,7 @@ export class AssistantService {
     clerkId: string;
     companyId: string;
   }) {
+    // Delegate history lookup to the repository.
     return await this.assistantRepository.getChatHistory({
       projectId,
       companyId,

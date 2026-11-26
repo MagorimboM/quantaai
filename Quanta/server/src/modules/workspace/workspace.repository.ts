@@ -39,6 +39,7 @@ export class WorkspaceRepository {
   // The person's company workspaces, alphabetical. The name shown is the
   // company's, and the counts are the company's projects and live recipes.
   async getCompanyWorkspaces(userId: string): Promise<CompanyWorkspace[]> {
+    // Query company workspaces joined with company records and subqueries for project and active recipe counts
     return await prisma.$queryRaw<CompanyWorkspace[]>`
       SELECT
         w.id,
@@ -65,6 +66,7 @@ export class WorkspaceRepository {
   async getPersonalWorkspace(
     userId: string,
   ): Promise<PersonalWorkspace | null> {
+    // Query the user's standalone workspace (companyId IS NULL) along with unassociated project and recipe counts
     const rows = await prisma.$queryRaw<PersonalWorkspace[]>`
       SELECT
         w.id,
@@ -80,6 +82,7 @@ export class WorkspaceRepository {
       WHERE w."userId" = ${userId}
         AND w."companyId" IS NULL
       LIMIT 1`;
+    // Return the first matching personal workspace or null when none exists
     return rows[0] ?? null;
   }
 
@@ -87,6 +90,7 @@ export class WorkspaceRepository {
   // companies, soonest first. Overdue ones come first on purpose: a late
   // project is the one that needs attention most.
   async getDueProjects(userId: string): Promise<DueProject[]> {
+    // Fetch active, incomplete projects across non-archived companies ordered by earliest endDate
     return await prisma.$queryRaw<DueProject[]>`
       SELECT
         p.id,
@@ -107,6 +111,7 @@ export class WorkspaceRepository {
 
   // True if the person already has a company with this name (ignoring case)
   async companyNameTaken(userId: string, name: string): Promise<boolean> {
+    // Count matching company rows case-insensitively for this user
     const count = await prisma.company.count({
       where: { userId, name: { equals: name, mode: 'insensitive' } },
     });
@@ -120,8 +125,10 @@ export class WorkspaceRepository {
   async createCompanyWorkspace(
     record: NewCompanyRecord,
   ): Promise<CompanyWorkspace> {
+    // Fast path when no policy document is attached: create company, default categories, and workspace in one transaction
     if (!record.companyPolicy) {
       const response = await prisma.$transaction(async (tx) => {
+        // Create company record and seed default trade categories
         const newCompany = await tx.company.create({
           data: {
             name: record.name,
@@ -148,6 +155,7 @@ export class WorkspaceRepository {
           },
         });
 
+        // Create workspace linked to the new company
         const newWorkspace = await tx.workspace.create({
           data: {
             userId: record.userId,
@@ -157,6 +165,7 @@ export class WorkspaceRepository {
           select: { id: true },
         });
 
+        // Query initial project and recipe counts for the new company
         const numberOfProjects = await tx.project.count({
           where: {
             companyId: newCompany.id,
@@ -168,6 +177,7 @@ export class WorkspaceRepository {
             companyId: newCompany.id,
           },
         });
+        // Assemble the CompanyWorkspace summary object for the client
         return {
           id: newWorkspace.id,
           name: newCompany.name,
@@ -181,6 +191,7 @@ export class WorkspaceRepository {
       return response;
     }
 
+    // Accumulate page-level chunk embeddings before opening the database transaction
     const embeddedDocument: {
       documentTitle: string;
       documentPageNumber: number | string;
@@ -207,12 +218,14 @@ export class WorkspaceRepository {
         }),
       );
 
+      // Fail early if S3 did not return HTTP 200
       if (savefileS3Response.$metadata.httpStatusCode !== 200) {
         throw new Error(
           `S3 upload failed with status ${savefileS3Response.$metadata.httpStatusCode}`,
         );
       }
 
+      // Build the public/stored URL for the uploaded policy PDF
       const baseUrl = process.env.AWS_S3_BUCKET_URL!.replace(/\/$/, '');
       fileUrl = `${baseUrl}/${encodeURI(fileKey)}`;
 
@@ -225,12 +238,14 @@ export class WorkspaceRepository {
         );
         if (contents.length === 0) continue;
 
+        // Generate float vectors for non-empty chunks on the current page
         const embeddingResponse = await openAi.embeddings.create({
           model: 'text-embedding-3-small',
           input: contents,
           encoding_format: 'float',
         });
 
+        // Pair each chunk string with its returned embedding vector
         embeddedDocument.push({
           documentTitle: eachPage.documentTitle,
           documentPageNumber: eachPage.documentPageNumber,
@@ -241,14 +256,17 @@ export class WorkspaceRepository {
         });
       }
     } catch (error) {
+      // Clean up any S3 object uploaded prior to failure and rethrow a uniform error
       console.error('Company policy upload or embedding failed:', error);
       await this.deleteUploadedFile(fileKey);
       throw new Error('Did not successfully embed items');
     }
 
     try {
+      // Persist company, workspace, document record, and pgvector embeddings atomically
       const response = await prisma.$transaction(
         async (tx) => {
+          // Create company record and seed default trade categories
           const newCompany = await tx.company.create({
             data: {
               name: record.name,
@@ -275,6 +293,7 @@ export class WorkspaceRepository {
             },
           });
 
+          // Create workspace linked to the new company
           const newWorkspace = await tx.workspace.create({
             data: {
               userId: record.userId,
@@ -284,6 +303,7 @@ export class WorkspaceRepository {
             select: { id: true },
           });
 
+          // Query initial project and recipe counts for the new company
           const numberOfProjects = await tx.project.count({
             where: {
               companyId: newCompany.id,
@@ -296,6 +316,7 @@ export class WorkspaceRepository {
             },
           });
 
+          // Create the parent document row referencing the uploaded policy PDF
           const newDocument = await tx.document.create({
             data: {
               companyId: newCompany.id,
@@ -313,9 +334,11 @@ export class WorkspaceRepository {
           let chunkIndex = 0;
           for (const eachPage of embeddedDocument) {
             for (const eachChunk of eachPage.chunks) {
+              // Format float array into pgvector literal syntax `[x,y,z,...]`
               const vector = `[${eachChunk.embedding.join(',')}]`;
               const title = `${eachPage.documentTitle} (page ${eachPage.documentPageNumber})`;
 
+              // Insert chunk text, metadata, and pgvector embedding into Postgres
               await tx.$executeRaw`
             INSERT INTO document_embeddings
               ("id", "userId", "documentId", "chunkText", "chunkTitle", "chunkIndex", "embedding")
@@ -325,6 +348,7 @@ export class WorkspaceRepository {
             }
           }
 
+          // Return the CompanyWorkspace summary object for the newly created company
           return {
             id: newWorkspace.id,
             name: newCompany.name,
@@ -348,8 +372,10 @@ export class WorkspaceRepository {
 
   // Best effort: a failed clean-up must not hide the original error
   private async deleteUploadedFile(fileKey: string): Promise<void> {
+    // Skip S3 deletion if no object key was created
     if (!fileKey) return;
     try {
+      // Remove the object from S3
       await s3Client.send(
         new DeleteObjectCommand({
           Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -357,6 +383,7 @@ export class WorkspaceRepository {
         }),
       );
     } catch (error) {
+      // Log cleanup failure without throwing over the caller's error
       console.error('Could not remove uploaded file:', fileKey, error);
     }
   }
